@@ -77,8 +77,8 @@
         .tab { flex: 1; padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-dim); border-bottom: 2px solid transparent; transition: all 0.15s; }
         .tab:hover { color: var(--text); }
         .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .tab-body { flex: 1; overflow-y: auto; }
-        .tab-content { display: none; height: 100%; }
+        .tab-body { flex: 1; overflow-y: auto; min-height: 0; }
+        .tab-content { display: none; height: 100%; min-height: 350px; }
         .tab-content.active { display: block; }
 
         /* Graph container */
@@ -145,6 +145,32 @@
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body { overflow: auto; height: auto; }
+            .header { padding: 10px 14px; height: auto; flex-wrap: wrap; gap: 6px; }
+            .header h1 { font-size: 15px; }
+            .team-info { display: none; }
+            .main { flex-direction: column; height: auto; min-height: calc(100vh - 60px); }
+            .panel-left { width: 100%; min-width: unset; max-width: unset; border-right: none; border-bottom: 1px solid var(--border); }
+            .object-list-wrap { max-height: 150px; }
+            .panel-right { min-height: 60vh; }
+            .tab { padding: 10px 8px; font-size: 11px; }
+            #graph-container { min-height: 350px; }
+            .risk-score { font-size: 40px; }
+            .impact-stat .num { font-size: 24px; }
+            .stats .stat .val { font-size: 22px; }
+            .legend { bottom: 8px; left: 8px; font-size: 9px; padding: 6px 10px; }
+            .result-panel { padding: 14px; }
+        }
+
+        @media (max-width: 400px) {
+            .header h1 { font-size: 13px; }
+            .controls { padding: 12px; }
+            .btn { padding: 8px 12px; font-size: 12px; }
+            .tab { font-size: 10px; padding: 8px 4px; }
+        }
     </style>
 </head>
 <body>
