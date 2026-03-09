@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  OIC Integration Flow: Onboarding Flow
+  Handles new-hire onboarding tasks by calling the HR_PACKAGE.
+  This flow does NOT reference the EMPLOYEES table directly,
+  making it an INDIRECT dependent via HR_PACKAGE.
+-->
+<integration name="ONBOARDING_FLOW" version="1.0">
+
+  <!-- Adapter connection for the HR database -->
+  <connection name="HR_DB_CONN" type="oracle-database"
+              direction="outbound"
+              description="HR database connection for onboarding operations"/>
+
+  <!-- Step 1: Check department headcount before onboarding -->
+  <step name="CheckHeadcount" connection="HR_DB_CONN">
+    <procedure>HR_PACKAGE.GET_HEADCOUNT</procedure>
+    <references>
+      <object type="PACKAGE">HR_PACKAGE</object>
+    </references>
+  </step>
+
+  <!-- Step 2: Sync the new employee record via the HR package -->
+  <step name="SyncNewEmployee" connection="HR_DB_CONN">
+    <procedure>HR_PACKAGE.SYNC_EMPLOYEE</procedure>
+    <references>
+      <object type="PACKAGE">HR_PACKAGE</object>
+    </references>
+  </step>
+
+</integration>

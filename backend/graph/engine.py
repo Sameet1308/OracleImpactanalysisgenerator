@@ -6,7 +6,7 @@ Impact Score Formula (0-100):
   score = (direct_weight * 0.52) + (indirect_weight * 0.18) + (type_weight * 0.30)
   where:
     direct_weight = min(direct_count * 13, 100)
-    indirect_weight = min(indirect_count * 25, 100)
+    indirect_weight = min(indirect_count * 22, 100)
     type_weight = TYPE_CRITICALITY[object_type] * 10
 
 Severity Thresholds:
@@ -171,7 +171,7 @@ class DependencyGraph:
         # 52% from direct impact count (saturates at ~8 dependents)
         direct_weight = min(len(direct) * 13, 100)
         # 18% from indirect impact count
-        indirect_weight = min(len(indirect) * 25, 100)
+        indirect_weight = min(len(indirect) * 22, 100)
         # 30% from object type criticality
         obj_type = self.graph.nodes[object_name].get("type", "UNKNOWN")
         type_score = TYPE_CRITICALITY.get(obj_type, 5)

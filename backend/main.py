@@ -10,12 +10,14 @@ from typing import List
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from parsers import parse_file, parse_files
 from graph.engine import DependencyGraph
 from ai.oci_genai import generate_analysis, get_ai_mode
+from pdf_report import generate_pdf_report
 
 app = FastAPI(
     title="Impact Analysis Generator",
@@ -141,6 +143,55 @@ async def analyze_impact(request: AnalyzeRequest):
         },
         "ai_mode": ai_result.get("mode", "mock"),
     }
+
+
+@app.get("/api/report/{object_name}")
+async def download_report(object_name: str):
+    """Generate and download a PDF impact analysis report for the given object."""
+    if graph.graph.number_of_nodes() == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No artifacts loaded. Upload files or load demo first.",
+        )
+
+    object_name = object_name.upper().strip()
+    impact = graph.compute_impact(object_name)
+
+    if not impact.get("found"):
+        available = [n for n in graph.graph.nodes]
+        raise HTTPException(
+            status_code=404,
+            detail=f"Object '{object_name}' not found. Available: {available}",
+        )
+
+    ai_result = await generate_analysis(impact)
+
+    impact_data = {
+        "object_name": impact["object_name"],
+        "object_type": impact.get("object_type", "OBJECT"),
+        "risk_score": impact["risk_score"],
+        "severity": impact["severity"],
+        "direct_impact": impact["direct_impact"],
+        "indirect_impact": impact["indirect_impact"],
+        "all_impacted": impact["all_impacted"],
+    }
+    ai_analysis = {
+        "root_cause": ai_result.get("root_cause", ""),
+        "recommendations": ai_result.get("recommendations", []),
+        "testing_checklist": ai_result.get("testing_checklist", []),
+        "rollback_plan": ai_result.get("rollback_plan", []),
+    }
+
+    pdf_bytes = generate_pdf_report(impact_data, ai_analysis)
+    filename = f"impact_report_{object_name}.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
 
 
 @app.get("/api/objects")

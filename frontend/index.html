@@ -51,6 +51,7 @@
         .btn-demo { background: #1A1530; color: #B088FF; }
         .btn-upload { background: var(--surface2); color: var(--text); border: 1px dashed var(--border); }
         .btn-impact { background: linear-gradient(135deg, #FF3B4F, #FF7B3B); color: white; }
+        .btn-pdf { background: linear-gradient(135deg, #00B894, #00D4FF); color: white; }
 
         .select-wrap { margin: 12px 0; }
         .select-wrap label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
@@ -171,6 +172,7 @@
             </div>
 
             <button class="btn btn-impact" id="analyze-btn" onclick="analyzeImpact()" disabled>&#128165; Compute Impact</button>
+            <button class="btn btn-pdf" id="pdf-btn" onclick="downloadPDF()" style="display:none">&#128196; Download PDF Report</button>
 
             <div class="stats">
                 <div class="stat"><div class="val" id="stat-nodes">0</div><div class="lbl">Objects</div></div>
@@ -427,6 +429,7 @@ async function analyzeImpact() {
         renderImpact(d);
         renderAI(d);
         switchTab('impact');
+        document.getElementById('pdf-btn').style.display = 'flex';
     } catch (e) { alert('Analysis failed: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '&#128165; Compute Impact'; }
 }
@@ -462,6 +465,24 @@ function renderAI(d) {
         <div class="ai-section"><h3>Testing Checklist</h3><ul>${(a.testing_checklist || []).map(t => '<li>' + t + '</li>').join('')}</ul></div>
         <div class="ai-section"><h3>Rollback Plan</h3><ol>${(a.rollback_plan || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
     `;
+}
+
+async function downloadPDF() {
+    const name = document.getElementById('object-select').value;
+    if (!name) { alert('Select an object first'); return; }
+    const btn = document.getElementById('pdf-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating PDF...';
+    try {
+        const r = await fetch(API + '/api/report/' + encodeURIComponent(name));
+        if (!r.ok) { const e = await r.json(); alert(e.detail || 'PDF generation failed'); return; }
+        const blob = await r.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'impact_report_' + name + '.pdf';
+        document.body.appendChild(a); a.click(); a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (e) { alert('PDF download failed: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '&#128196; Download PDF Report'; }
 }
 
 // Init: check backend status

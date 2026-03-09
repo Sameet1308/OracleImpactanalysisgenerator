@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Oracle Integration Cloud (OIC) Flow: HR Employee Sync
-  Syncs employee data from Oracle HCM to external payroll system
-  References: HR_EMPLOYEE_SUMMARY view, GET_EMPLOYEE_SALARY procedure, EMPLOYEES table
+  Synchronises employee data between HCM Cloud and the Payroll database.
+  This flow DIRECTLY references EMPLOYEES, HR_EMPLOYEE_SUMMARY, and GET_EMPLOYEE_SALARY.
 -->
 <integration name="HR_EMPLOYEE_SYNC" version="1.0" type="scheduled_orchestration">
-    <description>Scheduled sync of employee records from HCM to external payroll</description>
+    <description>Scheduled sync of employee records from HCM Cloud to payroll database</description>
 
     <connections>
         <connection name="HCM_ADAPTER" type="oracle_hcm_cloud" adapter="rest">
@@ -19,6 +19,7 @@
     <orchestration>
         <schedule cron="0 0 2 * * ?"/>
 
+        <!-- Step 1: Query the summary view for employee data -->
         <step name="FETCH_EMPLOYEES" type="invoke">
             <connection ref="HCM_ADAPTER"/>
             <operation>GET /emps</operation>
@@ -28,6 +29,7 @@
             </references>
         </step>
 
+        <!-- Step 2: Map HCM fields — references EMPLOYEES for schema awareness -->
         <step name="TRANSFORM_DATA" type="xslt_mapping">
             <input ref="FETCH_EMPLOYEES"/>
             <mapping file="emp_transform.xsl"/>
@@ -36,6 +38,7 @@
             </references>
         </step>
 
+        <!-- Step 3: Retrieve current salary via stored procedure -->
         <step name="CALC_SALARY" type="invoke">
             <connection ref="PAYROLL_DB_CONN"/>
             <operation>CALL</operation>
@@ -45,6 +48,7 @@
             </references>
         </step>
 
+        <!-- Step 4: Upsert into EMPLOYEES table -->
         <step name="UPDATE_PAYROLL" type="invoke">
             <connection ref="PAYROLL_DB_CONN"/>
             <operation>MERGE</operation>

@@ -1,40 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Oracle BI Publisher (BIP) Report: Monthly Payroll Summary
-  Data model queries PAYROLL_VIEW, EMPLOYEES, DEPARTMENTS
+  Oracle BI Publisher (BIP) Report: Monthly Payroll Report
+  Generates a payroll summary for Finance by querying PAYROLL_VIEW
+  and DEPARTMENTS only.  This report does NOT reference EMPLOYEES
+  directly, making it an INDIRECT dependent via PAYROLL_VIEW.
 -->
-<report name="MONTHLY_PAYROLL_REPORT" version="1.0" type="bip_report">
-    <description>Monthly payroll summary report with department breakdown</description>
+<report name="MONTHLY_PAYROLL_REPORT" version="2.1" type="bip_report">
+    <description>Monthly payroll cost breakdown by department and job title</description>
 
     <data_model>
-        <dataset name="PAYROLL_SUMMARY">
-            <sql>
-                SELECT
-                    EMPLOYEE_ID,
-                    EMPLOYEE_NAME,
-                    MONTHLY_SALARY,
-                    ANNUAL_SALARY,
-                    JOB_TITLE
-                FROM PAYROLL_VIEW
-                ORDER BY EMPLOYEE_NAME
-            </sql>
-            <references>
-                <object type="VIEW">PAYROLL_VIEW</object>
-            </references>
-        </dataset>
-
-        <dataset name="DEPARTMENT_TOTALS">
+        <!-- Dataset 1: Payroll summary grouped by department -->
+        <dataset name="PAYROLL_BY_DEPARTMENT">
             <sql>
                 SELECT
                     d.DEPARTMENT_NAME,
-                    COUNT(e.EMPLOYEE_ID) AS EMP_COUNT,
-                    SUM(e.SALARY) AS TOTAL_SALARY
-                FROM EMPLOYEES e
-                JOIN DEPARTMENTS d ON e.DEPARTMENT_ID = d.DEPARTMENT_ID
+                    COUNT(p.EMPLOYEE_ID)                     AS HEADCOUNT,
+                    SUM(p.SALARY)                            AS TOTAL_SALARY,
+                    AVG(p.SALARY)                            AS AVG_SALARY,
+                    SUM(p.SALARY * NVL(p.COMMISSION_PCT, 0)) AS TOTAL_COMMISSION
+                FROM PAYROLL_VIEW p
+                JOIN DEPARTMENTS d ON d.DEPARTMENT_ID = p.DEPARTMENT_ID
                 GROUP BY d.DEPARTMENT_NAME
+                ORDER BY TOTAL_SALARY DESC
             </sql>
             <references>
-                <object type="TABLE">EMPLOYEES</object>
+                <object type="VIEW">PAYROLL_VIEW</object>
+                <object type="TABLE">DEPARTMENTS</object>
+            </references>
+        </dataset>
+
+        <!-- Dataset 2: Payroll detail by job title within each department -->
+        <dataset name="PAYROLL_BY_JOB_TITLE">
+            <sql>
+                SELECT
+                    d.DEPARTMENT_NAME,
+                    p.JOB_TITLE,
+                    COUNT(p.EMPLOYEE_ID)  AS HEADCOUNT,
+                    SUM(p.SALARY)         AS TOTAL_SALARY,
+                    MIN(p.SALARY)         AS MIN_SALARY,
+                    MAX(p.SALARY)         AS MAX_SALARY
+                FROM PAYROLL_VIEW p
+                JOIN DEPARTMENTS d ON d.DEPARTMENT_ID = p.DEPARTMENT_ID
+                GROUP BY d.DEPARTMENT_NAME, p.JOB_TITLE
+                ORDER BY d.DEPARTMENT_NAME, TOTAL_SALARY DESC
+            </sql>
+            <references>
+                <object type="VIEW">PAYROLL_VIEW</object>
                 <object type="TABLE">DEPARTMENTS</object>
             </references>
         </dataset>
