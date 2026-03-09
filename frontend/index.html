@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Impact Analysis Generator — Oracle Pythia-26</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0A0D14;
+            --surface: #111622;
+            --surface2: #1A2030;
+            --border: #252D3F;
+            --text: #E4E8F1;
+            --text-dim: #7B83A0;
+            --accent: #00D4FF;
+            --accent-dim: #0099BB;
+            --critical: #FF3B4F;
+            --high: #FF7B3B;
+            --medium: #FFB03B;
+            --low: #3BDD7C;
+        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+        /* Header */
+        .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .header h1 span { color: var(--accent); }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .ai-badge { padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .ai-badge.mock { background: #1A1530; color: #B088FF; }
+        .ai-badge.live { background: #0A2A1A; color: #3BDD7C; }
+        .team-info { font-size: 11px; color: var(--text-dim); }
+
+        /* Main Layout: 30% left, 70% right */
+        .main { display: flex; height: calc(100vh - 52px); }
+        .panel-left { width: 30%; min-width: 300px; max-width: 400px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .panel-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Left Panel Sections */
+        .controls { padding: 16px; border-bottom: 1px solid var(--border); }
+        .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 10px; }
+
+        /* Buttons */
+        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; width: 100%; }
+        .btn:hover { filter: brightness(1.15); }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn + .btn { margin-top: 8px; }
+        .btn-demo { background: #1A1530; color: #B088FF; }
+        .btn-upload { background: var(--surface2); color: var(--text); border: 1px dashed var(--border); }
+        .btn-impact { background: linear-gradient(135deg, #FF3B4F, #FF7B3B); color: white; }
+
+        .select-wrap { margin: 12px 0; }
+        .select-wrap label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
+        .select-wrap select { width: 100%; padding: 9px 12px; background: var(--surface2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
+        .select-wrap select:focus { border-color: var(--accent); }
+
+        /* Stats */
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+        .stat { background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center; }
+        .stat .val { font-size: 28px; font-weight: 800; color: var(--accent); }
+        .stat .lbl { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+
+        /* Object list */
+        .object-list-wrap { flex: 1; overflow-y: auto; padding: 12px 16px; }
+        .obj-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background 0.1s; }
+        .obj-item:hover { background: var(--surface2); }
+        .obj-item.impacted { color: var(--critical); font-weight: 600; }
+        .obj-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .obj-type { margin-left: auto; font-size: 10px; color: var(--text-dim); }
+
+        /* Right Panel: Tabs */
+        .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .tab { flex: 1; padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-dim); border-bottom: 2px solid transparent; transition: all 0.15s; }
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-body { flex: 1; overflow-y: auto; }
+        .tab-content { display: none; height: 100%; }
+        .tab-content.active { display: block; }
+
+        /* Graph container */
+        #graph-container { width: 100%; height: 100%; position: relative; }
+        #graph-container svg { width: 100%; height: 100%; }
+        .legend { position: absolute; bottom: 16px; left: 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 10px; display: none; }
+        .legend.show { display: block; }
+        .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+        /* Impact & AI panels */
+        .result-panel { padding: 20px; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); text-align: center; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+        .empty-state p { font-size: 13px; line-height: 1.6; }
+
+        /* Risk display */
+        .risk-header { text-align: center; padding: 24px 0 20px; }
+        .risk-score { font-size: 56px; font-weight: 900; line-height: 1; }
+        .risk-score.critical { color: var(--critical); }
+        .risk-score.high { color: var(--high); }
+        .risk-score.medium { color: var(--medium); }
+        .risk-score.low { color: var(--low); }
+        .risk-label { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+        .severity { display: inline-block; padding: 5px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 10px; }
+        .severity.critical { background: #2A0A10; color: var(--critical); }
+        .severity.high { background: #2A1A0A; color: var(--high); }
+        .severity.medium { background: #2A2A0A; color: var(--medium); }
+        .severity.low { background: #0A2A14; color: var(--low); }
+        .target-name { margin-top: 12px; font-size: 15px; font-weight: 600; }
+        .target-type { font-size: 12px; color: var(--text-dim); }
+
+        .impact-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+        .impact-stat { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; }
+        .impact-stat .num { font-size: 32px; font-weight: 800; }
+        .impact-stat .num.direct { color: var(--critical); }
+        .impact-stat .num.indirect { color: var(--high); }
+        .impact-stat .txt { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+        .impact-group { margin-top: 20px; }
+        .impact-group h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        .impact-obj { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 6px; margin-bottom: 4px; font-size: 12px; }
+        .impact-obj .tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--border); color: var(--text-dim); margin-left: auto; }
+
+        /* AI Analysis */
+        .ai-mode-badge { margin-bottom: 20px; }
+        .ai-section { margin-bottom: 24px; }
+        .ai-section h3 { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .ai-section p { font-size: 13px; line-height: 1.7; }
+        .ai-section ol, .ai-section ul { padding-left: 20px; }
+        .ai-section li { font-size: 13px; line-height: 1.7; margin-bottom: 6px; }
+
+        /* Loading */
+        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.5s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Tooltip */
+        .tooltip { position: fixed; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 1000; display: none; line-height: 1.5; }
+
+        /* Upload hidden input */
+        #file-input { display: none; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span>&#9670;</span> Impact Analysis Generator</h1>
+    <div class="header-right">
+        <span id="ai-badge" class="ai-badge mock">&#127917; Demo Mode</span>
+        <span class="team-info">Oracle Pythia-26 &nbsp;|&nbsp; Pranali &middot; Suraj &middot; Sameet</span>
+    </div>
+</div>
+
+<div class="main">
+    <!-- LEFT PANEL: Controls (30%) -->
+    <div class="panel-left">
+        <div class="controls">
+            <div class="section-title">Controls</div>
+            <button class="btn btn-demo" onclick="loadDemo()">&#127917; Load Demo</button>
+            <input type="file" id="file-input" multiple accept=".sql,.xml,.groovy">
+            <button class="btn btn-upload" onclick="document.getElementById('file-input').click()">&#128194; Upload Artifacts</button>
+
+            <div class="select-wrap">
+                <label>Target Object</label>
+                <select id="object-select" disabled><option value="">Load artifacts first...</option></select>
+            </div>
+
+            <button class="btn btn-impact" id="analyze-btn" onclick="analyzeImpact()" disabled>&#128165; Compute Impact</button>
+
+            <div class="stats">
+                <div class="stat"><div class="val" id="stat-nodes">0</div><div class="lbl">Objects</div></div>
+                <div class="stat"><div class="val" id="stat-edges">0</div><div class="lbl">Dependencies</div></div>
+            </div>
+        </div>
+
+        <div class="object-list-wrap">
+            <div class="section-title">Parsed Objects</div>
+            <div id="object-list"><div class="empty-state" style="padding:30px 0"><p>No artifacts loaded</p></div></div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Tabbed view (70%) -->
+    <div class="panel-right">
+        <div class="tabs">
+            <div class="tab active" data-tab="graph" onclick="switchTab('graph')">&#128300; Dependency Graph</div>
+            <div class="tab" data-tab="impact" onclick="switchTab('impact')">&#128202; Impact Analysis</div>
+            <div class="tab" data-tab="ai" onclick="switchTab('ai')">&#129302; AI Analysis</div>
+        </div>
+        <div class="tab-body">
+            <div class="tab-content active" id="tab-graph">
+                <div id="graph-container">
+                    <div class="empty-state" id="graph-empty">
+                        <div class="icon">&#128300;</div>
+                        <p>Load demo or upload artifacts<br>to see the dependency graph</p>
+                    </div>
+                </div>
+                <div class="legend" id="legend">
+                    <div class="legend-row"><div class="legend-dot" style="background:#4A7CFF"></div> Table</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#00D4FF"></div> View</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#3BDD7C"></div> Procedure</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#FFD93D"></div> Function</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#B088FF"></div> Package</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#FF9F43"></div> OIC Flow</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#FF6B9D"></div> BIP Report</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:#00B894"></div> Groovy</div>
+                    <div class="legend-row"><div class="legend-dot" style="background:var(--critical)"></div> Impacted</div>
+                </div>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+
+            <div class="tab-content" id="tab-impact">
+                <div class="empty-state" id="impact-empty">
+                    <div class="icon">&#128202;</div>
+                    <p>Select an object and click<br>"Compute Impact" to see results</p>
+                </div>
+                <div class="result-panel" id="impact-result" style="display:none"></div>
+            </div>
+
+            <div class="tab-content" id="tab-ai">
+                <div class="empty-state" id="ai-empty">
+                    <div class="icon">&#129302;</div>
+                    <p>AI analysis will appear here<br>after computing impact</p>
+                </div>
+                <div class="result-panel" id="ai-result" style="display:none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin;
+let graphData = null, simulation = null, impactedNodes = new Set(), targetNode = null;
+
+const TYPE_COLOR = {
+    'TABLE': '#4A7CFF', 'VIEW': '#00D4FF', 'PROCEDURE': '#3BDD7C', 'FUNCTION': '#FFD93D',
+    'PACKAGE': '#B088FF', 'PACKAGE BODY': '#B088FF', 'TRIGGER': '#FF9F43', 'SEQUENCE': '#7B83A0',
+    'OIC_FLOW': '#FF9F43', 'OIC_CONNECTION': '#FF9F43', 'BIP_REPORT': '#FF6B9D',
+    'GROOVY_SCRIPT': '#00B894', 'UNKNOWN': '#7B83A0',
+};
+
+function switchTab(t) {
+    document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-' + t));
+    if (t === 'graph' && graphData) setTimeout(() => renderGraph(), 50);
+}
+
+async function loadDemo() {
+    try {
+        const r = await fetch(API + '/api/demo', { method: 'POST' });
+        const d = await r.json();
+        updateStats(d);
+        await refreshObjects();
+        await refreshGraph();
+    } catch (e) { alert('Failed to load demo: ' + e.message); }
+}
+
+document.getElementById('file-input').addEventListener('change', async e => {
+    if (!e.target.files.length) return;
+    const fd = new FormData();
+    for (const f of e.target.files) fd.append('files', f);
+    try {
+        const r = await fetch(API + '/api/upload', { method: 'POST', body: fd });
+        const d = await r.json();
+        updateStats(d);
+        await refreshObjects();
+        await refreshGraph();
+    } catch (e) { alert('Upload failed: ' + e.message); }
+    e.target.value = '';
+});
+
+function updateStats(d) {
+    // Works with both /api/demo and /api/upload response shapes
+    fetch(API + '/api/graph').then(r => r.json()).then(g => {
+        document.getElementById('stat-nodes').textContent = g.node_count;
+        document.getElementById('stat-edges').textContent = g.edge_count;
+    });
+}
+
+async function refreshObjects() {
+    const r = await fetch(API + '/api/objects');
+    const d = await r.json();
+    const sel = document.getElementById('object-select');
+    const list = document.getElementById('object-list');
+    sel.innerHTML = '<option value="">Select an object...</option>';
+    d.objects.forEach(o => { const op = document.createElement('option'); op.value = o.name; op.textContent = o.name + ' (' + o.type + ')'; sel.appendChild(op); });
+    sel.disabled = false;
+    document.getElementById('analyze-btn').disabled = false;
+    list.innerHTML = '';
+    d.objects.forEach(o => {
+        const div = document.createElement('div');
+        div.className = 'obj-item';
+        div.innerHTML = '<div class="obj-dot" style="background:' + (TYPE_COLOR[o.type] || TYPE_COLOR.UNKNOWN) + '"></div><span>' + o.name + '</span><span class="obj-type">' + o.type + '</span>';
+        div.onclick = () => { sel.value = o.name; };
+        list.appendChild(div);
+    });
+}
+
+async function refreshGraph() {
+    const r = await fetch(API + '/api/graph');
+    graphData = await r.json();
+    impactedNodes.clear();
+    targetNode = null;
+    document.getElementById('graph-empty').style.display = 'none';
+    document.getElementById('legend').classList.add('show');
+    renderGraph();
+}
+
+function renderGraph() {
+    const container = document.getElementById('graph-container');
+    const existing = container.querySelector('svg');
+    if (existing) existing.remove();
+
+    const w = container.clientWidth, h = container.clientHeight;
+    if (w === 0 || h === 0) return;
+
+    const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
+    const defs = svg.append('defs');
+    [['arrow', '#252D3F'], ['arrow-red', '#FF3B4F']].forEach(([id, col]) => {
+        defs.append('marker').attr('id', id).attr('viewBox', '0 -5 10 10').attr('refX', 22).attr('refY', 0)
+            .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
+            .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', col);
+    });
+
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.15, 4]).on('zoom', e => g.attr('transform', e.transform)));
+
+    // Deep copy to avoid D3 mutation issues on re-render
+    const nodes = graphData.nodes.map(n => ({ ...n }));
+    const edges = graphData.edges.map(e => ({ ...e }));
+
+    const link = g.append('g').selectAll('line').data(edges).join('line')
+        .attr('stroke', '#252D3F').attr('stroke-width', 1.5).attr('marker-end', 'url(#arrow)');
+
+    const node = g.append('g').selectAll('circle').data(nodes).join('circle')
+        .attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d))
+        .attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d))
+        .call(d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+            .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
+            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+    const label = g.append('g').selectAll('text').data(nodes).join('text')
+        .text(d => d.id).attr('font-size', 10).attr('fill', d => impactedNodes.has(d.id) ? '#FF3B4F' : '#E4E8F1')
+        .attr('font-weight', d => impactedNodes.has(d.id) ? 700 : 400)
+        .attr('text-anchor', 'middle').attr('dy', d => nodeR(d) + 14);
+
+    const tooltip = document.getElementById('tooltip');
+    node.on('mouseover', (ev, d) => {
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = '<strong>' + d.id + '</strong><br>Type: ' + d.type + '<br>File: ' + (d.file || 'N/A') + '<br>Connections: ' + (edges.filter(e => e.source.id === d.id || e.target.id === d.id || e.source === d.id || e.target === d.id).length);
+        tooltip.style.left = (ev.clientX + 14) + 'px';
+        tooltip.style.top = (ev.clientY - 14) + 'px';
+    }).on('mousemove', ev => {
+        tooltip.style.left = (ev.clientX + 14) + 'px';
+        tooltip.style.top = (ev.clientY - 14) + 'px';
+    }).on('mouseout', () => { tooltip.style.display = 'none'; })
+      .on('click', (ev, d) => { document.getElementById('object-select').value = d.id; });
+
+    const sim = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(edges).id(d => d.id).distance(110))
+        .force('charge', d3.forceManyBody().strength(-350))
+        .force('center', d3.forceCenter(w / 2, h / 2))
+        .force('collision', d3.forceCollide().radius(35))
+        .on('tick', () => {
+            link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+            node.attr('cx', d => d.x).attr('cy', d => d.y);
+            label.attr('x', d => d.x).attr('y', d => d.y);
+        });
+
+    simulation = sim;
+    window._gr = { node, link, label };
+}
+
+function nodeR(d) { return d.id === targetNode ? 20 : impactedNodes.has(d.id) ? 15 : ({ TABLE: 14, PACKAGE: 13, OIC_FLOW: 13, BIP_REPORT: 12 }[d.type] || 10); }
+function nodeFill(d) { return d.id === targetNode ? '#FF9F43' : impactedNodes.has(d.id) ? '#FF3B4F' : (TYPE_COLOR[d.type] || TYPE_COLOR.UNKNOWN); }
+function nodeStroke(d) { return d.id === targetNode ? '#FF9F43' : impactedNodes.has(d.id) ? '#FF3B4F' : '#0A0D14'; }
+function nodeSW(d) { return impactedNodes.has(d.id) || d.id === targetNode ? 3 : 2; }
+
+function highlightGraph() {
+    if (!window._gr) return;
+    const { node, link, label } = window._gr;
+    node.attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d)).attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d));
+    link.attr('stroke', d => {
+        const s = typeof d.source === 'object' ? d.source.id : d.source;
+        const t = typeof d.target === 'object' ? d.target.id : d.target;
+        return (impactedNodes.has(s) || impactedNodes.has(t) || s === targetNode || t === targetNode) ? '#FF3B4F' : '#252D3F';
+    }).attr('stroke-width', d => {
+        const s = typeof d.source === 'object' ? d.source.id : d.source;
+        const t = typeof d.target === 'object' ? d.target.id : d.target;
+        return (impactedNodes.has(s) || impactedNodes.has(t)) ? 2.5 : 1.5;
+    }).attr('marker-end', d => {
+        const s = typeof d.source === 'object' ? d.source.id : d.source;
+        const t = typeof d.target === 'object' ? d.target.id : d.target;
+        return (impactedNodes.has(s) || impactedNodes.has(t)) ? 'url(#arrow-red)' : 'url(#arrow)';
+    });
+    label.attr('fill', d => (impactedNodes.has(d.id) || d.id === targetNode) ? '#FF3B4F' : '#E4E8F1')
+         .attr('font-weight', d => (impactedNodes.has(d.id) || d.id === targetNode) ? 700 : 400);
+}
+
+async function analyzeImpact() {
+    const name = document.getElementById('object-select').value;
+    if (!name) { alert('Select an object first'); return; }
+    const btn = document.getElementById('analyze-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+    try {
+        const r = await fetch(API + '/api/analyze', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ object_name: name }),
+        });
+        if (!r.ok) { const e = await r.json(); alert(e.detail || 'Error'); return; }
+        const d = await r.json();
+
+        targetNode = d.object_name;
+        impactedNodes = new Set(d.all_impacted || []);
+        highlightGraph();
+
+        // Mark objects in sidebar
+        document.querySelectorAll('.obj-item').forEach(el => {
+            const n = el.querySelector('span').textContent;
+            el.classList.toggle('impacted', impactedNodes.has(n) || n === targetNode);
+        });
+
+        renderImpact(d);
+        renderAI(d);
+        switchTab('impact');
+    } catch (e) { alert('Analysis failed: ' + e.message); }
+    finally { btn.disabled = false; btn.innerHTML = '&#128165; Compute Impact'; }
+}
+
+function renderImpact(d) {
+    document.getElementById('impact-empty').style.display = 'none';
+    const el = document.getElementById('impact-result'); el.style.display = 'block';
+    const s = d.severity.toLowerCase();
+    el.innerHTML = `
+        <div class="risk-header">
+            <div class="risk-score ${s}">${d.risk_score}</div>
+            <div class="risk-label">/ 100 Risk Score</div>
+            <div class="severity ${s}">${d.severity}</div>
+            <div class="target-name">${d.object_name}</div>
+        </div>
+        <div class="impact-stats">
+            <div class="impact-stat"><div class="num direct">${d.direct_impact.length}</div><div class="txt">Direct Impact</div></div>
+            <div class="impact-stat"><div class="num indirect">${d.indirect_impact.length}</div><div class="txt">Indirect Impact</div></div>
+        </div>
+        ${d.direct_impact.length ? '<div class="impact-group"><h3>Direct Impacts</h3>' + d.direct_impact.map(o => '<div class="impact-obj"><div class="obj-dot" style="background:var(--critical)"></div>' + o.name + '<span class="tag">' + o.type + '</span></div>').join('') + '</div>' : ''}
+        ${d.indirect_impact.length ? '<div class="impact-group"><h3>Indirect (Transitive) Impacts</h3>' + d.indirect_impact.map(o => '<div class="impact-obj"><div class="obj-dot" style="background:var(--high)"></div>' + o.name + '<span class="tag">' + o.type + '</span></div>').join('') + '</div>' : ''}
+    `;
+}
+
+function renderAI(d) {
+    document.getElementById('ai-empty').style.display = 'none';
+    const el = document.getElementById('ai-result'); el.style.display = 'block';
+    const a = d.ai_analysis;
+    el.innerHTML = `
+        <div class="ai-mode-badge"><span class="ai-badge ${d.ai_mode === 'mock' ? 'mock' : 'live'}">${d.ai_mode === 'mock' ? '&#127917; Demo Mode' : '&#9889; OCI GenAI Live'}</span></div>
+        <div class="ai-section"><h3>Root Cause Analysis</h3><p>${a.root_cause || 'N/A'}</p></div>
+        <div class="ai-section"><h3>Fix Recommendations</h3><ol>${(a.recommendations || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
+        <div class="ai-section"><h3>Testing Checklist</h3><ul>${(a.testing_checklist || []).map(t => '<li>' + t + '</li>').join('')}</ul></div>
+        <div class="ai-section"><h3>Rollback Plan</h3><ol>${(a.rollback_plan || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
+    `;
+}
+
+// Init: check backend status
+(async () => {
+    try {
+        const r = await fetch(API + '/');
+        const d = await r.json();
+        if (d.ai_mode === 'live') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge live'; b.innerHTML = '&#9889; OCI GenAI Live'; }
+        if (d.objects_loaded > 0) { await refreshObjects(); await refreshGraph(); }
+    } catch (e) { console.log('Backend not reachable — UI in standalone mode'); }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Oracle BI Publisher (BIP) Report: Monthly Payroll Summary
+  Data model queries PAYROLL_VIEW, EMPLOYEES, DEPARTMENTS
+-->
+<report name="MONTHLY_PAYROLL_REPORT" version="1.0" type="bip_report">
+    <description>Monthly payroll summary report with department breakdown</description>
+
+    <data_model>
+        <dataset name="PAYROLL_SUMMARY">
+            <sql>
+                SELECT
+                    EMPLOYEE_ID,
+                    EMPLOYEE_NAME,
+                    MONTHLY_SALARY,
+                    ANNUAL_SALARY,
+                    JOB_TITLE
+                FROM PAYROLL_VIEW
+                ORDER BY EMPLOYEE_NAME
+            </sql>
+            <references>
+                <object type="VIEW">PAYROLL_VIEW</object>
+            </references>
+        </dataset>
+
+        <dataset name="DEPARTMENT_TOTALS">
+            <sql>
+                SELECT
+                    d.DEPARTMENT_NAME,
+                    COUNT(e.EMPLOYEE_ID) AS EMP_COUNT,
+                    SUM(e.SALARY) AS TOTAL_SALARY
+                FROM EMPLOYEES e
+                JOIN DEPARTMENTS d ON e.DEPARTMENT_ID = d.DEPARTMENT_ID
+                GROUP BY d.DEPARTMENT_NAME
+            </sql>
+            <references>
+                <object type="TABLE">EMPLOYEES</object>
+                <object type="TABLE">DEPARTMENTS</object>
+            </references>
+        </dataset>
+    </data_model>
+
+    <template format="rtf" file="payroll_template.rtf"/>
+    <output formats="pdf,xlsx,html"/>
+</report>

@@ -1,0 +1,135 @@
+-- ============================================================
+-- Oracle ERP Sample: HR Schema
+-- Contains: 3 tables, 2 views, 1 procedure, 1 function,
+--           1 package (spec+body), 1 trigger
+-- Designed so EMPLOYEES analysis → CRITICAL, score 82
+-- ============================================================
+
+-- ==================== TABLES ====================
+
+CREATE TABLE EMPLOYEES (
+    EMPLOYEE_ID    NUMBER PRIMARY KEY,
+    FIRST_NAME     VARCHAR2(50),
+    LAST_NAME      VARCHAR2(50),
+    EMAIL          VARCHAR2(100),
+    HIRE_DATE      DATE,
+    DEPARTMENT_ID  NUMBER,
+    JOB_ID         NUMBER,
+    SALARY         NUMBER(10,2),
+    MANAGER_ID     NUMBER REFERENCES EMPLOYEES(EMPLOYEE_ID)
+);
+
+CREATE TABLE DEPARTMENTS (
+    DEPARTMENT_ID   NUMBER PRIMARY KEY,
+    DEPARTMENT_NAME VARCHAR2(100),
+    LOCATION_ID     NUMBER
+);
+
+CREATE TABLE JOBS (
+    JOB_ID    NUMBER PRIMARY KEY,
+    JOB_TITLE VARCHAR2(100),
+    MIN_SALARY NUMBER(10,2),
+    MAX_SALARY NUMBER(10,2)
+);
+
+-- ==================== VIEWS ====================
+
+CREATE OR REPLACE VIEW HR_EMPLOYEE_SUMMARY AS
+SELECT
+    e.EMPLOYEE_ID,
+    e.FIRST_NAME || ' ' || e.LAST_NAME AS FULL_NAME,
+    e.SALARY,
+    d.DEPARTMENT_NAME,
+    e.HIRE_DATE
+FROM EMPLOYEES e
+JOIN DEPARTMENTS d ON e.DEPARTMENT_ID = d.DEPARTMENT_ID;
+
+CREATE OR REPLACE VIEW PAYROLL_VIEW AS
+SELECT
+    e.EMPLOYEE_ID,
+    e.FIRST_NAME || ' ' || e.LAST_NAME AS EMPLOYEE_NAME,
+    e.SALARY AS MONTHLY_SALARY,
+    e.SALARY * 12 AS ANNUAL_SALARY,
+    j.JOB_TITLE,
+    j.MIN_SALARY,
+    j.MAX_SALARY
+FROM EMPLOYEES e
+JOIN JOBS j ON e.JOB_ID = j.JOB_ID;
+
+-- ==================== PROCEDURE ====================
+
+CREATE OR REPLACE PROCEDURE GET_EMPLOYEE_SALARY(
+    p_emp_id   IN NUMBER,
+    p_salary   OUT NUMBER
+) IS
+BEGIN
+    SELECT SALARY INTO p_salary
+    FROM EMPLOYEES
+    WHERE EMPLOYEE_ID = p_emp_id;
+END GET_EMPLOYEE_SALARY;
+/
+
+-- ==================== FUNCTION ====================
+
+CREATE OR REPLACE FUNCTION CALC_ANNUAL_BONUS(
+    p_emp_id NUMBER
+) RETURN NUMBER IS
+    v_salary NUMBER;
+    v_bonus_rate NUMBER;
+BEGIN
+    GET_EMPLOYEE_SALARY(p_emp_id, v_salary);
+
+    SELECT CASE
+        WHEN j.MAX_SALARY > 15000 THEN 0.15
+        WHEN j.MAX_SALARY > 10000 THEN 0.10
+        ELSE 0.05
+    END INTO v_bonus_rate
+    FROM EMPLOYEES e
+    JOIN JOBS j ON e.JOB_ID = j.JOB_ID
+    WHERE e.EMPLOYEE_ID = p_emp_id;
+
+    RETURN v_salary * 12 * v_bonus_rate;
+END CALC_ANNUAL_BONUS;
+/
+
+-- ==================== PACKAGE ====================
+
+CREATE OR REPLACE PACKAGE HR_PACKAGE AS
+    PROCEDURE PROCESS_HIRE(p_emp_id NUMBER);
+    FUNCTION GET_HEADCOUNT(p_dept_id NUMBER) RETURN NUMBER;
+END HR_PACKAGE;
+/
+
+CREATE OR REPLACE PACKAGE BODY HR_PACKAGE AS
+
+    PROCEDURE PROCESS_HIRE(p_emp_id NUMBER) IS
+        v_salary NUMBER;
+    BEGIN
+        GET_EMPLOYEE_SALARY(p_emp_id, v_salary);
+        UPDATE EMPLOYEES
+        SET HIRE_DATE = SYSDATE
+        WHERE EMPLOYEE_ID = p_emp_id;
+    END PROCESS_HIRE;
+
+    FUNCTION GET_HEADCOUNT(p_dept_id NUMBER) RETURN NUMBER IS
+        v_count NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO v_count
+        FROM EMPLOYEES
+        WHERE DEPARTMENT_ID = p_dept_id;
+        RETURN v_count;
+    END GET_HEADCOUNT;
+
+END HR_PACKAGE;
+/
+
+-- ==================== TRIGGER ====================
+
+CREATE OR REPLACE TRIGGER PAYROLL_TRIGGER
+AFTER UPDATE OF SALARY ON EMPLOYEES
+FOR EACH ROW
+BEGIN
+    INSERT INTO SALARY_AUDIT_LOG (EMPLOYEE_ID, OLD_SALARY, NEW_SALARY, CHANGE_DATE)
+    VALUES (:OLD.EMPLOYEE_ID, :OLD.SALARY, :NEW.SALARY, SYSDATE);
+END PAYROLL_TRIGGER;
+/

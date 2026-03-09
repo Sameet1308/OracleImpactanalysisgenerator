@@ -1,0 +1,16 @@
+[Unit]
+Description=Impact Analysis Generator — Oracle Pythia-26
+After=network.target
+
+[Service]
+Type=simple
+User=opc
+WorkingDirectory=/opt/impact-analyzer/backend
+Environment=PATH=/opt/impact-analyzer/venv/bin:/usr/local/bin:/usr/bin
+EnvironmentFile=/opt/impact-analyzer/backend/.env
+ExecStart=/opt/impact-analyzer/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

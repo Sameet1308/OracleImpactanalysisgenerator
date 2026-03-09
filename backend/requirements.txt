@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+networkx
+sqlparse
+pydantic
+python-dotenv
+oci
+reportlab

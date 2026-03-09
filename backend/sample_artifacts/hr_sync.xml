@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Oracle Integration Cloud (OIC) Flow: HR Employee Sync
+  Syncs employee data from Oracle HCM to external payroll system
+  References: HR_EMPLOYEE_SUMMARY view, GET_EMPLOYEE_SALARY procedure, EMPLOYEES table
+-->
+<integration name="HR_EMPLOYEE_SYNC" version="1.0" type="scheduled_orchestration">
+    <description>Scheduled sync of employee records from HCM to external payroll</description>
+
+    <connections>
+        <connection name="HCM_ADAPTER" type="oracle_hcm_cloud" adapter="rest">
+            <property name="base_url">https://hcm.example.com/hcmRestApi/resources</property>
+        </connection>
+        <connection name="PAYROLL_DB_CONN" type="oracle_db" adapter="database">
+            <property name="service_name">PAYROLL_SVC</property>
+        </connection>
+    </connections>
+
+    <orchestration>
+        <schedule cron="0 0 2 * * ?"/>
+
+        <step name="FETCH_EMPLOYEES" type="invoke">
+            <connection ref="HCM_ADAPTER"/>
+            <operation>GET /emps</operation>
+            <query>SELECT EMPLOYEE_ID, FULL_NAME, SALARY, DEPARTMENT_NAME FROM HR_EMPLOYEE_SUMMARY</query>
+            <references>
+                <object type="VIEW">HR_EMPLOYEE_SUMMARY</object>
+            </references>
+        </step>
+
+        <step name="TRANSFORM_DATA" type="xslt_mapping">
+            <input ref="FETCH_EMPLOYEES"/>
+            <mapping file="emp_transform.xsl"/>
+            <references>
+                <object type="TABLE">EMPLOYEES</object>
+            </references>
+        </step>
+
+        <step name="CALC_SALARY" type="invoke">
+            <connection ref="PAYROLL_DB_CONN"/>
+            <operation>CALL</operation>
+            <procedure>GET_EMPLOYEE_SALARY</procedure>
+            <references>
+                <object type="PROCEDURE">GET_EMPLOYEE_SALARY</object>
+            </references>
+        </step>
+
+        <step name="UPDATE_PAYROLL" type="invoke">
+            <connection ref="PAYROLL_DB_CONN"/>
+            <operation>MERGE</operation>
+            <target_table>EMPLOYEES</target_table>
+            <references>
+                <object type="TABLE">EMPLOYEES</object>
+            </references>
+        </step>
+    </orchestration>
+
+    <error_handling>
+        <on_error action="notify">
+            <notification email="hr-admin@example.com"/>
+        </on_error>
+    </error_handling>
+</integration>
