@@ -11,3 +11,9 @@ venv/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Internal reference docs (keep local only)
+docs/knowledge-base/
+docs/DEMO_GUIDE.md
+docs/README.md
+PROGRESS.md
