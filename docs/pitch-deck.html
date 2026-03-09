@@ -152,7 +152,7 @@
             <p class="subtitle">AI-powered cross-artifact dependency mapping<br>for Oracle ERP — from days to seconds</p>
             <div style="margin-top:40px;display:flex;gap:20px;justify-content:center">
                 <span class="badge badge-accent">OCI Generative AI</span>
-                <span class="badge badge-accent">Cohere Command R+</span>
+                <span class="badge badge-accent">Cohere Command A</span>
                 <span class="badge badge-accent">Oracle SDLC</span>
             </div>
             <div style="margin-top:40px;font-size:14px;color:var(--dim)">Team: Sameet (Lead) &middot; Pranali &middot; Suraj</div>
@@ -173,7 +173,7 @@
             </ul>
             <div class="highlight-box center">
                 <h3>Root Cause: Cross-artifact dependency mapping <span class="red">does not exist</span></h3>
-                <p style="color:var(--dim);margin-top:8px;font-size:15px">Manual assessment is incomplete, error-prone, and takes days. Oracle's DBA_DEPENDENCIES misses OIC, BIP, and Groovy references entirely.</p>
+                <p style="color:var(--dim);margin-top:8px;font-size:15px">Oracle's <strong>DBA_DEPENDENCIES</strong> only tracks PL/SQL object relationships within the database. OIC Gen3 Projects visualize intra-project integration dependencies — but <strong>neither tool maps dependencies across PL/SQL, OIC flows, BIP reports, and Groovy scripts simultaneously</strong>. Even Oracle's 600+ Fusion AI agents (26A release) focus on finance, HR, and SCM workflows — none address cross-artifact impact analysis.</p>
             </div>
         </div>
     </div>
@@ -226,12 +226,12 @@
                 <div class="usp-card u1">
                     <div class="tag accent">USP 1</div>
                     <h4>Cross-Artifact Mapping</h4>
-                    <p>First tool to map dependencies ACROSS SQL, OIC, BIP, and Groovy simultaneously. Oracle's DBA_DEPENDENCIES only sees PL/SQL — we see everything.</p>
+                    <p>First tool to map dependencies ACROSS PL/SQL, OIC, BIP, and Groovy simultaneously. DBA_DEPENDENCIES covers only PL/SQL objects. OIC Gen3 Projects visualize only intra-project resources. We bridge both — and add BIP + Groovy.</p>
                 </div>
                 <div class="usp-card u2">
                     <div class="tag" style="color:var(--accent2)">USP 2</div>
                     <h4>AI-Powered Fix Plans</h4>
-                    <p>OCI Generative AI (Cohere Command R+) generates root cause analysis, 5 actionable fix steps, testing checklist, and rollback plan — not just "what breaks" but "how to fix it".</p>
+                    <p>OCI Generative AI (Cohere Command A — 256K context, 150% faster than Command R+) generates root cause analysis, 5 actionable fix steps, testing checklist, and rollback plan — not just "what breaks" but "how to fix it".</p>
                 </div>
                 <div class="usp-card u3">
                     <div class="tag" style="color:var(--orange)">USP 3</div>
@@ -253,8 +253,8 @@
             <div class="two-col">
                 <div>
                     <div style="font-size:12px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">The AI Engine</div>
-                    <h2>OCI Generative AI<br><span class="gradient-text">Cohere Command R+</span></h2>
-                    <p class="subtitle" style="font-size:16px">Not just dependency detection — AI that understands Oracle ERP semantics and generates actionable intelligence</p>
+                    <h2>OCI Generative AI<br><span class="gradient-text">Cohere Command A</span></h2>
+                    <p class="subtitle" style="font-size:16px">Not just dependency detection — AI that understands Oracle ERP semantics and generates actionable intelligence. Command A: 256K context, agentic enterprise tasks, 150% throughput vs Command R+.</p>
                     <div class="ai-flow">
                         <div class="ai-step">
                             <div class="ai-num">1</div>
@@ -291,11 +291,13 @@
                             &nbsp;&nbsp;ONBOARDING_FLOW
                         </div>
                         <div style="margin-top:16px">
-                            <p><strong>Why OCI GenAI?</strong></p>
-                            <p style="margin-top:6px">&#10003; Native OCI integration — no external API calls<br>
-                            &#10003; Cohere Command R+ excels at structured analysis<br>
+                            <p><strong>Why OCI GenAI + Command A?</strong></p>
+                            <p style="margin-top:6px">&#10003; Native OCI — runs inside your tenancy, no external API calls<br>
+                            &#10003; 256K token context — fits entire ERP schemas in one prompt<br>
+                            &#10003; Optimized for agentic enterprise tasks (Cohere benchmark)<br>
+                            &#10003; 150% throughput vs Command R+ on same GPU<br>
                             &#10003; 30s timeout with graceful mock fallback<br>
-                            &#10003; Oracle-specific prompt engineering</p>
+                            &#10003; Also supports Llama 4, Grok 4, gpt-oss on OCI</p>
                         </div>
                     </div>
                 </div>
@@ -326,18 +328,11 @@
                 </div>
             </div>
             <div class="highlight-box center mt-40">
-                <h3>Supported Oracle Artifact Types</h3>
-                <div style="display:flex;gap:12px;justify-content:center;margin-top:16px;flex-wrap:wrap">
-                    <span class="badge badge-accent">TABLE</span>
-                    <span class="badge badge-accent">VIEW</span>
-                    <span class="badge badge-accent">PROCEDURE</span>
-                    <span class="badge badge-accent">FUNCTION</span>
-                    <span class="badge badge-accent">PACKAGE</span>
-                    <span class="badge badge-accent">TRIGGER</span>
-                    <span class="badge badge-accent">SEQUENCE</span>
-                    <span class="badge badge-accent">OIC Flow</span>
-                    <span class="badge badge-accent">BIP Report</span>
-                    <span class="badge badge-accent">Groovy Script</span>
+                <h3>Fills the Gap No Oracle Tool Covers</h3>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px;text-align:left;font-size:13px">
+                    <div><strong style="color:var(--dim)">DBA_DEPENDENCIES</strong><br>&#10003; PL/SQL objects<br><span class="red">&#10007; OIC, BIP, Groovy</span></div>
+                    <div><strong style="color:var(--dim)">OIC Gen3 Projects</strong><br>&#10003; Intra-project resources<br><span class="red">&#10007; PL/SQL, BIP, Groovy</span></div>
+                    <div><strong style="color:var(--accent)">Our Tool</strong><br>&#10003; PL/SQL + OIC + BIP + Groovy<br><span class="green">&#10003; Cross-artifact mapping</span></div>
                 </div>
             </div>
         </div>
@@ -390,7 +385,7 @@
                 <div class="arch-arrow">&#9660;</div>
                 <div class="arch-row">
                     <div class="arch-box" style="border-color:var(--orange)">&#128306; NetworkX Graph<br><span style="font-size:11px;color:var(--dim)">DiGraph • BFS Traversal</span></div>
-                    <div class="arch-box highlight">&#129302; OCI Generative AI<br><span style="font-size:11px;color:var(--dim)">Cohere Command R+</span></div>
+                    <div class="arch-box highlight">&#129302; OCI Generative AI<br><span style="font-size:11px;color:var(--dim)">Cohere Command A (256K)</span></div>
                 </div>
                 <div class="arch-arrow">&#9660;</div>
                 <div class="arch-row">
@@ -401,7 +396,8 @@
             </div>
             <div style="margin-top:30px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
                 <span class="badge badge-accent">OCI Compute</span>
-                <span class="badge badge-accent">OCI Generative AI</span>
+                <span class="badge badge-accent">OCI Compute</span>
+                <span class="badge badge-accent">OCI GenAI (Command A)</span>
                 <span class="badge badge-accent">FastAPI</span>
                 <span class="badge badge-accent">NetworkX</span>
                 <span class="badge badge-accent">D3.js</span>
@@ -431,7 +427,7 @@
                     <div style="font-size:48px;margin-bottom:12px">&#129302;</div>
                     <h4>Step 3: AI Analysis</h4>
                     <p>Switch to AI tab — root cause, 5 fix steps, testing checklist, rollback plan. Download PDF report.</p>
-                    <div style="margin-top:12px;font-size:12px;color:var(--accent)">OCI GenAI • Cohere Command R+</div>
+                    <div style="margin-top:12px;font-size:12px;color:var(--accent)">OCI GenAI • Cohere Command A</div>
                 </div>
             </div>
             <div class="highlight-box mt-40">
@@ -484,7 +480,7 @@
                 </div>
             </div>
             <div style="margin-top:40px;font-size:13px;color:var(--dim)">
-                Built with OCI Generative AI (Cohere Command R+) &middot; FastAPI &middot; NetworkX &middot; D3.js
+                Built with OCI Generative AI (Cohere Command A) &middot; OCI Compute &middot; FastAPI &middot; NetworkX &middot; D3.js
             </div>
         </div>
     </div>

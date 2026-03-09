@@ -49,7 +49,7 @@ frontend/index.html (D3.js) ──HTTP──▶ FastAPI :8000 ──▶ Parsers 
 
 - **Parsers** (`backend/parsers/`): sql_parser (sqlparse + regex), oic_parser (xml.etree), groovy_parser (regex). Dispatcher in `__init__.py` routes by file extension.
 - **Graph Engine** (`backend/graph/engine.py`): NetworkX DiGraph. Edge A→B means A depends on B. Impact analysis walks predecessors (reverse). Score = 52% direct + 18% indirect + 30% type criticality.
-- **AI Module** (`backend/ai/oci_genai.py`): Mock returns structured dict with root_cause, recommendations, testing_checklist, rollback_plan. Live mode calls OCI Generative AI (Cohere Command R+) via `oci` SDK.
+- **AI Module** (`backend/ai/oci_genai.py`): Mock returns structured dict with root_cause, recommendations, testing_checklist, rollback_plan. Live mode calls OCI Generative AI (Cohere Command A) via `oci` SDK.
 - **Frontend**: Dark theme, 30/70 left-right layout. Left = controls. Right = 3 tabs (Graph, Impact, AI). D3.js force-directed graph with type-colored nodes. Impacted nodes turn red.
 
 ## Environment Variables (for OCI live mode)
@@ -58,7 +58,7 @@ frontend/index.html (D3.js) ──HTTP──▶ FastAPI :8000 ──▶ Parsers 
 OCI_GENAI_ENABLED=true
 OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxx
 OCI_REGION=us-chicago-1
-OCI_MODEL_ID=cohere.command-r-plus
+OCI_MODEL_ID=cohere.command-a-03-2025
 ```
 
 ## Verified Metrics

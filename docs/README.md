@@ -23,7 +23,7 @@ Upload your Oracle artifacts → the tool parses every object and dependency acr
 │  Backend (FastAPI)       │  Python, 6 endpoints
 │  ├─ Parsers              │  SQL/PL/SQL, OIC XML, BIP XML, Groovy
 │  ├─ Graph Engine         │  NetworkX directed dependency graph
-│  └─ AI Module            │  OCI GenAI (Cohere Command R+) + mock
+│  └─ AI Module            │  OCI GenAI (Cohere Command A) + mock
 └──────────────────────────┘
 ```
 
@@ -65,7 +65,7 @@ bash deploy/deploy.sh --region us-chicago-1 --compartment ocid1.compartment.oc1.
 | Backend | FastAPI + Python |
 | Parsers | sqlparse, xml.etree.ElementTree, regex |
 | Graph | NetworkX (directed graph, transitive traversal) |
-| AI | OCI Generative AI — Cohere Command R+ (with mock fallback) |
+| AI | OCI Generative AI — Cohere Command A (with mock fallback) |
 | Deploy | OCI Compute + systemd |
 
 ## Key Metrics

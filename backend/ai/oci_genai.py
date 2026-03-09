@@ -3,7 +3,7 @@ OCI Generative AI Client — generates root cause analysis and fix recommendatio
 
 Two modes:
   - Mock (default): deterministic structured output for demo without credentials
-  - Live: calls OCI Generative AI (Cohere Command R+) via oci SDK
+  - Live: calls OCI Generative AI (Cohere Command A — 256K context, agentic) via oci SDK
 
 Toggle via OCI_GENAI_ENABLED environment variable.
 """
@@ -15,7 +15,7 @@ from typing import Any, Dict
 OCI_GENAI_ENABLED = os.getenv("OCI_GENAI_ENABLED", "false").lower() == "true"
 OCI_COMPARTMENT_ID = os.getenv("OCI_COMPARTMENT_ID", "")
 OCI_REGION = os.getenv("OCI_REGION", "us-chicago-1")
-OCI_MODEL_ID = os.getenv("OCI_MODEL_ID", "cohere.command-r-plus")
+OCI_MODEL_ID = os.getenv("OCI_MODEL_ID", "cohere.command-a-03-2025")
 OCI_ENDPOINT = f"https://inference.generativeai.{OCI_REGION}.oci.oraclecloud.com"
 OCI_TIMEOUT = 30  # seconds
 
