@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Impact Analysis Generator — Oracle Pythia-26</title>
+    <title>Oracle Impact Analyzer — Cross-Artifact Dependency Analysis</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -194,10 +194,10 @@
 <body>
 
 <div class="header">
-    <h1><span>&#9670;</span> Impact Analysis Generator</h1>
+    <h1><span>&#9670;</span> Oracle Impact Analyzer</h1>
     <div class="header-right">
         <span id="ai-badge" class="ai-badge mock">&#127917; Demo Mode</span>
-        <span class="team-info">Oracle Pythia-26 &nbsp;|&nbsp; Pranali &middot; Suraj &middot; Sameet</span>
+        <span class="team-info">Cross-Artifact Dependency Analysis</span>
     </div>
 </div>
 
@@ -265,10 +265,12 @@
                         <div class="legend-row"><div class="legend-line" style="background:#D9D9D9;height:1px;width:20px"></div> No impact</div>
                     </div>
                     <div class="legend-section">
+                        <div class="legend-subtitle">Flow (left → right)</div>
+                        <div class="legend-hint">Data → Logic → Integration → Output</div>
                         <div class="legend-subtitle">Interactions</div>
                         <div class="legend-hint">Click node for details</div>
-                        <div class="legend-hint">Scroll to zoom</div>
-                        <div class="legend-hint">Drag to reposition</div>
+                        <div class="legend-hint">Drag to reposition (stays pinned)</div>
+                        <div class="legend-hint">Scroll to zoom, drag bg to pan</div>
                     </div>
                 </div>
                 <div class="node-card" id="node-card"></div>
@@ -316,22 +318,46 @@ const TYPE_COLOR = {
     'GROOVY_SCRIPT': '#00695C', 'UNKNOWN': '#757575',
 };
 
-const TYPE_GROUPS = {
-    'TABLE': { label: 'Tables', x: 0.10, y: 0.20 },
-    'VIEW': { label: 'Views', x: 0.10, y: 0.75 },
-    'PROCEDURE': { label: 'Procedures', x: 0.38, y: 0.15 },
-    'FUNCTION': { label: 'Functions', x: 0.38, y: 0.50 },
-    'PACKAGE': { label: 'Packages', x: 0.38, y: 0.82 },
-    'PACKAGE BODY': { label: 'Packages', x: 0.38, y: 0.82 },
-    'TRIGGER': { label: 'Triggers', x: 0.60, y: 0.82 },
-    'SEQUENCE': { label: 'Sequences', x: 0.60, y: 0.50 },
-    'OIC_FLOW': { label: 'OIC Integrations', x: 0.85, y: 0.18 },
-    'OIC_CONNECTION': { label: 'OIC Integrations', x: 0.85, y: 0.18 },
-    'BIP_REPORT': { label: 'BIP Reports', x: 0.85, y: 0.55 },
-    'GROOVY_SCRIPT': { label: 'Groovy Scripts', x: 0.85, y: 0.85 },
-    'UNKNOWN': { label: 'Other', x: 0.55, y: 0.15 },
+// Left-to-right flow: Data Layer → Logic Layer → Integration Layer
+// col = horizontal position (0-1), row used for vertical spreading
+const TYPE_LAYERS = {
+    // Col 1: Data Layer (left)
+    'TABLE':          { label: 'Data Layer',        col: 0.12 },
+    'VIEW':           { label: 'Data Layer',        col: 0.12 },
+    'SEQUENCE':       { label: 'Data Layer',        col: 0.12 },
+    // Col 2: Logic Layer (center-left)
+    'PROCEDURE':      { label: 'Logic Layer',       col: 0.37 },
+    'FUNCTION':       { label: 'Logic Layer',       col: 0.37 },
+    'PACKAGE':        { label: 'Logic Layer',       col: 0.37 },
+    'PACKAGE BODY':   { label: 'Logic Layer',       col: 0.37 },
+    'TRIGGER':        { label: 'Logic Layer',       col: 0.37 },
+    // Col 3: Integration Layer (center-right)
+    'OIC_FLOW':       { label: 'Integration Layer', col: 0.62 },
+    'OIC_CONNECTION': { label: 'Integration Layer', col: 0.62 },
+    // Col 4: Reporting & Scripts (right)
+    'BIP_REPORT':     { label: 'Output Layer',      col: 0.87 },
+    'GROOVY_SCRIPT':  { label: 'Output Layer',      col: 0.87 },
+    'UNKNOWN':        { label: 'Other',             col: 0.50 },
 };
-function getGroup(type) { return TYPE_GROUPS[type] || TYPE_GROUPS.UNKNOWN; }
+function getLayer(type) { return TYPE_LAYERS[type] || TYPE_LAYERS.UNKNOWN; }
+
+// Pre-compute vertical positions: spread nodes evenly within each column
+function assignInitialPositions(nodes, vw, vh) {
+    const cols = {};
+    nodes.forEach(n => {
+        const col = getLayer(n.type).col;
+        if (!cols[col]) cols[col] = [];
+        cols[col].push(n);
+    });
+    Object.entries(cols).forEach(([col, members]) => {
+        const x = parseFloat(col) * vw;
+        const spacing = vh / (members.length + 1);
+        members.forEach((n, i) => {
+            n.x = x + (Math.random() - 0.5) * 30; // slight jitter
+            n.y = spacing * (i + 1);
+        });
+    });
+}
 
 function switchTab(t) {
     document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
@@ -429,9 +455,9 @@ function renderGraph() {
         .attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d))
         .attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d))
         .attr('cursor', 'pointer')
-        .call(d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+        .call(d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.1).restart(); d.fx = d.x; d.fy = d.y; })
             .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); /* keep pinned: fx/fy stay set */ }));
 
     const label = g.append('g').selectAll('text').data(nodes).join('text')
         .text(d => d.id).attr('font-size', 10)
@@ -479,19 +505,21 @@ function renderGraph() {
     svg.on('click', () => { document.getElementById('node-card').style.display = 'none'; });
 
     // Use a larger virtual canvas so nodes have room; user pans/zooms to explore
-    const vw = Math.max(w * 1.8, 1400), vh = Math.max(h * 1.8, 1000);
-    // Auto-center the view on the virtual canvas
+    const vw = Math.max(w * 1.6, 1200), vh = Math.max(h * 1.4, 800);
+    // Pre-assign structured positions before simulation starts
+    assignInitialPositions(nodes, vw, vh);
+    // Auto-center the view
     const initTransform = d3.zoomIdentity.translate(-(vw - w) / 2, -(vh - h) / 2);
     g.attr('transform', initTransform);
 
-    // Grouped layout with cluster forces
-    const groupStrength = isMobile ? 0 : 0.15;
+    // Structured flow layout: strong horizontal column force, gentle vertical + link forces
+    const colStrength = isMobile ? 0 : 0.6;  // strong: keep columns aligned
     const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(edges).id(d => d.id).distance(140).strength(0.2))
-        .force('charge', d3.forceManyBody().strength(-400))
-        .force('groupX', d3.forceX(d => getGroup(d.type).x * vw).strength(groupStrength))
-        .force('groupY', d3.forceY(d => getGroup(d.type).y * vh).strength(groupStrength))
-        .force('collision', d3.forceCollide().radius(40));
+        .force('link', d3.forceLink(edges).id(d => d.id).distance(120).strength(0.15))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('colX', d3.forceX(d => getLayer(d.type).col * vw).strength(colStrength))
+        .force('spreadY', d3.forceY(vh / 2).strength(0.02))
+        .force('collision', d3.forceCollide().radius(45));
 
     let tickCount = 0;
     sim.on('tick', () => {
@@ -512,7 +540,7 @@ function drawClusterBackgrounds(g, nodes) {
     g.selectAll('.cluster-label').remove();
     const groups = {};
     nodes.forEach(n => {
-        const grp = getGroup(n.type).label;
+        const grp = getLayer(n.type).label;
         if (!groups[grp]) groups[grp] = [];
         groups[grp].push(n);
     });
@@ -543,34 +571,38 @@ function nodeSW(d) { return impactedNodes.has(d.id) || d.id === targetNode ? 3 :
 function highlightGraph() {
     if (!window._gr) return;
     const { node, link, label } = window._gr;
-    node.attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d)).attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d));
-    link.attr('stroke', d => {
+    const hasImpact = targetNode !== null;
+    const relevantNodes = new Set(impactedNodes);
+    if (targetNode) relevantNodes.add(targetNode);
+
+    // Nodes: impacted = bright + large, unrelated = faded small
+    node.attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d))
+        .attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d))
+        .attr('opacity', d => hasImpact ? (relevantNodes.has(d.id) ? 1 : 0.15) : 1);
+
+    // Edges: classify and fade unrelated
+    link.each(function(d) {
         const s = typeof d.source === 'object' ? d.source.id : d.source;
         const t = typeof d.target === 'object' ? d.target.id : d.target;
-        const sImp = impactedNodes.has(s) || s === targetNode;
-        const tImp = impactedNodes.has(t) || t === targetNode;
-        if (sImp && tImp) return THEME.edgeCritical;
-        if (sImp || tImp) return THEME.edgeHigh;
-        return THEME.edgeDefault;
-    }).attr('stroke-width', d => {
-        const s = typeof d.source === 'object' ? d.source.id : d.source;
-        const t = typeof d.target === 'object' ? d.target.id : d.target;
-        const sImp = impactedNodes.has(s) || s === targetNode;
-        const tImp = impactedNodes.has(t) || t === targetNode;
-        if (sImp && tImp) return 3;
-        if (sImp || tImp) return 2;
-        return 1;
-    }).attr('marker-end', d => {
-        const s = typeof d.source === 'object' ? d.source.id : d.source;
-        const t = typeof d.target === 'object' ? d.target.id : d.target;
-        const sImp = impactedNodes.has(s) || s === targetNode;
-        const tImp = impactedNodes.has(t) || t === targetNode;
-        if (sImp && tImp) return 'url(#arrow-critical)';
-        if (sImp || tImp) return 'url(#arrow-high)';
-        return 'url(#arrow)';
+        const sImp = relevantNodes.has(s);
+        const tImp = relevantNodes.has(t);
+        const el = d3.select(this);
+        if (sImp && tImp) {
+            el.attr('stroke', THEME.edgeCritical).attr('stroke-width', 3)
+              .attr('marker-end', 'url(#arrow-critical)').attr('opacity', 1);
+        } else if (sImp || tImp) {
+            el.attr('stroke', THEME.edgeHigh).attr('stroke-width', 2)
+              .attr('marker-end', 'url(#arrow-high)').attr('opacity', 0.8);
+        } else {
+            el.attr('stroke', THEME.edgeDefault).attr('stroke-width', 1)
+              .attr('marker-end', 'url(#arrow)').attr('opacity', hasImpact ? 0.08 : 1);
+        }
     });
-    label.attr('fill', d => (impactedNodes.has(d.id) || d.id === targetNode) ? THEME.labelImpacted : THEME.labelDefault)
-         .attr('font-weight', d => (impactedNodes.has(d.id) || d.id === targetNode) ? 700 : 400);
+
+    // Labels: impacted = red bold, unrelated = faded
+    label.attr('fill', d => relevantNodes.has(d.id) ? THEME.labelImpacted : THEME.labelDefault)
+         .attr('font-weight', d => relevantNodes.has(d.id) ? 700 : 400)
+         .attr('opacity', d => hasImpact ? (relevantNodes.has(d.id) ? 1 : 0.15) : 1);
 }
 
 async function analyzeImpact() {
