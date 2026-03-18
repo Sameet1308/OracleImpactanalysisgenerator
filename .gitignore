@@ -17,3 +17,10 @@ docs/knowledge-base/
 docs/DEMO_GUIDE.md
 docs/README.md
 PROGRESS.md
+
+# Local-only files
+node_modules/
+package.json
+package-lock.json
+pitch_deck.*
+.claude/
