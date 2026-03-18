@@ -31,6 +31,7 @@
         .ai-badge { padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .ai-badge.mock { background: #1A1530; color: #B088FF; }
         .ai-badge.live { background: #0A2A1A; color: #3BDD7C; }
+        .ai-badge.blueverse { background: #0F1A3A; color: #6C8FFF; }
         .team-info { font-size: 11px; color: var(--text-dim); }
 
         /* Main Layout: 30% left, 70% right */
@@ -484,8 +485,10 @@ function renderAI(d) {
     document.getElementById('ai-empty').style.display = 'none';
     const el = document.getElementById('ai-result'); el.style.display = 'block';
     const a = d.ai_analysis;
+    const badgeClass = d.ai_mode === 'blueverse' ? 'blueverse' : d.ai_mode === 'live' ? 'live' : 'mock';
+    const badgeText = d.ai_mode === 'blueverse' ? '&#128302; BlueVerse Agent Live' : d.ai_mode === 'live' ? '&#9889; OCI GenAI Live' : '&#127917; Demo Mode';
     el.innerHTML = `
-        <div class="ai-mode-badge"><span class="ai-badge ${d.ai_mode === 'mock' ? 'mock' : 'live'}">${d.ai_mode === 'mock' ? '&#127917; Demo Mode' : '&#9889; OCI GenAI Live'}</span></div>
+        <div class="ai-mode-badge"><span class="ai-badge ${badgeClass}">${badgeText}</span></div>
         <div class="ai-section"><h3>Root Cause Analysis</h3><p>${a.root_cause || 'N/A'}</p></div>
         <div class="ai-section"><h3>Fix Recommendations</h3><ol>${(a.recommendations || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
         <div class="ai-section"><h3>Testing Checklist</h3><ul>${(a.testing_checklist || []).map(t => '<li>' + t + '</li>').join('')}</ul></div>
@@ -516,7 +519,8 @@ async function downloadPDF() {
     try {
         const r = await fetch(API + '/');
         const d = await r.json();
-        if (d.ai_mode === 'live') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge live'; b.innerHTML = '&#9889; OCI GenAI Live'; }
+        if (d.ai_mode === 'blueverse') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge blueverse'; b.innerHTML = '&#128302; BlueVerse Agent Live'; }
+        else if (d.ai_mode === 'live') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge live'; b.innerHTML = '&#9889; OCI GenAI Live'; }
         if (d.objects_loaded > 0) { await refreshObjects(); await refreshGraph(); }
     } catch (e) { console.log('Backend not reachable — UI in standalone mode'); }
 })();

@@ -5,6 +5,9 @@ Oracle Pythia-26 Hackathon | Team: Pranali, Suraj, Sameet
 6 REST endpoints for Oracle ERP cross-artifact dependency analysis.
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from pathlib import Path
 from typing import List
 

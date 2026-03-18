@@ -1,17 +1,24 @@
 """
 OCI Generative AI Client — generates root cause analysis and fix recommendations.
 
-Two modes:
-  - Mock (default): deterministic structured output for demo without credentials
-  - Live: calls OCI Generative AI (Cohere Command A — 256K context, agentic) via oci SDK
+Three modes (checked in order):
+  1. BlueVerse (default): calls published AI_Elite_Ora1 agent on BlueVerse Marketplace
+  2. OCI Live: calls OCI Generative AI (Cohere Command A) via oci SDK
+  3. Mock: deterministic structured output for demo without credentials
 
-Toggle via OCI_GENAI_ENABLED environment variable.
+Toggle via BLUEVERSE_ENABLED / OCI_GENAI_ENABLED environment variables.
 """
 
+import logging
 import os
 from typing import Any, Dict
 
+from ai.blueverse import call_blueverse
+
+logger = logging.getLogger(__name__)
+
 # --- Configuration ---
+BLUEVERSE_ENABLED = os.getenv("BLUEVERSE_ENABLED", "true").lower() == "true"
 OCI_GENAI_ENABLED = os.getenv("OCI_GENAI_ENABLED", "false").lower() == "true"
 OCI_COMPARTMENT_ID = os.getenv("OCI_COMPARTMENT_ID", "")
 OCI_REGION = os.getenv("OCI_REGION", "us-chicago-1")
@@ -22,43 +29,44 @@ OCI_TIMEOUT = 30  # seconds
 
 def get_ai_mode() -> str:
     """Return current AI mode string."""
+    if BLUEVERSE_ENABLED:
+        return "blueverse"
     return "live" if OCI_GENAI_ENABLED else "mock"
 
 
 async def generate_analysis(impact_result: Dict[str, Any]) -> Dict[str, Any]:
     """
     Generate AI-powered root cause analysis and fix recommendations.
-    Routes to mock or live OCI GenAI based on configuration.
+    Priority: BlueVerse agent → OCI GenAI → Mock fallback.
     """
+    # 1. Try BlueVerse agent first
+    if BLUEVERSE_ENABLED:
+        result = await _call_blueverse(impact_result)
+        if result is not None:
+            return result
+        logger.info("BlueVerse failed, falling back...")
+
+    # 2. Try OCI GenAI
     if OCI_GENAI_ENABLED:
         return await _call_oci_genai(impact_result)
-    else:
-        return _mock_analysis(impact_result)
+
+    # 3. Mock fallback
+    return _mock_analysis(impact_result)
 
 
-async def _call_oci_genai(impact_result: Dict[str, Any]) -> Dict[str, Any]:
-    """Call OCI Generative AI (Cohere Command R+) for analysis."""
-    try:
-        import oci
+def _build_prompt(impact_result: Dict[str, Any]) -> str:
+    """Build the structured analysis prompt from impact data."""
+    target = impact_result["object_name"]
+    obj_type = impact_result.get("object_type", "UNKNOWN")
+    severity = impact_result["severity"]
+    score = impact_result["risk_score"]
+    direct = impact_result.get("direct_impact", [])
+    indirect = impact_result.get("indirect_impact", [])
 
-        config = oci.config.from_file()
-        client = oci.generative_ai_inference.GenerativeAiInferenceClient(
-            config=config,
-            service_endpoint=OCI_ENDPOINT,
-            timeout=(OCI_TIMEOUT, OCI_TIMEOUT),
-        )
+    direct_names = ", ".join(d["name"] for d in direct) or "None"
+    indirect_names = ", ".join(d["name"] for d in indirect) or "None"
 
-        target = impact_result["object_name"]
-        obj_type = impact_result.get("object_type", "UNKNOWN")
-        severity = impact_result["severity"]
-        score = impact_result["risk_score"]
-        direct = impact_result.get("direct_impact", [])
-        indirect = impact_result.get("indirect_impact", [])
-
-        direct_names = ", ".join(d["name"] for d in direct) or "None"
-        indirect_names = ", ".join(d["name"] for d in indirect) or "None"
-
-        prompt = f"""You are an Oracle ERP impact analysis expert. A developer is about to modify an Oracle artifact. Analyze the dependency impact and provide actionable guidance.
+    return f"""You are an Oracle ERP impact analysis expert. A developer is about to modify an Oracle artifact. Analyze the dependency impact and provide actionable guidance.
 
 TARGET OBJECT: {target} (Type: {obj_type})
 SEVERITY: {severity}
@@ -79,6 +87,47 @@ Provide 4-5 bullet points of specific tests to run after the change.
 
 ## ROLLBACK PLAN
 Provide 5 numbered steps to revert the change if something breaks in production."""
+
+
+async def _call_blueverse(impact_result: Dict[str, Any]) -> Dict[str, Any] | None:
+    """Call BlueVerse AI_Elite_Ora1 agent for analysis. Returns None on failure."""
+    try:
+        prompt = _build_prompt(impact_result)
+        response_text = await call_blueverse(prompt)
+
+        if response_text is None:
+            return None
+
+        parsed = _parse_ai_response(response_text)
+
+        # If parsing got nothing useful, still return the raw text as root_cause
+        if not parsed["root_cause"] and not parsed["recommendations"]:
+            parsed["root_cause"] = response_text
+
+        return {
+            "mode": "blueverse",
+            "model": "AI_Elite_Ora1 (BlueVerse)",
+            **parsed,
+            "raw_response": response_text,
+        }
+    except Exception as e:
+        logger.warning("BlueVerse analysis failed: %s", str(e))
+        return None
+
+
+async def _call_oci_genai(impact_result: Dict[str, Any]) -> Dict[str, Any]:
+    """Call OCI Generative AI (Cohere Command R+) for analysis."""
+    try:
+        import oci
+
+        config = oci.config.from_file()
+        client = oci.generative_ai_inference.GenerativeAiInferenceClient(
+            config=config,
+            service_endpoint=OCI_ENDPOINT,
+            timeout=(OCI_TIMEOUT, OCI_TIMEOUT),
+        )
+
+        prompt = _build_prompt(impact_result)
 
         chat_detail = oci.generative_ai_inference.models.ChatDetails(
             compartment_id=OCI_COMPARTMENT_ID,
