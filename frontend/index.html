@@ -3,712 +3,869 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle Impact Analyzer — Cross-Artifact Dependency Analysis</title>
+    <title>Impact Analysis Generator — Oracle Pythia-26</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --bg: #F5F5F5;
-            --surface: #FFFFFF;
-            --surface2: #F0F0F0;
-            --border: #D9D9D9;
-            --text: #1D1D1D;
-            --text-dim: #6B6B6B;
-            --accent: #C74634;
-            --accent-dim: #A33828;
-            --accent-bg: #FDF0EE;
-            --shadow: rgba(0,0,0,0.08);
-            --critical: #D32F2F;
-            --high: #E65100;
-            --medium: #F9A825;
-            --low: #2E7D32;
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#F8F9FB;--surface:#FFF;--surface2:#F3F4F6;--border:#E5E7EB;
+            --text:#111827;--dim:#6B7280;--muted:#9CA3AF;
+            --accent:#C74634;--accent2:#B03D2E;--accent-bg:#FEF2F0;
+            --blue:#2563EB;--blue-bg:#EFF6FF;
+            --red:#DC2626;--orange:#F97316;--amber:#F59E0B;--green:#16A34A;
+            --sh:0 1px 3px rgba(0,0,0,0.06);--sh2:0 4px 16px rgba(0,0,0,0.1);
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
 
-        /* Header */
-        .header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; height: 52px; box-shadow: 0 1px 3px var(--shadow); }
-        .header h1 { font-size: 18px; font-weight: 600; }
-        .header h1 span { color: var(--accent); }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .ai-badge { padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-        .ai-badge.mock { background: #F3E8FF; color: #7C3AED; }
-        .ai-badge.live { background: #E8F5E9; color: #2E7D32; }
-        .ai-badge.blueverse { background: #E3F2FD; color: #1565C0; }
-        .team-info { font-size: 11px; color: var(--text-dim); }
+        /* ═══ HEADER ═══ */
+        header{background:var(--surface);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:var(--sh)}
+        .h-left{display:flex;align-items:center;gap:10px}
+        .h-logo{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:900}
+        .h-title{font-size:14px;font-weight:700}
+        .h-title span{font-weight:400;color:var(--dim);font-size:12px;margin-left:6px}
+        .h-right{display:flex;align-items:center;gap:10px}
+        .h-badge{padding:3px 10px;border-radius:16px;font-size:9px;font-weight:600;display:flex;align-items:center;gap:3px}
+        .h-badge.bl{background:var(--blue-bg);color:var(--blue)}
+        .h-badge.mock{background:#F3E8FF;color:#7C3AED}
+        .h-user{display:flex;align-items:center;gap:8px}
+        .h-uname{font-size:11px;font-weight:600;text-align:right}
+        .h-urole{font-size:9px;color:var(--dim);text-align:right}
+        .h-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#E65100);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
 
-        /* Main Layout: 30% left, 70% right */
-        .main { display: flex; height: calc(100vh - 52px); }
-        .panel-left { width: 30%; min-width: 300px; max-width: 400px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-        .panel-right { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        /* ═══ LAYOUT ═══ */
+        .app{display:flex;height:calc(100vh - 48px)}
 
-        /* Left Panel Sections */
-        .controls { padding: 16px; border-bottom: 1px solid var(--border); }
-        .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 10px; }
+        /* ═══ SIDEBAR — icon rail ═══ */
+        .sidebar{width:56px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:4px;flex-shrink:0}
+        .sb-btn{width:40px;height:40px;border-radius:10px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--dim);transition:all .15s;position:relative}
+        .sb-btn:hover{background:var(--surface2);color:var(--text)}
+        .sb-btn.active{background:var(--accent-bg);color:var(--accent)}
+        .sb-btn .sb-tip{position:absolute;left:52px;background:var(--text);color:#fff;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:10}
+        .sb-btn:hover .sb-tip{opacity:1}
+        .sb-divider{width:24px;height:1px;background:var(--border);margin:6px 0}
+        .sb-spacer{flex:1}
 
-        /* Buttons */
-        .btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; width: 100%; box-shadow: 0 1px 2px var(--shadow); }
-        .btn:hover { filter: brightness(0.95); }
-        .btn:active { transform: scale(0.98); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn + .btn { margin-top: 8px; }
-        .btn-demo { background: #F3E8FF; color: #7C3AED; }
-        .btn-upload { background: var(--surface); color: var(--text); border: 1px dashed #BDBDBD; }
-        .btn-impact { background: linear-gradient(135deg, #C74634, #E65100); color: white; }
-        .btn-pdf { background: linear-gradient(135deg, #2E7D32, #00897B); color: white; }
+        /* ═══ MAIN CONTENT ═══ */
+        .content{flex:1;display:flex;flex-direction:column;overflow:hidden}
 
-        .select-wrap { margin: 12px 0; }
-        .select-wrap label { display: block; font-size: 11px; color: var(--text-dim); margin-bottom: 4px; }
-        .select-wrap select { width: 100%; padding: 9px 12px; background: #FFFFFF; color: var(--text); border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; }
-        .select-wrap select:focus { border-color: var(--accent); }
+        /* ═══ PANELS (slide-over from left, overlays on graph) ═══ */
+        .panel-overlay{position:absolute;top:0;left:56px;width:300px;height:100%;background:var(--surface);border-right:1px solid var(--border);box-shadow:var(--sh2);z-index:20;transform:translateX(-360px);transition:transform .25s ease;overflow-y:auto;padding:20px}
+        .panel-overlay.open{transform:translateX(0)}
+        .panel-overlay h2{font-size:14px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+        .panel-overlay h2 .close-btn{width:24px;height:24px;border-radius:6px;border:none;background:var(--surface2);cursor:pointer;font-size:12px;color:var(--dim);display:flex;align-items:center;justify-content:center}
+        .panel-overlay h2 .close-btn:hover{background:var(--border)}
 
-        /* Stats */
-        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-        .stat { background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center; box-shadow: 0 1px 3px var(--shadow); }
-        .stat .val { font-size: 28px; font-weight: 800; color: var(--accent); }
-        .stat .lbl { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+        /* Connector grid */
+        .cn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+        .cn-tile{border:1.5px solid var(--border);border-radius:10px;padding:12px;text-align:center;cursor:pointer;transition:all .15s}
+        .cn-tile:hover{border-color:var(--accent);background:var(--accent-bg)}
+        .cn-tile.on{border-color:var(--green);background:#F0FDF4}
+        .cn-icon{font-size:20px;margin-bottom:4px}
+        .cn-name{font-size:11px;font-weight:600}
+        .cn-status{font-size:9px;color:var(--muted);margin-top:2px}
+        .cn-tile.on .cn-status{color:var(--green);font-weight:600}
 
-        /* Object list */
-        .object-list-wrap { flex: 1; overflow-y: auto; padding: 12px 16px; }
-        .obj-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background 0.1s; }
-        .obj-item:hover { background: var(--accent-bg); }
-        .obj-item.impacted { color: var(--critical); font-weight: 600; }
-        .obj-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-        .obj-type { margin-left: auto; font-size: 10px; color: var(--text-dim); }
+        /* Upload section */
+        .upload-zone{border:2px dashed var(--border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:10px}
+        .upload-zone:hover{border-color:var(--accent);background:var(--accent-bg)}
+        .upload-zone .uz-icon{font-size:28px;margin-bottom:6px}
+        .upload-zone p{font-size:11px;color:var(--dim)}
+        .or-divider{text-align:center;font-size:10px;color:var(--muted);margin:10px 0;position:relative}
+        .or-divider::before,.or-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+        .or-divider::before{left:0}
+        .or-divider::after{right:0}
 
-        /* Right Panel: Tabs */
-        .tabs { display: flex; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .tab { flex: 1; padding: 14px 16px; text-align: center; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--text-dim); border-bottom: 2px solid transparent; transition: all 0.15s; }
-        .tab:hover { color: var(--text); }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-        .tab-body { flex: 1; overflow-y: auto; min-height: 0; }
-        .tab-content { display: none; height: 100%; min-height: 350px; }
-        .tab-content.active { display: block; }
+        /* Object list in panel */
+        .obj-grid{max-height:300px;overflow-y:auto;margin-top:10px}
+        .obj-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:11px;transition:background .1s}
+        .obj-row:hover{background:var(--accent-bg)}
+        .obj-row.sel{background:var(--accent-bg);font-weight:600}
+        .obj-row.impacted{color:var(--red)}
+        .obj-row .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+        .obj-row .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .obj-row .type{font-size:8px;color:var(--muted)}
 
-        /* Graph container */
-        #graph-container { width: 100%; height: 100%; position: relative; background: var(--bg); }
-        #graph-container svg { width: 100%; height: 100%; }
-        .legend { position: absolute; bottom: 16px; left: 16px; background: rgba(255,255,255,0.95); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 10px; display: none; box-shadow: 0 2px 8px var(--shadow); max-width: 220px; }
-        .legend.show { display: block; }
-        .legend-title { font-weight: 700; font-size: 12px; margin-bottom: 8px; color: var(--text); }
-        .legend-subtitle { font-weight: 600; font-size: 10px; color: var(--accent); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .legend-section { margin-bottom: 4px; }
-        .legend-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
-        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
-        .legend-line { width: 20px; border-radius: 2px; flex-shrink: 0; }
-        .legend-hint { font-size: 10px; color: var(--text-dim); padding: 1px 0; }
+        /* Analyze section */
+        .analyze-section{margin-top:16px}
+        .a-select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:inherit;outline:none;background:#fff}
+        .a-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(199,70,52,.1)}
+        .a-btn{width:100%;margin-top:10px;padding:12px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+        .a-btn:hover{background:var(--accent2)}
+        .a-btn:disabled{opacity:.4;cursor:not-allowed}
+        .a-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+        .a-stat{background:var(--surface2);border-radius:8px;padding:8px;text-align:center}
+        .a-stat .v{font-size:18px;font-weight:800;color:var(--accent)}
+        .a-stat .l{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+        .a-pdf{width:100%;margin-top:8px;padding:10px;border:none;border-radius:8px;background:#059669;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
 
-        /* Node info card */
-        .node-card { position: fixed; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); z-index: 1001; display: none; font-size: 12px; line-height: 1.6; }
-        .node-card .nc-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
-        .node-card .nc-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-        .node-card .nc-name { font-weight: 700; font-size: 14px; }
-        .node-card .nc-type { font-size: 11px; color: var(--text-dim); }
-        .node-card .nc-row { display: flex; justify-content: space-between; padding: 3px 0; }
-        .node-card .nc-label { color: var(--text-dim); }
-        .node-card .nc-value { font-weight: 600; }
-        .node-card .nc-risk { margin-top: 8px; padding: 6px 10px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 13px; }
+        /* ═══ MAIN AREA ═══ */
+        .main-area{flex:1;position:relative;overflow:hidden;overflow-y:auto}
 
-        /* Impact & AI panels */
-        .result-panel { padding: 20px; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-dim); text-align: center; }
-        .empty-state .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-        .empty-state p { font-size: 13px; line-height: 1.6; }
+        /* Centered phase screens */
+        .phase{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100%;text-align:center;padding:48px 40px;animation:fadeUp .4s ease}
+        .phase.active{display:flex}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .phase h2{font-size:20px;font-weight:800;margin-bottom:4px}
+        .phase .sub{font-size:12px;color:var(--dim);margin-bottom:28px;max-width:400px;line-height:1.6}
 
-        /* Impact summary */
-        .impact-summary { background: var(--accent-bg); border: 1px solid var(--accent); border-radius: 8px; padding: 12px 16px; font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 16px; }
+        /* Step indicator */
+        .stepper{display:flex;align-items:center;gap:0;margin-bottom:32px}
+        .stepper-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--muted);transition:all .2s}
+        .stepper-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
+        .stepper-dot.current{border-color:var(--accent);color:var(--accent)}
+        .stepper-line{width:40px;height:2px;background:var(--border);transition:background .2s}
+        .stepper-line.done{background:var(--accent)}
 
-        /* Risk display */
-        .risk-header { text-align: center; padding: 24px 0 20px; }
-        .risk-gauge { display: block; margin: 0 auto 8px; }
-        .severity { display: inline-block; padding: 5px 20px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 10px; }
-        .severity.critical { background: #FFEBEE; color: var(--critical); }
-        .severity.high { background: #FFF3E0; color: var(--high); }
-        .severity.medium { background: #FFFDE7; color: var(--medium); }
-        .severity.low { background: #E8F5E9; color: var(--low); }
-        .target-name { margin-top: 12px; font-size: 15px; font-weight: 600; }
+        /* Phase 1: Connect */
+        .cn-grid-lg{display:grid;grid-template-columns:repeat(4,140px);gap:12px;justify-content:center}
+        .cn-tile-lg{border:2px solid var(--border);border-radius:14px;padding:20px 16px;text-align:center;cursor:pointer;transition:all .2s}
+        .cn-tile-lg:hover{border-color:var(--accent);background:var(--accent-bg);transform:translateY(-2px);box-shadow:var(--sh2)}
+        .cn-tile-lg.on{border-color:var(--green);background:#F0FDF4}
+        .cn-tile-lg .cn-ico{font-size:28px;margin-bottom:8px}
+        .cn-tile-lg .cn-nm{font-size:12px;font-weight:700}
+        .cn-tile-lg .cn-st{font-size:10px;color:var(--muted);margin-top:4px}
+        .cn-tile-lg.on .cn-st{color:var(--green);font-weight:600}
+        .phase-next{margin-top:28px;padding:12px 40px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+        .phase-next:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(199,70,52,.25)}
+        .phase-next:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+        .phase-secondary{margin-top:10px;padding:10px 28px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);color:var(--dim);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s}
+        .phase-secondary:hover{border-color:var(--accent);color:var(--accent)}
 
-        .impact-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
-        .impact-stat { background: var(--surface2); border-radius: 10px; padding: 14px; text-align: center; box-shadow: 0 1px 3px var(--shadow); }
-        .impact-stat .num { font-size: 32px; font-weight: 800; }
-        .impact-stat .num.direct { color: var(--critical); }
-        .impact-stat .num.indirect { color: var(--high); }
-        .impact-stat .txt { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+        /* Phase 2: Artifacts */
+        .artifact-summary{display:flex;gap:16px;justify-content:center;margin-bottom:20px}
+        .art-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 24px;text-align:center;min-width:120px;box-shadow:var(--sh)}
+        .art-card .av{font-size:28px;font-weight:900;color:var(--accent)}
+        .art-card .al{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+        .upload-mini{display:flex;align-items:center;gap:8px;margin-top:16px;padding:10px 20px;border:1.5px dashed var(--border);border-radius:8px;cursor:pointer;font-size:11px;color:var(--dim);transition:all .15s}
+        .upload-mini:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
 
-        .impact-group { margin-top: 20px; }
-        .impact-group h3 { font-size: 12px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
-        .impact-obj { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 6px; margin-bottom: 4px; font-size: 12px; }
-        .impact-obj .tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: var(--border); color: var(--text-dim); margin-left: auto; }
+        /* Phase 3: Analyze */
+        .analyze-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 32px;box-shadow:var(--sh);width:100%;max-width:420px;text-align:left}
+        .analyze-card label{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:6px}
+        .analyze-card select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;background:#fff}
+        .analyze-card select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(199,70,52,.1)}
+        .analyze-card .a-go{width:100%;margin-top:12px;padding:13px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+        .analyze-card .a-go:hover{background:var(--accent2)}
 
-        /* AI Analysis */
-        .ai-mode-badge { margin-bottom: 20px; }
-        .ai-section { margin-bottom: 20px; background: var(--surface2); border-radius: 10px; padding: 16px; }
-        .ai-section h3 { font-size: 13px; font-weight: 700; color: var(--accent); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
-        .ai-section p { font-size: 13px; line-height: 1.7; }
-        .ai-section ol, .ai-section ul { padding-left: 20px; }
-        .ai-section li { font-size: 13px; line-height: 1.7; margin-bottom: 6px; }
-        .ai-icon { margin-right: 6px; }
+        /* Results tabs */
+        .results{display:none;flex-direction:column;height:100%}
+        .results.show{display:flex}
+        .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;flex-shrink:0}
+        .tab{padding:12px 18px;font-size:12px;font-weight:500;cursor:pointer;color:var(--dim);border-bottom:2px solid transparent;transition:all .15s}
+        .tab:hover{color:var(--text)}
+        .tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+        .tab-body{flex:1;overflow-y:auto}
+        .tab-content{display:none;height:100%;min-height:300px}
+        .tab-content.active{display:block}
 
-        /* Loading */
-        .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.5s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* Graph */
+        #graph-container{width:100%;height:100%;position:relative;background:var(--bg)}
+        #graph-container svg{width:100%;height:100%}
+        .g-toolbar{position:absolute;top:10px;right:10px;display:flex;gap:4px}
+        .g-tool{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:10px;cursor:pointer;font-family:inherit;color:var(--dim);transition:all .15s}
+        .g-tool:hover{border-color:var(--accent);color:var(--accent)}
 
-        /* Tooltip */
-        .tooltip { position: fixed; background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; font-size: 12px; pointer-events: none; z-index: 1000; display: none; line-height: 1.5; box-shadow: 0 4px 12px rgba(0,0,0,0.12); color: var(--text); }
+        .g-legend{position:absolute;bottom:10px;right:10px;background:rgba(255,255,255,.97);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:9px;box-shadow:var(--sh2);max-width:170px;display:none}
+        .g-legend.show{display:block}
+        .gl-title{font-weight:700;font-size:10px;margin-bottom:4px;display:flex;justify-content:space-between}
+        .gl-close{cursor:pointer;color:var(--muted);font-size:13px}
+        .gl-sub{font-weight:600;font-size:8px;color:var(--accent);margin:5px 0 2px;text-transform:uppercase;letter-spacing:.5px}
+        .gl-row{display:flex;align-items:center;gap:4px;margin-bottom:1px;font-size:9px;color:var(--dim)}
+        .gl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+        .gl-line{width:14px;flex-shrink:0;border-radius:2px}
 
-        /* Upload hidden input */
-        #file-input { display: none; }
+        .node-card{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;width:220px;box-shadow:var(--sh2);z-index:30;display:none;font-size:10px;line-height:1.5}
+        .nc-header{display:flex;align-items:center;gap:6px;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+        .nc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+        .nc-name{font-weight:700;font-size:12px}
+        .nc-type{font-size:9px;color:var(--dim)}
+        .nc-row{display:flex;justify-content:space-between;padding:2px 0;font-size:10px}
+        .nc-label{color:var(--dim)}
+        .nc-value{font-weight:600}
+        .nc-risk{margin-top:4px;padding:4px 8px;border-radius:5px;text-align:center;font-weight:700;font-size:10px}
 
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #C0C0C0; border-radius: 3px; }
+        /* Impact */
+        .result-panel{padding:20px 24px}
+        .impact-banner{background:var(--accent-bg);border:1px solid rgba(199,70,52,.15);border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;margin-bottom:16px;display:flex;align-items:center;gap:6px}
+        .risk-header{text-align:center;padding:14px 0}
+        .sev-badge{display:inline-block;padding:3px 14px;border-radius:16px;font-size:11px;font-weight:700;margin-top:6px}
+        .sev-badge.critical{background:#FEE2E2;color:var(--red)}
+        .sev-badge.high{background:#FFF7ED;color:var(--orange)}
+        .sev-badge.medium{background:#FFFBEB;color:#D97706}
+        .sev-badge.low{background:#F0FDF4;color:var(--green)}
+        .target-name{margin-top:4px;font-size:14px;font-weight:700}
+        .impact-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+        .impact-stat{background:var(--surface2);border-radius:10px;padding:12px;text-align:center;box-shadow:var(--sh)}
+        .impact-stat .num{font-size:24px;font-weight:800}
+        .impact-stat .num.d{color:var(--red)}
+        .impact-stat .num.i{color:var(--orange)}
+        .impact-stat .txt{font-size:10px;color:var(--dim);margin-top:2px}
+        .impact-group{margin-top:12px}
+        .impact-group h3{font-size:10px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+        .impact-obj{display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface2);border-radius:6px;margin-bottom:3px;font-size:11px}
+        .impact-obj .tag{font-size:8px;padding:2px 6px;border-radius:4px;background:var(--border);color:var(--dim);margin-left:auto;font-weight:500}
 
-        /* Mobile Responsive */
-        @media (max-width: 768px) {
-            body { overflow: auto; height: auto; }
-            .header { padding: 10px 14px; height: auto; flex-wrap: wrap; gap: 6px; }
-            .header h1 { font-size: 15px; }
-            .team-info { display: none; }
-            .main { flex-direction: column; height: auto; min-height: calc(100vh - 60px); }
-            .panel-left { width: 100%; min-width: unset; max-width: unset; border-right: none; border-bottom: 1px solid var(--border); }
-            .object-list-wrap { max-height: 150px; }
-            .panel-right { min-height: 60vh; }
-            .tab { padding: 10px 8px; font-size: 11px; }
-            #graph-container { min-height: 350px; }
-            .impact-stat .num { font-size: 24px; }
-            .stats .stat .val { font-size: 22px; }
-            .legend { bottom: 8px; left: 8px; font-size: 9px; padding: 6px 10px; max-width: calc(100vw - 32px); }
-            .result-panel { padding: 14px; }
-            .node-card { width: calc(100vw - 32px); left: 16px !important; }
-            .risk-gauge { width: 160px; height: 96px; }
-        }
+        /* AI */
+        .ai-badge-wrap{margin-bottom:12px}
+        .ai-section{margin-bottom:12px;background:var(--surface2);border-radius:10px;padding:14px}
+        .ai-section h3{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px}
+        .ai-section p{font-size:12px;line-height:1.7}
+        .ai-section ol,.ai-section ul{padding-left:18px}
+        .ai-section li{font-size:12px;line-height:1.7;margin-bottom:3px}
 
-        @media (max-width: 400px) {
-            .header h1 { font-size: 13px; }
-            .controls { padding: 12px; }
-            .btn { padding: 8px 12px; font-size: 12px; }
-            .tab { font-size: 10px; padding: 8px 4px; }
+        /* Utils */
+        .spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .5s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .tooltip{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:10px;pointer-events:none;z-index:40;display:none;line-height:1.4;box-shadow:var(--sh2)}
+        #file-input{display:none}
+        ::-webkit-scrollbar{width:4px}
+        ::-webkit-scrollbar-track{background:transparent}
+        ::-webkit-scrollbar-thumb{background:#D1D5DB;border-radius:2px}
+
+        /* ═══ LOGIN SCREEN ═══ */
+        .login-screen{position:fixed;inset:0;z-index:100;display:flex;transition:opacity .5s ease,transform .5s ease}
+        .login-screen.hidden{opacity:0;pointer-events:none;transform:scale(1.02)}
+        .login-left{flex:1;background:linear-gradient(135deg,#C74634 0%,#E65100 50%,#F59E0B 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;padding:40px;position:relative;overflow:hidden}
+        .login-left::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,.06);top:-120px;right:-120px}
+        .login-left::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.04);bottom:-80px;left:-60px}
+        .login-brand{position:relative;z-index:1;text-align:center}
+        .login-brand .lb-icon{width:64px;height:64px;background:rgba(255,255,255,.15);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}
+        .login-brand h1{font-size:24px;font-weight:800;margin-bottom:6px;letter-spacing:-.5px}
+        .login-brand p{font-size:13px;opacity:.85;line-height:1.6;max-width:300px}
+        .login-features{margin-top:32px;position:relative;z-index:1}
+        .login-feat{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:12px;opacity:.9}
+        .login-feat .lf-check{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+
+        .login-right{width:420px;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px}
+        .login-form{width:100%;max-width:320px}
+        .login-form h2{font-size:20px;font-weight:800;margin-bottom:4px}
+        .login-form .lf-sub{font-size:12px;color:var(--dim);margin-bottom:24px}
+        .login-field{margin-bottom:14px}
+        .login-field label{display:block;font-size:11px;font-weight:500;color:var(--dim);margin-bottom:4px}
+        .login-field input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+        .login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(199,70,52,.08)}
+        .login-submit{width:100%;padding:12px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;margin-top:4px}
+        .login-submit:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(199,70,52,.3)}
+        .login-divider{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:10px;color:var(--muted)}
+        .login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+        .login-sso{width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;color:var(--text)}
+        .login-sso:hover{border-color:var(--accent);background:var(--accent-bg)}
+        .login-footer{margin-top:24px;font-size:10px;color:var(--muted);text-align:center}
+
+        @media(max-width:768px){
+            body{overflow:auto;height:auto}
+            .sidebar{width:48px}
+            .sb-btn{width:36px;height:36px}
+            .panel-overlay{left:48px;width:260px}
+            .w-steps{flex-direction:column;gap:12px}
+            .login-screen{flex-direction:column}
+            .login-left{flex:none;height:200px;padding:24px}
+            .login-brand h1{font-size:18px}
+            .login-features{display:none}
+            .login-right{width:100%;flex:1;padding:24px}
         }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1><span>&#9670;</span> Oracle Impact Analyzer</h1>
-    <div class="header-right">
-        <span id="ai-badge" class="ai-badge mock">&#127917; Demo Mode</span>
-        <span class="team-info">Cross-Artifact Dependency Analysis</span>
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div class="login-screen" id="login-screen">
+    <div class="login-left">
+        <div class="login-brand">
+            <div class="lb-icon">&#9670;</div>
+            <h1>Impact Analysis Generator</h1>
+            <p>Understand the full blast radius before modifying any object in your Oracle ecosystem.</p>
+        </div>
+        <div class="login-features">
+            <div class="login-feat"><div class="lf-check">&#10003;</div> Cross-artifact dependency analysis</div>
+            <div class="login-feat"><div class="lf-check">&#10003;</div> AI-powered fix recommendations</div>
+            <div class="login-feat"><div class="lf-check">&#10003;</div> Visual blast radius mapping</div>
+            <div class="login-feat"><div class="lf-check">&#10003;</div> Automated rollback planning</div>
+        </div>
+    </div>
+    <div class="login-right">
+        <div class="login-form">
+            <h2>Sign in</h2>
+            <div class="lf-sub">Access your Oracle impact workspace</div>
+            <div class="login-field">
+                <label>Email</label>
+                <input type="email" id="login-email" value="analyst@oracle-erp.com" placeholder="you@company.com">
+            </div>
+            <div class="login-field">
+                <label>Password</label>
+                <input type="password" id="login-pass" value="••••••••" placeholder="Enter password">
+            </div>
+            <button class="login-submit" onclick="doLogin()">Sign In</button>
+            <div class="login-divider">or continue with</div>
+            <button class="login-sso" onclick="doLogin()">&#9741; Oracle SSO</button>
+            <div class="login-footer">Oracle Pythia-26 &middot; Impact Analysis Platform</div>
+        </div>
     </div>
 </div>
 
-<div class="main">
-    <!-- LEFT PANEL: Controls (30%) -->
-    <div class="panel-left">
-        <div class="controls">
-            <div class="section-title">Controls</div>
-            <button class="btn btn-demo" onclick="loadDemo()">&#127917; Load Demo</button>
-            <input type="file" id="file-input" multiple accept=".sql,.xml,.groovy">
-            <button class="btn btn-upload" onclick="document.getElementById('file-input').click()">&#128194; Upload Artifacts</button>
-
-            <div class="select-wrap">
-                <label>Target Object</label>
-                <select id="object-select" disabled><option value="">Load artifacts first...</option></select>
-            </div>
-
-            <button class="btn btn-impact" id="analyze-btn" onclick="analyzeImpact()" disabled>&#128165; Compute Impact</button>
-            <button class="btn btn-pdf" id="pdf-btn" onclick="downloadPDF()" style="display:none">&#128196; Download PDF Report</button>
-
-            <div class="stats">
-                <div class="stat"><div class="val" id="stat-nodes">0</div><div class="lbl">Objects</div></div>
-                <div class="stat"><div class="val" id="stat-edges">0</div><div class="lbl">Dependencies</div></div>
-            </div>
+<header>
+    <div class="h-left">
+        <div class="h-logo">&#9670;</div>
+        <div class="h-title">Impact Analysis Generator<span>Oracle Pythia-26</span></div>
+    </div>
+    <div class="h-right">
+        <span id="ai-badge" class="h-badge mock">&#127917; Demo Mode</span>
+        <div class="h-user">
+            <div><div class="h-uname">Sameet Dandawate</div><div class="h-urole">Oracle ERP Analyst</div></div>
+            <div class="h-avatar">SD</div>
         </div>
+    </div>
+</header>
 
-        <div class="object-list-wrap">
-            <div class="section-title">Parsed Objects</div>
-            <div id="object-list"><div class="empty-state" style="padding:30px 0"><p>No artifacts loaded</p></div></div>
+<div class="app">
+    <!-- ═══ SIDEBAR ═══ -->
+    <nav class="sidebar">
+        <button class="sb-btn" onclick="togglePanel('connectors')" id="sb-conn"><span>&#9741;</span><span class="sb-tip">Connectors</span></button>
+        <button class="sb-btn" onclick="togglePanel('data')" id="sb-data"><span>&#128194;</span><span class="sb-tip">Artifacts</span></button>
+        <div class="sb-divider"></div>
+        <button class="sb-btn" onclick="togglePanel('analyze')" id="sb-analyze"><span>&#128269;</span><span class="sb-tip">Analyze</span></button>
+        <div class="sb-spacer"></div>
+    </nav>
+
+    <!-- ═══ SLIDE-OVER PANELS ═══ -->
+    <!-- Connectors -->
+    <div class="panel-overlay" id="panel-connectors">
+        <h2>Oracle Ecosystem <button class="close-btn" onclick="closePanel()">&times;</button></h2>
+        <div class="cn-grid">
+            <div class="cn-tile on" onclick="connectTile(this)"><div class="cn-icon">&#9741;</div><div class="cn-name">Oracle ERP</div><div class="cn-status">&#10003; Connected</div></div>
+            <div class="cn-tile" onclick="connectTile(this)"><div class="cn-icon">&#8644;</div><div class="cn-name">OIC</div><div class="cn-status">Connect</div></div>
+            <div class="cn-tile" onclick="connectTile(this)"><div class="cn-icon">&#9783;</div><div class="cn-name">BIP Reports</div><div class="cn-status">Connect</div></div>
+            <div class="cn-tile" onclick="connectTile(this)"><div class="cn-icon">&#9729;</div><div class="cn-name">Fusion HCM</div><div class="cn-status">Connect</div></div>
         </div>
     </div>
 
-    <!-- RIGHT PANEL: Tabbed view (70%) -->
-    <div class="panel-right">
-        <div class="tabs">
-            <div class="tab active" data-tab="graph" onclick="switchTab('graph')">&#128300; Dependency Graph</div>
-            <div class="tab" data-tab="impact" onclick="switchTab('impact')">&#128202; Impact Analysis</div>
-            <div class="tab" data-tab="ai" onclick="switchTab('ai')">&#129302; AI Analysis</div>
+    <!-- Data / Artifacts -->
+    <div class="panel-overlay" id="panel-data">
+        <h2>Artifacts <button class="close-btn" onclick="closePanel()">&times;</button></h2>
+        <div class="upload-zone" onclick="document.getElementById('file-input').click()">
+            <div class="uz-icon">&#128194;</div>
+            <p><strong>Upload</strong> SQL, XML, Groovy files</p>
         </div>
-        <div class="tab-body">
-            <div class="tab-content active" id="tab-graph">
-                <div id="graph-container">
-                    <div class="empty-state" id="graph-empty">
-                        <div class="icon">&#128300;</div>
-                        <p>Load demo or upload artifacts<br>to see the dependency graph</p>
-                    </div>
-                </div>
-                <div class="legend" id="legend">
-                    <div class="legend-title">How to Read This Graph</div>
-                    <div class="legend-section">
-                        <div class="legend-subtitle">Artifact Types</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#1565C0"></div> Table</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#0097A7"></div> View</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#2E7D32"></div> Procedure</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#F57F17"></div> Function</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#7B1FA2"></div> Package</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#D84315"></div> OIC Flow</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#C2185B"></div> BIP Report</div>
-                        <div class="legend-row"><div class="legend-dot" style="background:#00695C"></div> Groovy</div>
-                    </div>
-                    <div class="legend-section">
-                        <div class="legend-subtitle">Edge Impact</div>
-                        <div class="legend-row"><div class="legend-line" style="background:#D32F2F;height:3px;width:20px"></div> Critical path</div>
-                        <div class="legend-row"><div class="legend-line" style="background:#E65100;height:2px;width:20px"></div> High impact</div>
-                        <div class="legend-row"><div class="legend-line" style="background:#D9D9D9;height:1px;width:20px"></div> No impact</div>
-                    </div>
-                    <div class="legend-section">
-                        <div class="legend-subtitle">Flow (left → right)</div>
-                        <div class="legend-hint">Data → Logic → Integration → Output</div>
-                        <div class="legend-subtitle">Interactions</div>
-                        <div class="legend-hint">Click node for details</div>
-                        <div class="legend-hint">Drag to reposition (stays pinned)</div>
-                        <div class="legend-hint">Scroll to zoom, drag bg to pan</div>
-                    </div>
-                </div>
-                <div class="node-card" id="node-card"></div>
-                <div class="tooltip" id="tooltip"></div>
-            </div>
+        <input type="file" id="file-input" multiple accept=".sql,.xml,.groovy">
+        <div class="or-divider">or</div>
+        <button class="a-btn" style="background:#7C3AED" onclick="loadDemo()">&#127917; Load Sample Artifacts</button>
+        <div id="obj-list-wrap" style="margin-top:16px;display:none">
+            <h2 style="font-size:12px">Discovered Objects</h2>
+            <div class="obj-grid" id="object-list"></div>
+        </div>
+    </div>
 
-            <div class="tab-content" id="tab-impact">
-                <div class="empty-state" id="impact-empty">
-                    <div class="icon">&#128202;</div>
-                    <p>Select an object and click<br>"Compute Impact" to see results</p>
-                </div>
-                <div class="result-panel" id="impact-result" style="display:none"></div>
-            </div>
+    <!-- Analyze -->
+    <div class="panel-overlay" id="panel-analyze">
+        <h2>Impact Analysis <button class="close-btn" onclick="closePanel()">&times;</button></h2>
+        <label style="font-size:11px;color:var(--dim);display:block;margin-bottom:4px">What are you modifying?</label>
+        <select class="a-select" id="object-select" disabled><option value="">Load artifacts first...</option></select>
+        <button class="a-btn" id="analyze-btn" onclick="analyzeImpact()" disabled>&#128165; Analyze Impact</button>
+        <div class="a-stats">
+            <div class="a-stat"><div class="v" id="stat-nodes">0</div><div class="l">Objects</div></div>
+            <div class="a-stat"><div class="v" id="stat-edges">0</div><div class="l">Dependencies</div></div>
+        </div>
+        <button class="a-pdf" id="pdf-btn" onclick="downloadPDF()">&#128196; Export PDF Report</button>
+    </div>
 
-            <div class="tab-content" id="tab-ai">
-                <div class="empty-state" id="ai-empty">
-                    <div class="icon">&#129302;</div>
-                    <p>AI analysis will appear here<br>after computing impact</p>
+    <!-- ═══ MAIN AREA ═══ -->
+    <div class="main-area">
+
+        <!-- PHASE 1: Connect -->
+        <div class="phase active" id="phase-connect">
+            <div class="stepper">
+                <div class="stepper-dot current">1</div>
+                <div class="stepper-line"></div>
+                <div class="stepper-dot">2</div>
+                <div class="stepper-line"></div>
+                <div class="stepper-dot">3</div>
+            </div>
+            <h2>Connect Your Oracle Ecosystem</h2>
+            <p class="sub">Select the systems you want to analyze. We'll scan for cross-artifact dependencies across your entire stack.</p>
+            <div class="cn-grid-lg">
+                <div class="cn-tile-lg on" onclick="toggleConn(this)"><div class="cn-ico">&#9741;</div><div class="cn-nm">Oracle ERP</div><div class="cn-st">&#10003; Connected</div></div>
+                <div class="cn-tile-lg" onclick="toggleConn(this)"><div class="cn-ico">&#8644;</div><div class="cn-nm">OIC</div><div class="cn-st">Connect</div></div>
+                <div class="cn-tile-lg" onclick="toggleConn(this)"><div class="cn-ico">&#9783;</div><div class="cn-nm">BIP Reports</div><div class="cn-st">Connect</div></div>
+                <div class="cn-tile-lg" onclick="toggleConn(this)"><div class="cn-ico">&#9729;</div><div class="cn-nm">Fusion HCM</div><div class="cn-st">Connect</div></div>
+            </div>
+            <button class="phase-next" onclick="goPhase2()">Continue &#8594;</button>
+            <button class="phase-secondary" onclick="goPhase2()">Skip — I'll upload artifacts manually</button>
+        </div>
+
+        <!-- PHASE 2: Artifacts -->
+        <div class="phase" id="phase-artifacts">
+            <div class="stepper">
+                <div class="stepper-dot done">&#10003;</div>
+                <div class="stepper-line done"></div>
+                <div class="stepper-dot current">2</div>
+                <div class="stepper-line"></div>
+                <div class="stepper-dot">3</div>
+            </div>
+            <h2>Artifacts Discovered</h2>
+            <p class="sub">We found the following objects from your connected systems. You can also upload additional files.</p>
+            <div class="artifact-summary">
+                <div class="art-card"><div class="av" id="art-objects">0</div><div class="al">Objects</div></div>
+                <div class="art-card"><div class="av" id="art-deps">0</div><div class="al">Dependencies</div></div>
+                <div class="art-card"><div class="av" id="art-files">4</div><div class="al">Files Parsed</div></div>
+            </div>
+            <div class="upload-mini" onclick="document.getElementById('file-input').click()">
+                &#128194; Upload additional artifacts (SQL, XML, Groovy)
+            </div>
+            <input type="file" id="file-input" multiple accept=".sql,.xml,.groovy">
+            <button class="phase-next" onclick="goPhase3()" style="margin-top:24px">Analyze Objects &#8594;</button>
+        </div>
+
+        <!-- PHASE 3: Analyze -->
+        <div class="phase" id="phase-analyze">
+            <div class="stepper">
+                <div class="stepper-dot done">&#10003;</div>
+                <div class="stepper-line done"></div>
+                <div class="stepper-dot done">&#10003;</div>
+                <div class="stepper-line done"></div>
+                <div class="stepper-dot current">3</div>
+            </div>
+            <h2>Run Impact Analysis</h2>
+            <p class="sub">Select the object you're planning to modify. We'll show you every dependency that could break.</p>
+            <div class="analyze-card">
+                <label>What object are you modifying?</label>
+                <select id="object-select"><option value="">Select an object...</option></select>
+                <button class="a-go" id="analyze-btn" onclick="analyzeImpact()">&#128165; Show Blast Radius</button>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="results" id="state-results">
+            <div class="tabs">
+                <div class="tab active" data-tab="graph" onclick="switchTab('graph')">&#128300; Dependency Graph</div>
+                <div class="tab" data-tab="impact" onclick="switchTab('impact')">&#128202; Impact Report</div>
+                <div class="tab" data-tab="ai" onclick="switchTab('ai')">&#129302; AI Analysis</div>
+            </div>
+            <div class="tab-body">
+                <div class="tab-content active" id="tab-graph">
+                    <div id="graph-container">
+                        <div class="g-toolbar">
+                            <button class="g-tool" onclick="resetGraph()">&#8634; Reset</button>
+                            <button class="g-tool" id="btn-toggle" onclick="toggleFiltered()" style="display:none">Show All</button>
+                            <button class="g-tool" onclick="toggleLegend()">Legend</button>
+                        </div>
+                        <div class="g-legend" id="legend">
+                            <div class="gl-title">Legend <span class="gl-close" onclick="toggleLegend()">&times;</span></div>
+                            <div class="gl-sub">Node Impact</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#F59E0B;width:9px;height:9px"></div> Target</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#DC2626;width:7px;height:7px"></div> Direct impact</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#F97316;width:6px;height:6px"></div> Indirect impact</div>
+                            <div class="gl-sub">Edges</div>
+                            <div class="gl-row"><div class="gl-line" style="background:#DC2626;height:3px"></div> Direct dep.</div>
+                            <div class="gl-row"><div class="gl-line" style="background:#F97316;height:2px"></div> Indirect dep.</div>
+                            <div class="gl-row"><div class="gl-line" style="background:#E5E7EB;height:1px"></div> Normal</div>
+                            <div class="gl-sub">Artifact Types</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#1565C0"></div> Table</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#0097A7"></div> View</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#2E7D32"></div> Procedure</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#F57F17"></div> Function</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#7B1FA2"></div> Package</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#D84315"></div> OIC Flow</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#C2185B"></div> BIP Report</div>
+                            <div class="gl-row"><div class="gl-dot" style="background:#00695C"></div> Groovy</div>
+                        </div>
+                    </div>
+                    <div class="node-card" id="node-card"></div>
+                    <div class="tooltip" id="tooltip"></div>
                 </div>
-                <div class="result-panel" id="ai-result" style="display:none"></div>
+                <div class="tab-content" id="tab-impact"><div class="result-panel" id="impact-result"></div></div>
+                <div class="tab-content" id="tab-ai"><div class="result-panel" id="ai-result"></div></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-const API = window.location.protocol === 'file:' ? 'http://localhost:8000' : window.location.origin;
-let graphData = null, simulation = null, impactedNodes = new Set(), targetNode = null;
+const API=window.location.protocol==='file:'?'http://localhost:8000':window.location.origin;
+let graphData=null,simulation=null,impactedNodes=new Set(),directNodes=new Set(),indirectNodes=new Set(),targetNode=null,showFiltered=true;
 
-const THEME = {
-    edgeDefault: '#D9D9D9',
-    edgeCritical: '#D32F2F',
-    edgeHigh: '#E65100',
-    labelDefault: '#1D1D1D',
-    labelImpacted: '#D32F2F',
-    nodeStroke: '#FFFFFF',
-    nodeStrokeImpacted: '#D32F2F',
-    targetFill: '#E65100',
-};
+const TC={'TABLE':'#1565C0','VIEW':'#0097A7','PROCEDURE':'#2E7D32','FUNCTION':'#F57F17','PACKAGE':'#7B1FA2','PACKAGE BODY':'#7B1FA2','TRIGGER':'#EA580C','SEQUENCE':'#6B7280','OIC_FLOW':'#D84315','OIC_CONNECTION':'#BF360C','BIP_REPORT':'#C2185B','GROOVY_SCRIPT':'#00695C','UNKNOWN':'#6B7280'};
+const TL={'TABLE':.12,'VIEW':.12,'SEQUENCE':.12,'PROCEDURE':.37,'FUNCTION':.37,'PACKAGE':.37,'PACKAGE BODY':.37,'TRIGGER':.37,'OIC_FLOW':.62,'OIC_CONNECTION':.62,'BIP_REPORT':.87,'GROOVY_SCRIPT':.87,'UNKNOWN':.50};
+const LN={.12:'Data Layer',.37:'Logic Layer',.62:'Integration',.87:'Output'};
+function gc(t){return TL[t]??.50}
 
-const TYPE_COLOR = {
-    'TABLE': '#1565C0', 'VIEW': '#0097A7', 'PROCEDURE': '#2E7D32', 'FUNCTION': '#F57F17',
-    'PACKAGE': '#7B1FA2', 'PACKAGE BODY': '#7B1FA2', 'TRIGGER': '#E65100', 'SEQUENCE': '#757575',
-    'OIC_FLOW': '#D84315', 'OIC_CONNECTION': '#BF360C', 'BIP_REPORT': '#C2185B',
-    'GROOVY_SCRIPT': '#00695C', 'UNKNOWN': '#757575',
-};
-
-// Left-to-right flow: Data Layer → Logic Layer → Integration Layer
-// col = horizontal position (0-1), row used for vertical spreading
-const TYPE_LAYERS = {
-    // Col 1: Data Layer (left)
-    'TABLE':          { label: 'Data Layer',        col: 0.12 },
-    'VIEW':           { label: 'Data Layer',        col: 0.12 },
-    'SEQUENCE':       { label: 'Data Layer',        col: 0.12 },
-    // Col 2: Logic Layer (center-left)
-    'PROCEDURE':      { label: 'Logic Layer',       col: 0.37 },
-    'FUNCTION':       { label: 'Logic Layer',       col: 0.37 },
-    'PACKAGE':        { label: 'Logic Layer',       col: 0.37 },
-    'PACKAGE BODY':   { label: 'Logic Layer',       col: 0.37 },
-    'TRIGGER':        { label: 'Logic Layer',       col: 0.37 },
-    // Col 3: Integration Layer (center-right)
-    'OIC_FLOW':       { label: 'Integration Layer', col: 0.62 },
-    'OIC_CONNECTION': { label: 'Integration Layer', col: 0.62 },
-    // Col 4: Reporting & Scripts (right)
-    'BIP_REPORT':     { label: 'Output Layer',      col: 0.87 },
-    'GROOVY_SCRIPT':  { label: 'Output Layer',      col: 0.87 },
-    'UNKNOWN':        { label: 'Other',             col: 0.50 },
-};
-function getLayer(type) { return TYPE_LAYERS[type] || TYPE_LAYERS.UNKNOWN; }
-
-// Pre-compute vertical positions: spread nodes evenly within each column
-function assignInitialPositions(nodes, vw, vh) {
-    const cols = {};
-    nodes.forEach(n => {
-        const col = getLayer(n.type).col;
-        if (!cols[col]) cols[col] = [];
-        cols[col].push(n);
-    });
-    Object.entries(cols).forEach(([col, members]) => {
-        const x = parseFloat(col) * vw;
-        const spacing = vh / (members.length + 1);
-        members.forEach((n, i) => {
-            n.x = x + (Math.random() - 0.5) * 30; // slight jitter
-            n.y = spacing * (i + 1);
-        });
-    });
+// ── Panel management ──
+let openPanelId=null;
+function togglePanel(id){
+    const panel=document.getElementById('panel-'+id);
+    if(openPanelId===id){closePanel();return}
+    document.querySelectorAll('.panel-overlay').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+    panel.classList.add('open');
+    document.getElementById('sb-'+{connectors:'conn',data:'data',analyze:'analyze'}[id]).classList.add('active');
+    openPanelId=id;
+}
+function closePanel(){
+    document.querySelectorAll('.panel-overlay').forEach(p=>p.classList.remove('open'));
+    document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('active'));
+    openPanelId=null;
+}
+function connectTile(el){if(el.classList.contains('on'))return;el.classList.add('on');el.querySelector('.cn-status').innerHTML='&#10003; Connected'}
+function toggleConn(el){
+    if(el.classList.contains('on')){el.classList.remove('on');el.querySelector('.cn-st').textContent='Connect'}
+    else{el.classList.add('on');el.querySelector('.cn-st').innerHTML='&#10003; Connected'}
 }
 
-function switchTab(t) {
-    document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.toggle('active', el.id === 'tab-' + t));
-    if (t === 'graph' && graphData) setTimeout(() => renderGraph(), 50);
+// ── Phase navigation ──
+function showPhaseEl(id){
+    document.querySelectorAll('.phase').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const r=document.getElementById('state-results');
+    if(id==='results') r.classList.add('show'); else r.classList.remove('show');
+    // Hide sidebar for onboarding phases, show for results
+    document.querySelector('.sidebar').style.display=(id==='results')?'flex':'none';
+}
+async function goPhase2(){
+    // Load demo artifacts when moving to phase 2
+    try{
+        await fetch(API+'/api/demo',{method:'POST'});
+        await refreshStats();await refreshObjects();
+        const r=await fetch(API+'/api/graph');graphData=await r.json();
+        document.getElementById('art-objects').textContent=graphData.node_count||graphData.nodes?.length||0;
+        document.getElementById('art-deps').textContent=graphData.edge_count||graphData.edges?.length||0;
+    }catch(e){}
+    showPhaseEl('phase-artifacts');
+}
+function goPhase3(){showPhaseEl('phase-analyze')}
+
+// Compat shim for old code paths
+function showPhase(p){
+    if(p==='welcome') showPhaseEl('phase-connect');
+    else if(p==='ready') showPhaseEl('phase-artifacts');
+    else if(p==='results'){
+        document.querySelectorAll('.phase').forEach(p2=>p2.classList.remove('active'));
+        document.getElementById('state-results').classList.add('show');
+        document.querySelector('.sidebar').style.display='flex';
+    }
 }
 
-async function loadDemo() {
-    try {
-        const r = await fetch(API + '/api/demo', { method: 'POST' });
-        const d = await r.json();
-        updateStats(d);
-        await refreshObjects();
-        await refreshGraph();
-    } catch (e) { alert('Failed to load demo: ' + e.message); }
+// ── Tabs ──
+function switchTab(t){
+    document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.tab===t));
+    document.querySelectorAll('.tab-content').forEach(e=>e.classList.toggle('active',e.id==='tab-'+t));
+    if(t==='graph'&&graphData)setTimeout(()=>renderGraph(),50);
 }
+function toggleLegend(){document.getElementById('legend').classList.toggle('show')}
 
-document.getElementById('file-input').addEventListener('change', async e => {
-    if (!e.target.files.length) return;
-    const fd = new FormData();
-    for (const f of e.target.files) fd.append('files', f);
-    try {
-        const r = await fetch(API + '/api/upload', { method: 'POST', body: fd });
-        const d = await r.json();
-        updateStats(d);
-        await refreshObjects();
-        await refreshGraph();
-    } catch (e) { alert('Upload failed: ' + e.message); }
-    e.target.value = '';
+// ── Load Demo (called from phase 2 button in panel, kept for compat) ──
+async function loadDemo(){ await goPhase2(); }
+
+// ── Upload ──
+document.getElementById('file-input').addEventListener('change',async e=>{
+    if(!e.target.files.length)return;
+    const fd=new FormData();
+    for(const f of e.target.files)fd.append('files',f);
+    try{
+        await fetch(API+'/api/upload',{method:'POST',body:fd});
+        await refreshStats();await refreshObjects();
+        const r=await fetch(API+'/api/graph');graphData=await r.json();
+        document.getElementById('art-objects').textContent=graphData.node_count||graphData.nodes?.length||0;
+        document.getElementById('art-deps').textContent=graphData.edge_count||graphData.edges?.length||0;
+        // Stay on phase 2 to show updated counts
+    }catch(e){alert('Upload failed: '+e.message)}
+    e.target.value='';
 });
 
-function updateStats(d) {
-    fetch(API + '/api/graph').then(r => r.json()).then(g => {
-        document.getElementById('stat-nodes').textContent = g.node_count;
-        document.getElementById('stat-edges').textContent = g.edge_count;
-    });
+async function refreshStats(){
+    try{const r=await fetch(API+'/api/graph');const g=await r.json();
+    const nc=g.node_count||g.nodes?.length||0;const ec=g.edge_count||g.edges?.length||0;
+    // Update wherever stats exist
+    ['stat-nodes','art-objects'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=nc});
+    ['stat-edges','art-deps'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ec});
+    }catch(e){}
 }
 
-async function refreshObjects() {
-    const r = await fetch(API + '/api/objects');
-    const d = await r.json();
-    const sel = document.getElementById('object-select');
-    const list = document.getElementById('object-list');
-    sel.innerHTML = '<option value="">Select an object...</option>';
-    d.objects.forEach(o => { const op = document.createElement('option'); op.value = o.name; op.textContent = o.name + ' (' + o.type + ')'; sel.appendChild(op); });
-    sel.disabled = false;
-    document.getElementById('analyze-btn').disabled = false;
-    list.innerHTML = '';
-    d.objects.forEach(o => {
-        const div = document.createElement('div');
-        div.className = 'obj-item';
-        div.innerHTML = '<div class="obj-dot" style="background:' + (TYPE_COLOR[o.type] || TYPE_COLOR.UNKNOWN) + '"></div><span>' + o.name + '</span><span class="obj-type">' + o.type + '</span>';
-        div.onclick = () => { sel.value = o.name; };
+async function refreshObjects(){
+    const r=await fetch(API+'/api/objects');const d=await r.json();
+    const sel=document.getElementById('object-select');
+    const list=document.getElementById('object-list');
+    sel.innerHTML='<option value="">Select an object...</option>';
+    d.objects.forEach(o=>{const op=document.createElement('option');op.value=o.name;op.textContent=o.name+' ('+o.type+')';sel.appendChild(op)});
+    list.innerHTML='';
+    d.objects.forEach(o=>{
+        const div=document.createElement('div');div.className='obj-row';
+        div.innerHTML=`<div class="dot" style="background:${TC[o.type]||TC.UNKNOWN}"></div><span class="name">${o.name}</span><span class="type">${o.type}</span>`;
+        div.onclick=()=>{sel.value=o.name;togglePanel('analyze')};
         list.appendChild(div);
     });
 }
 
-async function refreshGraph() {
-    const r = await fetch(API + '/api/graph');
-    graphData = await r.json();
-    impactedNodes.clear();
-    targetNode = null;
-    document.getElementById('graph-empty').style.display = 'none';
-    document.getElementById('legend').classList.add('show');
-    renderGraph();
+// ── Analyze ──
+async function analyzeImpact(){
+    const name=document.getElementById('object-select').value;
+    if(!name){alert('Select an object first');return}
+    const btn=document.getElementById('analyze-btn');
+    btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Analyzing...';
+    try{
+        const r=await fetch(API+'/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({object_name:name})});
+        if(!r.ok){const e=await r.json();alert(e.detail||'Error');return}
+        const d=await r.json();
+        targetNode=d.object_name;
+        directNodes=new Set((d.direct_impact||[]).map(o=>o.name));
+        indirectNodes=new Set((d.indirect_impact||[]).map(o=>o.name));
+        impactedNodes=new Set([...directNodes,...indirectNodes]);
+        showFiltered=true;
+        // Transition to results
+        document.querySelectorAll('.phase').forEach(p2=>p2.classList.remove('active'));
+        document.getElementById('state-results').classList.add('show');
+        document.querySelector('.sidebar').style.display='flex';
+        document.getElementById('legend').classList.add('show');
+        document.getElementById('btn-toggle').style.display='inline-flex';
+        renderGraph();renderImpact(d);renderAI(d);
+        switchTab('graph');
+        document.getElementById('pdf-btn').style.display='block';
+        document.querySelectorAll('.obj-row').forEach(el=>{
+            const n=el.querySelector('.name').textContent;
+            el.classList.toggle('impacted',impactedNodes.has(n)||n===targetNode);
+        });
+    }catch(e){alert('Analysis failed: '+e.message)}
+    finally{btn.disabled=false;btn.innerHTML='&#128165; What\'s the Dependency Graph?'}
 }
 
-function renderGraph() {
-    const container = document.getElementById('graph-container');
-    const existing = container.querySelector('svg');
-    if (existing) existing.remove();
-
-    const w = container.clientWidth, h = container.clientHeight;
-    if (w === 0 || h === 0) return;
-    const isMobile = w < 768;
-
-    const svg = d3.select(container).append('svg').attr('width', w).attr('height', h);
-    const defs = svg.append('defs');
-    [['arrow', THEME.edgeDefault], ['arrow-critical', THEME.edgeCritical], ['arrow-high', THEME.edgeHigh]].forEach(([id, col]) => {
-        defs.append('marker').attr('id', id).attr('viewBox', '0 -5 10 10').attr('refX', 22).attr('refY', 0)
-            .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
-            .append('path').attr('d', 'M0,-5L10,0L0,5').attr('fill', col);
-    });
-
-    const g = svg.append('g');
-    svg.call(d3.zoom().scaleExtent([0.15, 4]).on('zoom', e => g.attr('transform', e.transform)));
-
-    const nodes = graphData.nodes.map(n => ({ ...n }));
-    const edges = graphData.edges.map(e => ({ ...e }));
-
-    const link = g.append('g').selectAll('line').data(edges).join('line')
-        .attr('stroke', THEME.edgeDefault).attr('stroke-width', 1).attr('marker-end', 'url(#arrow)');
-
-    const node = g.append('g').selectAll('circle').data(nodes).join('circle')
-        .attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d))
-        .attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d))
-        .attr('cursor', 'pointer')
-        .call(d3.drag().on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.1).restart(); d.fx = d.x; d.fy = d.y; })
-            .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); /* keep pinned: fx/fy stay set */ }));
-
-    const label = g.append('g').selectAll('text').data(nodes).join('text')
-        .text(d => d.id).attr('font-size', 10)
-        .attr('fill', d => impactedNodes.has(d.id) ? THEME.labelImpacted : THEME.labelDefault)
-        .attr('font-weight', d => impactedNodes.has(d.id) ? 700 : 400)
-        .attr('text-anchor', 'middle').attr('dy', d => nodeR(d) + 14);
-
-    const tooltip = document.getElementById('tooltip');
-    node.on('mouseover', (ev, d) => {
-        tooltip.style.display = 'block';
-        tooltip.innerHTML = '<strong>' + d.id + '</strong><br>Type: ' + d.type + '<br>File: ' + (d.file || 'N/A');
-        tooltip.style.left = (ev.clientX + 14) + 'px';
-        tooltip.style.top = (ev.clientY - 14) + 'px';
-    }).on('mousemove', ev => {
-        tooltip.style.left = (ev.clientX + 14) + 'px';
-        tooltip.style.top = (ev.clientY - 14) + 'px';
-    }).on('mouseout', () => { tooltip.style.display = 'none'; });
-
-    // Click node: show info card
-    node.on('click', (ev, d) => {
-        ev.stopPropagation();
-        document.getElementById('object-select').value = d.id;
-        const card = document.getElementById('node-card');
-        const inDeg = edges.filter(e => { const t = typeof e.target === 'object' ? e.target.id : e.target; return t === d.id; }).length;
-        const outDeg = edges.filter(e => { const s = typeof e.source === 'object' ? e.source.id : e.source; return s === d.id; }).length;
-        const isImpacted = impactedNodes.has(d.id);
-        const isTarget = d.id === targetNode;
-        let riskHTML = '';
-        if (isTarget) riskHTML = '<div class="nc-risk" style="background:var(--accent-bg);color:var(--accent)">&#127919; Analysis Target</div>';
-        else if (isImpacted) riskHTML = '<div class="nc-risk" style="background:#FFEBEE;color:var(--critical)">&#9888;&#65039; Impacted</div>';
-        card.innerHTML = `
-            <div class="nc-header">
-                <div class="nc-dot" style="background:${TYPE_COLOR[d.type]||TYPE_COLOR.UNKNOWN}"></div>
-                <div><div class="nc-name">${d.id}</div><div class="nc-type">${d.type}</div></div>
-            </div>
-            <div class="nc-row"><span class="nc-label">Source File</span><span class="nc-value">${d.file||'N/A'}</span></div>
-            <div class="nc-row"><span class="nc-label">Depends on</span><span class="nc-value">${outDeg} objects</span></div>
-            <div class="nc-row"><span class="nc-label">Depended by</span><span class="nc-value">${inDeg} objects</span></div>
-            ${riskHTML}
-        `;
-        card.style.display = 'block';
-        card.style.left = Math.min(ev.clientX + 16, window.innerWidth - 280) + 'px';
-        card.style.top = Math.min(ev.clientY - 16, window.innerHeight - 250) + 'px';
-    });
-    svg.on('click', () => { document.getElementById('node-card').style.display = 'none'; });
-
-    // Use a larger virtual canvas so nodes have room; user pans/zooms to explore
-    const vw = Math.max(w * 1.6, 1200), vh = Math.max(h * 1.4, 800);
-    // Pre-assign structured positions before simulation starts
-    assignInitialPositions(nodes, vw, vh);
-    // Auto-center the view
-    const initTransform = d3.zoomIdentity.translate(-(vw - w) / 2, -(vh - h) / 2);
-    g.attr('transform', initTransform);
-
-    // Structured flow layout: strong horizontal column force, gentle vertical + link forces
-    const colStrength = isMobile ? 0 : 0.6;  // strong: keep columns aligned
-    const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(edges).id(d => d.id).distance(120).strength(0.15))
-        .force('charge', d3.forceManyBody().strength(-300))
-        .force('colX', d3.forceX(d => getLayer(d.type).col * vw).strength(colStrength))
-        .force('spreadY', d3.forceY(vh / 2).strength(0.02))
-        .force('collision', d3.forceCollide().radius(45));
-
-    let tickCount = 0;
-    sim.on('tick', () => {
-        link.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
-        node.attr('cx', d => d.x).attr('cy', d => d.y);
-        label.attr('x', d => d.x).attr('y', d => d.y);
-        tickCount++;
-        if (!isMobile && tickCount % 50 === 0) drawClusterBackgrounds(g, nodes);
-    });
-    sim.on('end', () => { if (!isMobile) drawClusterBackgrounds(g, nodes); });
-
-    simulation = sim;
-    window._gr = { node, link, label };
+// ── Graph ──
+function resetGraph(){if(graphData)renderGraph()}
+function toggleFiltered(){
+    showFiltered=!showFiltered;
+    document.getElementById('btn-toggle').textContent=showFiltered?'Show All':'Impact Only';
+    renderGraph();if(targetNode)highlightGraph();
 }
 
-function drawClusterBackgrounds(g, nodes) {
-    g.selectAll('.cluster-bg').remove();
-    g.selectAll('.cluster-label').remove();
-    const groups = {};
-    nodes.forEach(n => {
-        const grp = getLayer(n.type).label;
-        if (!groups[grp]) groups[grp] = [];
-        groups[grp].push(n);
+function renderGraph(){
+    const c=document.getElementById('graph-container');
+    const old=c.querySelector('svg');if(old)old.remove();
+    const w=c.clientWidth,h=c.clientHeight;if(!w||!h)return;
+
+    let nodes=graphData.nodes.map(n=>({...n})),edges=graphData.edges.map(e=>({...e}));
+    if(showFiltered&&targetNode){
+        const rel=new Set(impactedNodes);rel.add(targetNode);
+        nodes=nodes.filter(n=>rel.has(n.id));
+        const nids=new Set(nodes.map(n=>n.id));
+        edges=edges.filter(e=>nids.has(e.source)&&nids.has(e.target));
+    }
+    if(!nodes.length)return;
+
+    const svg=d3.select(c).append('svg').attr('width',w).attr('height',h);
+    const defs=svg.append('defs');
+    [['arr','#D1D5DB'],['arr-r','#DC2626'],['arr-o','#F97316']].forEach(([id,col])=>{
+        defs.append('marker').attr('id',id).attr('viewBox','0 -5 10 10').attr('refX',20).attr('refY',0)
+            .attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto')
+            .append('path').attr('d','M0,-5L10,0L0,5').attr('fill',col);
     });
-    const clusterG = g.insert('g', ':first-child');
-    Object.entries(groups).forEach(([label, members]) => {
-        if (members.length === 0) return;
-        const pad = 40;
-        const xs = members.map(m => m.x), ys = members.map(m => m.y);
-        const x1 = Math.min(...xs) - pad, y1 = Math.min(...ys) - pad;
-        const x2 = Math.max(...xs) + pad, y2 = Math.max(...ys) + pad;
-        clusterG.append('rect').attr('class', 'cluster-bg')
-            .attr('x', x1).attr('y', y1).attr('width', x2-x1).attr('height', y2-y1)
-            .attr('rx', 12).attr('ry', 12)
-            .attr('fill', '#F0F0F0').attr('opacity', 0.6)
-            .attr('stroke', '#D9D9D9').attr('stroke-width', 1);
-        clusterG.append('text').attr('class', 'cluster-label')
-            .attr('x', x1 + 8).attr('y', y1 + 16)
-            .attr('font-size', 11).attr('font-weight', 600)
-            .attr('fill', '#6B6B6B').text(label);
-    });
-}
 
-function nodeR(d) { return d.id === targetNode ? 20 : impactedNodes.has(d.id) ? 15 : ({ TABLE: 14, PACKAGE: 13, OIC_FLOW: 13, BIP_REPORT: 12 }[d.type] || 10); }
-function nodeFill(d) { return d.id === targetNode ? THEME.targetFill : impactedNodes.has(d.id) ? THEME.edgeCritical : (TYPE_COLOR[d.type] || TYPE_COLOR.UNKNOWN); }
-function nodeStroke(d) { return d.id === targetNode ? THEME.targetFill : impactedNodes.has(d.id) ? THEME.nodeStrokeImpacted : THEME.nodeStroke; }
-function nodeSW(d) { return impactedNodes.has(d.id) || d.id === targetNode ? 3 : 2; }
+    const g=svg.append('g');
+    const zm=d3.zoom().scaleExtent([.2,4]).on('zoom',e=>g.attr('transform',e.transform));
+    svg.call(zm);
 
-function highlightGraph() {
-    if (!window._gr) return;
-    const { node, link, label } = window._gr;
-    const hasImpact = targetNode !== null;
-    const relevantNodes = new Set(impactedNodes);
-    if (targetNode) relevantNodes.add(targetNode);
-
-    // Nodes: impacted = bright + large, unrelated = faded small
-    node.attr('r', d => nodeR(d)).attr('fill', d => nodeFill(d))
-        .attr('stroke', d => nodeStroke(d)).attr('stroke-width', d => nodeSW(d))
-        .attr('opacity', d => hasImpact ? (relevantNodes.has(d.id) ? 1 : 0.15) : 1);
-
-    // Edges: classify and fade unrelated
-    link.each(function(d) {
-        const s = typeof d.source === 'object' ? d.source.id : d.source;
-        const t = typeof d.target === 'object' ? d.target.id : d.target;
-        const sImp = relevantNodes.has(s);
-        const tImp = relevantNodes.has(t);
-        const el = d3.select(this);
-        if (sImp && tImp) {
-            el.attr('stroke', THEME.edgeCritical).attr('stroke-width', 3)
-              .attr('marker-end', 'url(#arrow-critical)').attr('opacity', 1);
-        } else if (sImp || tImp) {
-            el.attr('stroke', THEME.edgeHigh).attr('stroke-width', 2)
-              .attr('marker-end', 'url(#arrow-high)').attr('opacity', 0.8);
+    // Radial layout: target at center, direct ring, indirect ring
+    const cx=w/2, cy=h/2;
+    nodes.forEach(n=>{
+        if(n.id===targetNode){n.x=cx;n.y=cy}
+        else if(directNodes.has(n.id)){
+            const idx=[...directNodes].indexOf(n.id);
+            const angle=(2*Math.PI*idx)/directNodes.size - Math.PI/2;
+            const r1=Math.min(w,h)*0.25;
+            n.x=cx+Math.cos(angle)*r1;n.y=cy+Math.sin(angle)*r1;
+        } else if(indirectNodes.has(n.id)){
+            const idx=[...indirectNodes].indexOf(n.id);
+            const angle=(2*Math.PI*idx)/indirectNodes.size - Math.PI/4;
+            const r2=Math.min(w,h)*0.42;
+            n.x=cx+Math.cos(angle)*r2;n.y=cy+Math.sin(angle)*r2;
         } else {
-            el.attr('stroke', THEME.edgeDefault).attr('stroke-width', 1)
-              .attr('marker-end', 'url(#arrow)').attr('opacity', hasImpact ? 0.08 : 1);
+            n.x=cx+(Math.random()-.5)*w*0.6;n.y=cy+(Math.random()-.5)*h*0.6;
         }
     });
 
-    // Labels: impacted = red bold, unrelated = faded
-    label.attr('fill', d => relevantNodes.has(d.id) ? THEME.labelImpacted : THEME.labelDefault)
-         .attr('font-weight', d => relevantNodes.has(d.id) ? 700 : 400)
-         .attr('opacity', d => hasImpact ? (relevantNodes.has(d.id) ? 1 : 0.15) : 1);
+    // Draw concentric rings for blast radius zones
+    if(targetNode){
+        const rg=g.append('g');
+        const r1=Math.min(w,h)*0.25, r2=Math.min(w,h)*0.42;
+        rg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r2+30).attr('fill','none').attr('stroke','#FECACA').attr('stroke-width',1).attr('stroke-dasharray','4,4').attr('opacity',.6);
+        rg.append('circle').attr('cx',cx).attr('cy',cy).attr('r',r1+20).attr('fill','none').attr('stroke','#FCA5A5').attr('stroke-width',1).attr('stroke-dasharray','4,4').attr('opacity',.6);
+        rg.append('text').attr('x',cx+r1+24).attr('y',cy-6).attr('font-size',9).attr('fill','#DC2626').attr('opacity',.5).text('Direct Impact');
+        rg.append('text').attr('x',cx+r2+34).attr('y',cy-6).attr('font-size',9).attr('fill','#F97316').attr('opacity',.5).text('Indirect Impact');
+    }
+
+    const link=g.append('g').selectAll('line').data(edges).join('line')
+        .attr('stroke','#D1D5DB').attr('stroke-width',1).attr('marker-end','url(#arr)').attr('opacity',.5);
+
+    const node=g.append('g').selectAll('circle').data(nodes).join('circle')
+        .attr('r',d=>nR(d)).attr('fill',d=>nF(d)).attr('stroke',d=>nS(d)).attr('stroke-width',d=>nW(d))
+        .attr('cursor','grab')
+        .call(d3.drag()
+            .on('start',(e,d)=>{if(!e.active)sim.alphaTarget(.05).restart();d.fx=d.x;d.fy=d.y})
+            .on('drag',(e,d)=>{d.fx=e.x;d.fy=e.y})
+            .on('end',(e,d)=>{if(!e.active)sim.alphaTarget(0)}));
+
+    const label=g.append('g').selectAll('text').data(nodes).join('text')
+        .text(d=>d.id.length>20?d.id.substring(0,18)+'…':d.id)
+        .attr('font-size',10).attr('font-family','Inter,system-ui,sans-serif')
+        .attr('fill',d=>{if(d.id===targetNode)return'#B45309';if(directNodes.has(d.id))return'#DC2626';if(indirectNodes.has(d.id))return'#C2410C';return'#374151'})
+        .attr('font-weight',d=>(impactedNodes.has(d.id)||d.id===targetNode)?700:500)
+        .attr('text-anchor','middle').attr('dy',d=>nR(d)+13);
+
+    const tip=document.getElementById('tooltip');
+    node.on('mouseover',(ev,d)=>{tip.style.display='block';tip.innerHTML=`<strong>${d.id}</strong><br>Type: ${d.type}<br>File: ${d.file||'N/A'}`;tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY-12)+'px'})
+        .on('mousemove',ev=>{tip.style.left=(ev.clientX+12)+'px';tip.style.top=(ev.clientY-12)+'px'})
+        .on('mouseout',()=>{tip.style.display='none'});
+
+    node.on('click',(ev,d)=>{
+        ev.stopPropagation();
+        const card=document.getElementById('node-card');
+        const inD=edges.filter(e=>{const t=typeof e.target==='object'?e.target.id:e.target;return t===d.id}).length;
+        const outD=edges.filter(e=>{const s=typeof e.source==='object'?e.source.id:e.source;return s===d.id}).length;
+        let rH='';
+        if(d.id===targetNode)rH='<div class="nc-risk" style="background:var(--accent-bg);color:#B45309">&#127919; Target</div>';
+        else if(directNodes.has(d.id))rH='<div class="nc-risk" style="background:#FEE2E2;color:#DC2626">Direct Impact</div>';
+        else if(indirectNodes.has(d.id))rH='<div class="nc-risk" style="background:#FFF7ED;color:#EA580C">Indirect Impact</div>';
+        card.innerHTML=`<div class="nc-header"><div class="nc-dot" style="background:${TC[d.type]||TC.UNKNOWN}"></div><div><div class="nc-name">${d.id}</div><div class="nc-type">${d.type}</div></div></div>
+            <div class="nc-row"><span class="nc-label">Source</span><span class="nc-value">${d.file||'N/A'}</span></div>
+            <div class="nc-row"><span class="nc-label">Depends on</span><span class="nc-value">${outD}</span></div>
+            <div class="nc-row"><span class="nc-label">Used by</span><span class="nc-value">${inD}</span></div>${rH}`;
+        card.style.display='block';
+        card.style.left=Math.min(ev.clientX+14,window.innerWidth-240)+'px';
+        card.style.top=Math.min(ev.clientY-14,window.innerHeight-200)+'px';
+    });
+    svg.on('click',()=>{document.getElementById('node-card').style.display='none'});
+
+    // No initial transform needed — layout is centered in viewport
+    const sim=d3.forceSimulation(nodes)
+        .force('link',d3.forceLink(edges).id(d=>d.id).distance(80).strength(.08))
+        .force('charge',d3.forceManyBody().strength(-180))
+        .force('center',d3.forceCenter(cx,cy).strength(.03))
+        .force('collision',d3.forceCollide().radius(40))
+        // Keep target pinned at center
+        .force('targetPin',()=>{
+            nodes.forEach(n=>{if(n.id===targetNode){n.x=cx;n.y=cy;n.fx=cx;n.fy=cy}});
+        });
+
+    sim.on('tick',()=>{
+        link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+        node.attr('cx',d=>d.x).attr('cy',d=>d.y);
+        label.attr('x',d=>d.x).attr('y',d=>d.y);
+    });
+
+    simulation=sim;window._gr={node,link,label,edges};
+    if(targetNode)highlightGraph();
 }
 
-async function analyzeImpact() {
-    const name = document.getElementById('object-select').value;
-    if (!name) { alert('Select an object first'); return; }
-    const btn = document.getElementById('analyze-btn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
-    try {
-        const r = await fetch(API + '/api/analyze', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ object_name: name }),
-        });
-        if (!r.ok) { const e = await r.json(); alert(e.detail || 'Error'); return; }
-        const d = await r.json();
+function nR(d){if(d.id===targetNode)return 20;if(directNodes.has(d.id))return 13;if(indirectNodes.has(d.id))return 11;return{TABLE:11,PACKAGE:10,'PACKAGE BODY':10,OIC_FLOW:10,BIP_REPORT:10}[d.type]||8}
+function nF(d){if(d.id===targetNode)return'#F59E0B';if(directNodes.has(d.id))return'#DC2626';if(indirectNodes.has(d.id))return'#F97316';return TC[d.type]||TC.UNKNOWN}
+function nS(d){if(d.id===targetNode)return'#D97706';if(directNodes.has(d.id))return'#991B1B';if(indirectNodes.has(d.id))return'#C2410C';return'#FFF'}
+function nW(d){return(impactedNodes.has(d.id)||d.id===targetNode)?3:2}
 
-        targetNode = d.object_name;
-        impactedNodes = new Set(d.all_impacted || []);
-        highlightGraph();
+function highlightGraph(){
+    if(!window._gr)return;const{node,link,label,edges}=window._gr;
+    const rel=new Set(impactedNodes);if(targetNode)rel.add(targetNode);const has=!!targetNode;
 
-        document.querySelectorAll('.obj-item').forEach(el => {
-            const n = el.querySelector('span').textContent;
-            el.classList.toggle('impacted', impactedNodes.has(n) || n === targetNode);
-        });
+    node.attr('r',d=>nR(d)).attr('fill',d=>nF(d)).attr('stroke',d=>nS(d)).attr('stroke-width',d=>nW(d))
+        .attr('opacity',d=>has&&!showFiltered?(rel.has(d.id)?1:.1):1);
 
-        renderImpact(d);
-        renderAI(d);
-        switchTab('impact');
-        document.getElementById('pdf-btn').style.display = 'flex';
-    } catch (e) { alert('Analysis failed: ' + e.message); }
-    finally { btn.disabled = false; btn.innerHTML = '&#128165; Compute Impact'; }
+    link.each(function(d){
+        const s=typeof d.source==='object'?d.source.id:d.source;
+        const t=typeof d.target==='object'?d.target.id:d.target;
+        const el=d3.select(this);
+        const isTarget=s===targetNode||t===targetNode;
+        const isDirect=(directNodes.has(s)||s===targetNode)&&(directNodes.has(t)||t===targetNode);
+        if(isTarget||isDirect){el.attr('stroke','#DC2626').attr('stroke-width',2.5).attr('marker-end','url(#arr-r)').attr('opacity',1)}
+        else if(rel.has(s)&&rel.has(t)){el.attr('stroke','#F97316').attr('stroke-width',1.8).attr('marker-end','url(#arr-o)').attr('opacity',.8)}
+        else{el.attr('stroke','#D1D5DB').attr('stroke-width',1).attr('marker-end','url(#arr)').attr('opacity',has&&!showFiltered?.05:.5)}
+    });
+
+    label.attr('fill',d=>{if(d.id===targetNode)return'#B45309';if(directNodes.has(d.id))return'#DC2626';if(indirectNodes.has(d.id))return'#C2410C';return'#374151'})
+         .attr('font-weight',d=>rel.has(d.id)?700:500)
+         .attr('opacity',d=>has&&!showFiltered?(rel.has(d.id)?1:.1):1);
 }
 
-function renderImpact(d) {
-    document.getElementById('impact-empty').style.display = 'none';
-    const el = document.getElementById('impact-result'); el.style.display = 'block';
-    const s = d.severity.toLowerCase();
-    const sevColor = {'critical':'var(--critical)','high':'var(--high)','medium':'var(--medium)','low':'var(--low)'}[s] || 'var(--text-dim)';
-    const dashLen = (d.risk_score / 100) * 251.3;
-
-    const allTypes = new Set([...d.direct_impact.map(o => o.type), ...d.indirect_impact.map(o => o.type)]);
-    const totalImpacted = d.direct_impact.length + d.indirect_impact.length;
-    const summaryText = `Modifying <strong>${d.object_name}</strong> affects <strong>${totalImpacted}</strong> object${totalImpacted!==1?'s':''} across <strong>${allTypes.size}</strong> artifact type${allTypes.size!==1?'s':''}`;
-
-    el.innerHTML = `
-        <div class="impact-summary">&#9888;&#65039; ${summaryText}</div>
+function renderImpact(d){
+    const el=document.getElementById('impact-result');
+    const s=d.severity.toLowerCase();
+    const sc2={critical:'var(--red)',high:'var(--orange)',medium:'#D97706',low:'var(--green)'}[s]||'var(--dim)';
+    const dl=(d.risk_score/100)*251.3;
+    const types=new Set([...d.direct_impact.map(o=>o.type),...d.indirect_impact.map(o=>o.type)]);
+    const tot=d.direct_impact.length+d.indirect_impact.length;
+    el.innerHTML=`
+        <div class="impact-banner">&#9888;&#65039; Modifying <strong style="margin:0 3px">${d.object_name}</strong> affects <strong style="margin:0 3px">${tot}</strong> object${tot!==1?'s':''} across <strong style="margin:0 3px">${types.size}</strong> type${types.size!==1?'s':''}</div>
         <div class="risk-header">
-            <svg class="risk-gauge" viewBox="0 0 200 120" width="200" height="120">
+            <svg viewBox="0 0 200 120" width="170" height="102" style="display:block;margin:0 auto 4px">
                 <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="var(--border)" stroke-width="12" stroke-linecap="round"/>
-                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="${sevColor}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dashLen} 999" style="transition: stroke-dasharray 0.8s ease"/>
-                <text x="100" y="90" text-anchor="middle" font-size="36" font-weight="900" fill="${sevColor}">${d.risk_score}</text>
-                <text x="100" y="108" text-anchor="middle" font-size="11" fill="var(--text-dim)">/ 100</text>
+                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="${sc2}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dl} 999" style="transition:stroke-dasharray .8s ease"/>
+                <text x="100" y="86" text-anchor="middle" font-size="32" font-weight="900" fill="${sc2}">${d.risk_score}</text>
+                <text x="100" y="104" text-anchor="middle" font-size="10" fill="var(--muted)">/ 100</text>
             </svg>
-            <div class="severity ${s}">${d.severity}</div>
+            <div class="sev-badge ${s}">${d.severity}</div>
             <div class="target-name">${d.object_name}</div>
         </div>
         <div class="impact-stats">
-            <div class="impact-stat"><div class="num direct">${d.direct_impact.length}</div><div class="txt">Direct Impact</div></div>
-            <div class="impact-stat"><div class="num indirect">${d.indirect_impact.length}</div><div class="txt">Indirect Impact</div></div>
+            <div class="impact-stat"><div class="num d">${d.direct_impact.length}</div><div class="txt">Direct Impact</div></div>
+            <div class="impact-stat"><div class="num i">${d.indirect_impact.length}</div><div class="txt">Indirect Impact</div></div>
         </div>
-        ${d.direct_impact.length ? '<div class="impact-group"><h3>Direct Impacts</h3>' + d.direct_impact.map(o => '<div class="impact-obj"><div class="obj-dot" style="background:var(--critical)"></div>' + o.name + '<span class="tag">' + o.type + '</span></div>').join('') + '</div>' : ''}
-        ${d.indirect_impact.length ? '<div class="impact-group"><h3>Indirect (Transitive) Impacts</h3>' + d.indirect_impact.map(o => '<div class="impact-obj"><div class="obj-dot" style="background:var(--high)"></div>' + o.name + '<span class="tag">' + o.type + '</span></div>').join('') + '</div>' : ''}
+        ${d.direct_impact.length?'<div class="impact-group"><h3>Direct Impacts</h3>'+d.direct_impact.map(o=>`<div class="impact-obj"><div class="dot" style="background:var(--red);width:6px;height:6px;border-radius:50%"></div>${o.name}<span class="tag">${o.type}</span></div>`).join('')+'</div>':''}
+        ${d.indirect_impact.length?'<div class="impact-group"><h3>Indirect Impacts</h3>'+d.indirect_impact.map(o=>`<div class="impact-obj"><div class="dot" style="background:var(--orange);width:6px;height:6px;border-radius:50%"></div>${o.name}<span class="tag">${o.type}</span></div>`).join('')+'</div>':''}
     `;
 }
 
-function renderAI(d) {
-    document.getElementById('ai-empty').style.display = 'none';
-    const el = document.getElementById('ai-result'); el.style.display = 'block';
-    const a = d.ai_analysis;
-    const badgeClass = d.ai_mode === 'blueverse' ? 'blueverse' : d.ai_mode === 'live' ? 'live' : 'mock';
-    const badgeText = d.ai_mode === 'blueverse' ? '&#128302; BlueVerse Agent Live' : d.ai_mode === 'live' ? '&#9889; OCI GenAI Live' : '&#127917; Demo Mode';
-    el.innerHTML = `
-        <div class="ai-mode-badge"><span class="ai-badge ${badgeClass}">${badgeText}</span></div>
-        <div class="ai-section"><h3><span class="ai-icon">&#128269;</span> Root Cause Analysis</h3><p>${a.root_cause || 'N/A'}</p></div>
-        <div class="ai-section"><h3><span class="ai-icon">&#128736;</span> Fix Recommendations</h3><ol>${(a.recommendations || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
-        <div class="ai-section"><h3><span class="ai-icon">&#9989;</span> Testing Checklist</h3><ul>${(a.testing_checklist || []).map(t => '<li>' + t + '</li>').join('')}</ul></div>
-        <div class="ai-section"><h3><span class="ai-icon">&#128260;</span> Rollback Plan</h3><ol>${(a.rollback_plan || []).map(r => '<li>' + r + '</li>').join('')}</ol></div>
+function renderAI(d){
+    const el=document.getElementById('ai-result');const a=d.ai_analysis;
+    const bc=d.ai_mode==='blueverse'?'bl':d.ai_mode==='live'?'live':'mock';
+    const bt=d.ai_mode==='blueverse'?'&#128302; BlueVerse Agent':d.ai_mode==='live'?'&#9889; OCI GenAI':'&#127917; Demo Mode';
+    el.innerHTML=`
+        <div class="ai-badge-wrap"><span class="h-badge ${bc}">${bt}</span></div>
+        <div class="ai-section"><h3>&#128269; Root Cause</h3><p>${a.root_cause||'N/A'}</p></div>
+        <div class="ai-section"><h3>&#128736; Recommendations</h3><ol>${(a.recommendations||[]).map(r=>'<li>'+r+'</li>').join('')}</ol></div>
+        <div class="ai-section"><h3>&#9989; Testing</h3><ul>${(a.testing_checklist||[]).map(t=>'<li>'+t+'</li>').join('')}</ul></div>
+        <div class="ai-section"><h3>&#128260; Rollback</h3><ol>${(a.rollback_plan||[]).map(r=>'<li>'+r+'</li>').join('')}</ol></div>
     `;
 }
 
-async function downloadPDF() {
-    const name = document.getElementById('object-select').value;
-    if (!name) { alert('Select an object first'); return; }
-    const btn = document.getElementById('pdf-btn');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Generating PDF...';
-    try {
-        const r = await fetch(API + '/api/report/' + encodeURIComponent(name));
-        if (!r.ok) { const e = await r.json(); alert(e.detail || 'PDF generation failed'); return; }
-        const blob = await r.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'impact_report_' + name + '.pdf';
-        document.body.appendChild(a); a.click(); a.remove();
-        window.URL.revokeObjectURL(url);
-    } catch (e) { alert('PDF download failed: ' + e.message); }
-    finally { btn.disabled = false; btn.innerHTML = '&#128196; Download PDF Report'; }
+async function downloadPDF(){
+    const name=document.getElementById('object-select').value;if(!name)return;
+    const btn=document.getElementById('pdf-btn');
+    btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Generating...';
+    try{
+        const r=await fetch(API+'/api/report/'+encodeURIComponent(name));
+        if(!r.ok){alert('PDF failed');return}
+        const blob=await r.blob();const url=window.URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=url;a.download='impact_report_'+name+'.pdf';
+        document.body.appendChild(a);a.click();a.remove();window.URL.revokeObjectURL(url);
+    }catch(e){alert('PDF failed: '+e.message)}
+    finally{btn.disabled=false;btn.innerHTML='&#128196; Export PDF Report'}
 }
 
-// Init: check backend status
-(async () => {
-    try {
-        const r = await fetch(API + '/');
-        const d = await r.json();
-        if (d.ai_mode === 'blueverse') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge blueverse'; b.innerHTML = '&#128302; BlueVerse Agent Live'; }
-        else if (d.ai_mode === 'live') { const b = document.getElementById('ai-badge'); b.className = 'ai-badge live'; b.innerHTML = '&#9889; OCI GenAI Live'; }
-        if (d.objects_loaded > 0) { await refreshObjects(); await refreshGraph(); }
-    } catch (e) { console.log('Backend not reachable — UI in standalone mode'); }
+// ── Login ──
+function doLogin(){
+    document.getElementById('login-screen').classList.add('hidden');
+    // After transition, remove from DOM to free up pointer events
+    setTimeout(()=>{document.getElementById('login-screen').style.display='none'},600);
+}
+// Allow Enter key to submit login
+document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!document.getElementById('login-screen').classList.contains('hidden')) doLogin();
+});
+
+// ── Init ──
+(async()=>{
+    try{
+        const r=await fetch(API+'/');const d=await r.json();
+        const b=document.getElementById('ai-badge');
+        if(d.ai_mode==='blueverse'){b.className='h-badge bl';b.innerHTML='&#128302; BlueVerse Agent Live'}
+        else if(d.ai_mode==='live'){b.className='h-badge live';b.innerHTML='&#9889; OCI GenAI Live'}
+        if(d.objects_loaded>0){
+            await refreshStats();await refreshObjects();
+            const gr=await fetch(API+'/api/graph');graphData=await gr.json();
+            // Skip to phase 3 (analyze) since artifacts already loaded
+            document.getElementById('art-objects').textContent=graphData.node_count||graphData.nodes?.length||0;
+            document.getElementById('art-deps').textContent=graphData.edge_count||graphData.edges?.length||0;
+            showPhaseEl('phase-analyze');
+        }else{
+            showPhaseEl('phase-connect');
+            document.querySelector('.sidebar').style.display='none';
+        }
+    }catch(e){console.log('Backend not reachable');showPhase('welcome')}
 })();
 </script>
 </body>
