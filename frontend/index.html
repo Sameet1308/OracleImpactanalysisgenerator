@@ -289,10 +289,10 @@
             <div class="h-title">Oracle ERP Impact Analysis</div>
         </div>
         <nav class="h-nav">
-            <a href="#" class="active">Dashboard</a>
-            <a href="#">Analyze Change</a>
-            <a href="#">Artifact Explorer</a>
-            <a href="#">Reports</a>
+            <a href="#" class="active" onclick="navTo(event,'dashboard')">Dashboard</a>
+            <a href="#" onclick="navTo(event,'analyze')">Analyze Change</a>
+            <a href="#" onclick="navTo(event,'explorer')">Artifact Explorer</a>
+            <a href="#" onclick="navTo(event,'reports')">Reports</a>
         </nav>
     </div>
     <div class="h-right">
@@ -437,16 +437,16 @@
                     </div>
                 </div>
                 <!-- Bottom tabs -->
-                <div class="pc-tabs" id="pc-tabs" style="display:none">
+                <div class="pc-tabs" id="pc-tabs">
                     <div class="pc-tab active" data-tab="evidence" onclick="switchTab(this)">Evidence</div>
                     <div class="pc-tab" data-tab="testscope" onclick="switchTab(this)">Test Scope</div>
                     <div class="pc-tab" data-tab="rollback" onclick="switchTab(this)">Rollback Plan</div>
                     <div class="pc-tab" data-tab="callhier" onclick="switchTab(this)">Call Hierarchy</div>
                 </div>
-                <div class="pc-tab-content show" id="tab-evidence"></div>
-                <div class="pc-tab-content" id="tab-testscope"></div>
-                <div class="pc-tab-content" id="tab-rollback"></div>
-                <div class="pc-tab-content" id="tab-callhier"></div>
+                <div class="pc-tab-content show" id="tab-evidence"><p style="color:var(--muted);font-style:italic">Run an analysis to see root cause evidence</p></div>
+                <div class="pc-tab-content" id="tab-testscope"><p style="color:var(--muted);font-style:italic">Test scope will appear after analysis</p></div>
+                <div class="pc-tab-content" id="tab-rollback"><p style="color:var(--muted);font-style:italic">Rollback plan will appear after analysis</p></div>
+                <div class="pc-tab-content" id="tab-callhier"><p style="color:var(--muted);font-style:italic">Call hierarchy will appear after analysis</p></div>
             </div>
 
             <!-- RIGHT: Impact Summary -->
@@ -479,6 +479,29 @@ function getEdgeLabel(sType, tType) {
     if (EL[sType] && EL[sType][tType]) return EL[sType][tType];
     if (EL[tType] && EL[tType][sType]) return EL[tType][sType];
     return 'Depends On';
+}
+
+// Nav bar navigation
+function navTo(ev, section) {
+    ev.preventDefault();
+    document.querySelectorAll('.h-nav a').forEach(a => a.classList.remove('active'));
+    ev.target.classList.add('active');
+    if (section === 'dashboard') {
+        // Already on dashboard, scroll to top
+    } else if (section === 'analyze') {
+        // Focus on the object selector for analysis
+        const sel = document.getElementById('object-select');
+        if (sel) { sel.focus(); sel.click(); }
+    } else if (section === 'explorer') {
+        // Show full graph (reset filter)
+        if (graphData) { showFiltered = false; renderGraph(); }
+        const btn = document.getElementById('btn-toggle');
+        if (btn) { btn.style.display = 'inline-flex'; btn.textContent = 'Impact Only'; }
+    } else if (section === 'reports') {
+        // Trigger PDF export if analysis exists
+        if (targetNode) { downloadPDF(); }
+        else { alert('Run an analysis first to generate a report'); }
+    }
 }
 
 // Phase navigation
@@ -603,7 +626,6 @@ async function analyzeImpact() {
 
         document.getElementById('btn-toggle').style.display = 'inline-flex';
         document.getElementById('pdf-btn').style.display = 'flex';
-        document.getElementById('pc-tabs').style.display = 'flex';
 
         renderGraph();
         renderImpactSummary(d);
