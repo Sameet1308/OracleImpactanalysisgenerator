@@ -639,12 +639,27 @@ document.getElementById('file-input').addEventListener('change', async e => {
     const fd = new FormData();
     for (const f of e.target.files) fd.append('files', f);
     try {
-        await fetch(API + '/api/upload', {method: 'POST', body: fd});
+        const uploadRes = await fetch(API + '/api/upload', {method: 'POST', body: fd});
+        const uploadData = await uploadRes.json();
         await refreshStats(); await refreshObjects(); refreshKBStatus();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
         document.getElementById('art-objects').textContent = graphData.node_count || graphData.nodes?.length || 0;
         document.getElementById('art-deps').textContent = graphData.edge_count || graphData.edges?.length || 0;
-        if (document.getElementById('dashboard').classList.contains('show')) renderGraph();
+        // Auto-populate Change Details and trigger analysis
+        showPhaseEl('dashboard');
+        if (graphData.nodes && graphData.nodes.length > 0) {
+            // Find first object from uploaded file and auto-select it
+            const uploadedFileName = e.target.files[0]?.name || '';
+            const match = graphData.nodes.find(n => n.file === uploadedFileName) || graphData.nodes[0];
+            if (match) {
+                const sel = document.getElementById('object-select');
+                sel.value = match.id;
+                document.getElementById('pl-artifact').textContent = match.id;
+                document.getElementById('pl-type').textContent = (match.type || 'UNKNOWN').replace('_', ' ');
+                // Auto-run analysis
+                analyzeImpact();
+            }
+        }
     } catch(e) { alert('Upload failed: ' + e.message); }
     e.target.value = '';
 });
@@ -857,7 +872,7 @@ function renderGraph() {
             else if (directNodes.has(n.id)) {
                 const idx = [...directNodes].indexOf(n.id);
                 const angle = (2 * Math.PI * idx) / directNodes.size - Math.PI / 2;
-                const r1 = Math.min(w, h) * 0.28;
+                const r1 = Math.min(w, h) * 0.32;
                 n.x = cx + Math.cos(angle) * r1; n.y = cy + Math.sin(angle) * r1;
             } else if (indirectNodes.has(n.id)) {
                 const idx = [...indirectNodes].indexOf(n.id);
@@ -911,7 +926,7 @@ function renderGraph() {
         .call(d3.drag()
             .on('start', (e, d) => { if (!e.active) sim.alphaTarget(.05).restart(); d.fx = d.x; d.fy = d.y; })
             .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); }));
+            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); /* Keep fx/fy so node stays pinned where dropped */ }));
 
     // Target glow
     node.filter(d => d.id === targetNode).append('circle')
@@ -1000,10 +1015,10 @@ function renderGraph() {
     svg.on('click', () => { document.getElementById('node-card').style.display = 'none'; });
 
     const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(edges).id(d => d.id).distance(140).strength(.04))
-        .force('charge', d3.forceManyBody().strength(-350))
-        .force('center', d3.forceCenter(cx, cy).strength(.015))
-        .force('collision', d3.forceCollide().radius(d => getCardW(d) / 2 + 12));
+        .force('link', d3.forceLink(edges).id(d => d.id).distance(160).strength(.03))
+        .force('charge', d3.forceManyBody().strength(-500))
+        .force('center', d3.forceCenter(cx, cy).strength(.01))
+        .force('collision', d3.forceCollide().radius(d => getCardW(d) / 2 + 25).strength(.8));
 
     if (targetNode) {
         sim.force('targetPin', () => {
