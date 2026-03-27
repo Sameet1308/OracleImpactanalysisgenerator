@@ -5,6 +5,56 @@ Each session is documented with changes, files modified, and next steps.
 
 ---
 
+## 2026-03-27 — RAG Knowledge Base + Token Management + UI Polish
+
+**What changed:**
+- Added RAG knowledge base: ChromaDB + sentence-transformers (all-MiniLM-L6-v2)
+- Artifact source code is chunked, embedded, and retrieved during analysis
+- AI prompt now includes actual source code snippets (5 chunks per analysis)
+- Added runtime token management: POST /api/token + GET /api/token/status
+- Settings modal: paste BlueVerse JWT from UI, no server restart needed
+- LLM status badge: green (live), amber (expiring), red (expired) with countdown
+- KB status badge: shows chunk count after loading artifacts
+- Upload Change File now auto-triggers analysis + populates Change Details
+- Nodes stay pinned where dragged (no snap-back)
+- Increased collision force to prevent node overlap
+- Removed duplicate Upload button from toolbar
+- Fixed token save bug (was checking 'ok' instead of 'valid')
+- Global CLAUDE.md + 10 custom skills for future projects
+- Session discipline rules added
+
+**Files modified/created:**
+- `backend/knowledge/__init__.py` — new RAG package
+- `backend/knowledge/rag.py` — KnowledgeBase class (chunking, embedding, retrieval)
+- `backend/ai/oci_genai.py` — added code_context parameter to prompt builder
+- `backend/ai/blueverse.py` — added update_token() and get_token_status()
+- `backend/main.py` — KB integration, token endpoints, /api/knowledge/status
+- `backend/requirements.txt` — added chromadb, sentence-transformers
+- `frontend/index.html` — Settings modal, LLM/KB badges, upload auto-analyze, graph fixes
+- `~/.claude/CLAUDE.md` — global session discipline rules
+- `~/.claude/commands/*.md` — 10 global skills (init-project, pitch, sell, etc.)
+- `CLAUDE.md` — updated project architecture
+- `CHANGELOG.md` — this entry
+
+**Commits this session:**
+- `582ae9a` Add RAG knowledge base: source code context for AI analysis
+- `2bf70c6` Add Settings modal for BlueVerse token management
+- `7a5039e` Add runtime token management for BlueVerse JWT
+- `5610464` Add session discipline: CHANGELOG.md + updated CLAUDE.md
+- `7670aaa` Fix UI: graph placeholder, nav links, edge colors, tab sizing
+- `f0509cd` Fix nav links and bottom tabs visibility
+- `3c09bf4` Card-style graph nodes, layout fixes, viewport fit
+- `f064852` Polish UI: graph spacing, drag pin, auto-analyze on upload
+
+**Verified metrics:**
+- RAG: 31 chunks, 21 objects, 5 files indexed from demo data
+- EMPLOYEES analysis: score 82, CRITICAL, 5 code context chunks used
+- Token management: paste via UI, 20-min validity, auto-status check
+
+**Status: ALL FEATURES COMPLETE** ✅
+
+---
+
 ## 2026-03-23 — Enterprise UI Overhaul + BlueVerse Integration
 
 **What changed:**
