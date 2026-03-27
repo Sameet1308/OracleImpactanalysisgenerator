@@ -44,17 +44,23 @@ open frontend/index.html
 ## Architecture
 
 ```
-frontend/index.html (D3.js) ──HTTP──▶ FastAPI :8000 ──▶ Parsers + NetworkX + OCI GenAI
+frontend/index.html (D3.js) ──HTTP──▶ FastAPI :8000 ──▶ Parsers + NetworkX + BlueVerse/OCI GenAI
 ```
 
 - **Parsers** (`backend/parsers/`): sql_parser (sqlparse + regex), oic_parser (xml.etree), groovy_parser (regex). Dispatcher in `__init__.py` routes by file extension.
 - **Graph Engine** (`backend/graph/engine.py`): NetworkX DiGraph. Edge A→B means A depends on B. Impact analysis walks predecessors (reverse). Score = 52% direct + 18% indirect + 30% type criticality.
-- **AI Module** (`backend/ai/oci_genai.py`): Mock returns structured dict with root_cause, recommendations, testing_checklist, rollback_plan. Live mode calls OCI Generative AI (Cohere Command A) via `oci` SDK.
-- **Frontend**: Dark theme, 30/70 left-right layout. Left = controls. Right = 3 tabs (Graph, Impact, AI). D3.js force-directed graph with type-colored nodes. Impacted nodes turn red.
+- **AI Module** (`backend/ai/`): 3-tier fallback: BlueVerse Agent → OCI GenAI → Mock. `blueverse.py` calls the BlueVerse Marketplace REST API. `oci_genai.py` handles OCI and mock modes.
+- **Frontend**: Enterprise light theme, 3-column layout (Change Details | Dependency Graph | Impact Summary). Login → Connect → Artifacts → Dashboard flow. D3.js radial spoke graph with card-style nodes, edge labels, risk-colored connectors.
 
-## Environment Variables (for OCI live mode)
+## Environment Variables
 
 ```
+# BlueVerse Agent (primary AI — set in backend/.env)
+BLUEVERSE_TOKEN=<JWT token>
+BLUEVERSE_SPACE=AI_Elite_ora1_45e8873c
+BLUEVERSE_FLOW_ID=69ba8b9226e0ed36e19c0c05
+
+# OCI GenAI (fallback)
 OCI_GENAI_ENABLED=true
 OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxx
 OCI_REGION=us-chicago-1
@@ -63,7 +69,43 @@ OCI_MODEL_ID=cohere.command-a-03-2025
 
 ## Verified Metrics
 
-- 15 objects, 30 dependencies parsed from 4 sample files
+- 25 objects parsed from 4 sample files
 - 20 graph nodes, 24 edges
-- EMPLOYEES: score 82, CRITICAL, 8 direct impacts
+- EMPLOYEES: score 82, CRITICAL, 6 direct + 3 indirect impacts
+- BlueVerse AI: Oracle-specific recommendations with ORA error codes
 - Mock AI: 5 recommendations, 5 testing items, 5 rollback steps
+
+## Session Discipline — MANDATORY for every Claude session
+
+### At Session Start
+1. Read this file first
+2. Read `CHANGELOG.md` to understand what was done previously
+3. Run `git log --oneline -10` to see recent commits
+4. Run `git status` to check for uncommitted work
+5. Summarize to the user: "Here's where we left off: [last commit], [open items]"
+
+### During Work
+1. Work in the **main folder** (`D:\WorkspaceAI\oracle-pythia-impact`), NOT in worktrees
+2. Test every change in the browser before calling it done — take a screenshot
+3. Commit after each meaningful unit of work, not in bulk at the end
+4. Never hardcode credentials — use `.env` files
+
+### At Session End
+1. Commit all pending changes with descriptive messages
+2. Push to GitHub
+3. Update `CHANGELOG.md` with what was done this session
+4. Verify `git status` is clean
+
+### CHANGELOG.md Format
+Each session entry should follow:
+```
+## YYYY-MM-DD — Session Summary Title
+**What changed:**
+- bullet points of changes made
+**Files modified:**
+- list of files
+**Open items:**
+- what still needs work
+**Next steps:**
+- what to do next session
+```
