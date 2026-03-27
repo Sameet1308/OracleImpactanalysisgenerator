@@ -8,3 +8,5 @@ python-dotenv
 httpx
 oci
 reportlab
+chromadb
+sentence-transformers

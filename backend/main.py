@@ -21,6 +21,7 @@ from parsers import parse_file, parse_files
 from graph.engine import DependencyGraph
 from ai.oci_genai import generate_analysis, get_ai_mode
 from ai.blueverse import update_token, get_token_status
+from knowledge.rag import KnowledgeBase
 from pdf_report import generate_pdf_report
 
 app = FastAPI(
@@ -39,6 +40,8 @@ app.add_middleware(
 
 # Global dependency graph — in-memory, no persistence needed
 graph = DependencyGraph()
+# RAG knowledge base — in-memory, embeds source code for richer AI context
+knowledge_base = KnowledgeBase()
 
 SAMPLE_DIR = Path(__file__).parent / "sample_artifacts"
 
@@ -55,6 +58,7 @@ async def health_check():
         "ai_mode": get_ai_mode(),
         "objects_loaded": graph.graph.number_of_nodes(),
         "token_status": get_token_status(),
+        "knowledge_base": knowledge_base.get_status(),
         "version": "1.0.0",
     }
 
@@ -72,6 +76,8 @@ async def upload_artifacts(files: List[UploadFile] = File(...)):
             objects, deps = parse_file(f.filename, content)
             all_objects.extend(objects)
             all_deps.extend(deps)
+            # Ingest into RAG knowledge base
+            knowledge_base.ingest(f.filename, content, objects)
         except Exception as e:
             errors.append({"file": f.filename, "error": str(e)})
 
@@ -92,6 +98,7 @@ async def upload_artifacts(files: List[UploadFile] = File(...)):
 async def load_demo():
     """Load built-in sample artifacts. Resets graph first for clean demo state."""
     graph.clear()
+    knowledge_base.clear()
 
     sample_files = {}
     for f in SAMPLE_DIR.iterdir():
@@ -105,10 +112,16 @@ async def load_demo():
     graph.add_objects(all_objects)
     graph.add_dependencies(all_deps)
 
+    # Ingest all sample files into RAG knowledge base
+    for fname, fcontent in sample_files.items():
+        file_objects = [o for o in all_objects if o.get("source_file") == fname]
+        knowledge_base.ingest(fname, fcontent, file_objects)
+
     return {
         "files_processed": len(sample_files),
         "objects_found": len(all_objects),
         "dependencies_found": len(all_deps),
+        "knowledge_base": knowledge_base.get_status(),
     }
 
 
@@ -131,7 +144,13 @@ async def analyze_impact(request: AnalyzeRequest):
             detail=f"Object '{object_name}' not found. Available: {available}",
         )
 
-    ai_result = await generate_analysis(impact)
+    # Retrieve relevant source code chunks from RAG knowledge base
+    code_context = knowledge_base.retrieve(
+        object_name,
+        impact.get("all_impacted", []),
+    )
+
+    ai_result = await generate_analysis(impact, code_context=code_context)
 
     return {
         "object_name": impact["object_name"],
@@ -140,6 +159,7 @@ async def analyze_impact(request: AnalyzeRequest):
         "direct_impact": impact["direct_impact"],
         "indirect_impact": impact["indirect_impact"],
         "all_impacted": impact["all_impacted"],
+        "code_context_used": len(code_context),
         "ai_analysis": {
             "root_cause": ai_result.get("root_cause", ""),
             "recommendations": ai_result.get("recommendations", []),
@@ -214,6 +234,12 @@ async def refresh_token(request: TokenRequest):
 async def token_status():
     """Check current BlueVerse token status (valid/expiring/expired)."""
     return get_token_status()
+
+
+@app.get("/api/knowledge/status")
+async def knowledge_status():
+    """Return RAG knowledge base stats — chunks, files, objects indexed."""
+    return knowledge_base.get_status()
 
 
 @app.get("/api/objects")

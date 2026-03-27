@@ -63,6 +63,12 @@
         .h-icon-btn{width:32px;height:32px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s}
         .h-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
         .h-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#E65100);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer}
+        .llm-badge{padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .llm-badge.live{background:#DCFCE7;color:#166534}
+        .llm-badge.expiring{background:#FEF3C7;color:#92400E}
+        .llm-badge.expired{background:#FEE2E2;color:#991B1B}
+        .llm-badge.mock{background:var(--surface2);color:var(--dim)}
+        .llm-badge.checking{background:var(--surface2);color:var(--muted)}
 
         /* ═══ SETTINGS MODAL ═══ */
         .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
@@ -342,6 +348,8 @@
         </nav>
     </div>
     <div class="h-right">
+        <div id="llm-badge" class="llm-badge checking" title="Click to refresh" onclick="openSettings()">&#9679; Checking...</div>
+        <div id="kb-badge" class="llm-badge mock" style="display:none" title="RAG Knowledge Base">&#128218; KB: --</div>
         <button class="h-icon-btn" title="Settings" onclick="openSettings()">&#9881;</button>
         <button class="h-icon-btn" title="Notifications">&#128276;</button>
         <div class="h-avatar" title="Sameet Dandawate">SD</div>
@@ -410,7 +418,6 @@
             <div class="tb-spacer"></div>
             <div class="tb-quick">
                 <button onclick="loadDemo()" id="demo-btn">&#127917; Load Demo</button>
-                <button onclick="document.getElementById('file-input').click()">&#128194; Upload</button>
             </div>
         </div>
 
@@ -621,6 +628,7 @@ async function loadDemo() {
         await refreshStats(); await refreshObjects();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
         showGraphPlaceholder();
+        refreshKBStatus();
     } catch(e) { alert('Failed to load demo: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '&#127917; Load Demo'; }
 }
@@ -632,7 +640,7 @@ document.getElementById('file-input').addEventListener('change', async e => {
     for (const f of e.target.files) fd.append('files', f);
     try {
         await fetch(API + '/api/upload', {method: 'POST', body: fd});
-        await refreshStats(); await refreshObjects();
+        await refreshStats(); await refreshObjects(); refreshKBStatus();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
         document.getElementById('art-objects').textContent = graphData.node_count || graphData.nodes?.length || 0;
         document.getElementById('art-deps').textContent = graphData.edge_count || graphData.edges?.length || 0;
@@ -1054,6 +1062,59 @@ async function downloadPDF() {
 }
 
 // Login
+// ═══ LLM STATUS BADGE ═══
+async function updateLLMBadge() {
+    const badge = document.getElementById('llm-badge');
+    try {
+        const r = await fetch(API + '/');
+        const d = await r.json();
+        const ts = d.token_status;
+        if (ts && ts.status === 'valid') {
+            badge.className = 'llm-badge live';
+            badge.innerHTML = '&#9679; BlueVerse Live (' + Math.round(ts.expires_in_minutes) + 'm)';
+            badge.title = 'BlueVerse agent active — expires ' + ts.expires_at;
+        } else if (ts && ts.status === 'expiring_soon') {
+            badge.className = 'llm-badge expiring';
+            badge.innerHTML = '&#9888; Expiring (' + Math.round(ts.expires_in_minutes) + 'm)';
+            badge.title = 'Token expiring soon — click Settings to refresh';
+        } else if (d.ai_mode === 'blueverse' && (!ts || ts.status === 'expired')) {
+            badge.className = 'llm-badge expired';
+            badge.innerHTML = '&#9679; Token Expired';
+            badge.title = 'BlueVerse token expired — click Settings to paste new one';
+        } else {
+            badge.className = 'llm-badge mock';
+            badge.innerHTML = '&#9679; Mock Mode';
+            badge.title = 'Running with mock AI — paste BlueVerse token in Settings';
+        }
+    } catch(e) {
+        badge.className = 'llm-badge mock';
+        badge.innerHTML = '&#9679; Offline';
+    }
+}
+// Check every 60 seconds
+setInterval(updateLLMBadge, 60000);
+
+// ═══ KB STATUS ═══
+async function refreshKBStatus() {
+    const badge = document.getElementById('kb-badge');
+    try {
+        const r = await fetch(API + '/api/knowledge/status');
+        const kb = await r.json();
+        if (kb.enabled && kb.chunks > 0) {
+            badge.style.display = 'inline-block';
+            badge.className = 'llm-badge live';
+            badge.innerHTML = '&#128218; KB: ' + kb.chunks + ' chunks';
+            badge.title = 'RAG Knowledge Base — ' + kb.objects + ' objects, ' + kb.files + ' files indexed';
+        } else if (kb.enabled) {
+            badge.style.display = 'inline-block';
+            badge.className = 'llm-badge mock';
+            badge.innerHTML = '&#128218; KB: empty';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch(e) { badge.style.display = 'none'; }
+}
+
 // ═══ SETTINGS / TOKEN MANAGEMENT ═══
 function openSettings() {
     document.getElementById('settings-modal').classList.add('show');
@@ -1090,15 +1151,15 @@ async function saveToken() {
             body: JSON.stringify({token: token})
         });
         const d = await r.json();
-        if (d.status === 'ok') {
+        if (d.status === 'valid' || d.status === 'expiring_soon') {
             document.getElementById('token-input').value = '';
             await checkTokenStatus();
-            // Update header badge
-            const bv = document.querySelector('.bv-badge');
-            if (bv) { bv.style.background = '#DCFCE7'; bv.style.color = '#166534'; bv.innerHTML = '&#9679; BlueVerse Agent Live'; }
-            alert('Token updated successfully!');
+            await updateLLMBadge();
+            alert('Token saved! Valid for ' + Math.round(d.expires_in_minutes) + ' minutes.');
+        } else if (d.status === 'expired') {
+            alert('Token is already expired. Please copy a fresh one from BlueVerse.');
         } else {
-            alert('Error: ' + (d.detail || 'Unknown error'));
+            alert('Error: ' + (d.detail || d.status || 'Unknown error'));
         }
     } catch(e) {
         alert('Failed to save token: ' + e.message);
@@ -1128,6 +1189,8 @@ document.addEventListener('keydown', e => {
         } else {
             showPhaseEl('phase-connect');
         }
+        updateLLMBadge();
+        refreshKBStatus();
     } catch(e) { console.log('Backend not reachable'); showPhaseEl('phase-connect'); }
 })();
 </script>
