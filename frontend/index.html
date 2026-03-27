@@ -64,6 +64,31 @@
         .h-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
         .h-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#E65100);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer}
 
+        /* ═══ SETTINGS MODAL ═══ */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+        .modal-overlay.show{display:flex}
+        .modal{background:#fff;border-radius:12px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+        .modal-header h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+        .modal-close{width:28px;height:28px;border:none;background:none;cursor:pointer;font-size:18px;color:var(--dim);border-radius:4px;display:flex;align-items:center;justify-content:center}
+        .modal-close:hover{background:var(--border-light);color:var(--text)}
+        .modal-body{padding:20px}
+        .modal-section{margin-bottom:18px}
+        .modal-section label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+        .modal-section textarea{width:100%;height:80px;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:'Courier New',monospace;resize:vertical;outline:none;background:var(--surface2);word-break:break-all}
+        .modal-section textarea:focus{border-color:var(--blue);background:#fff}
+        .token-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-top:8px}
+        .token-status.valid{background:#DCFCE7;color:#166534}
+        .token-status.expiring{background:#FEF3C7;color:#92400E}
+        .token-status.expired{background:#FEE2E2;color:#991B1B}
+        .token-status.unknown{background:var(--surface2);color:var(--dim)}
+        .modal-actions{display:flex;gap:8px;margin-top:18px}
+        .modal-actions button{flex:1;padding:10px;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+        .btn-blueverse{border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue)}
+        .btn-blueverse:hover{background:var(--blue);color:#fff}
+        .btn-save-token{border:none;background:var(--blue);color:#fff}
+        .btn-save-token:hover{background:#1D4ED8}
+
         /* ═══ TOOLBAR ═══ */
         .toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
         .tb-search{flex:0 0 220px;position:relative}
@@ -281,6 +306,27 @@
     </div>
 </div>
 
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>&#9881; Settings</h3>
+            <button class="modal-close" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-section">
+                <label>BlueVerse Agent Token</label>
+                <textarea id="token-input" placeholder="Paste your Bearer token here..."></textarea>
+                <div id="token-status-badge" class="token-status unknown">&#9679; Checking...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-blueverse" onclick="window.open('https://blueverse-foundry.ltimindtree.com/studio','_blank')">&#9741; Open BlueVerse</button>
+                <button class="btn-save-token" onclick="saveToken()">Save Token</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ HEADER ═══ -->
 <header>
     <div class="h-left">
@@ -296,7 +342,7 @@
         </nav>
     </div>
     <div class="h-right">
-        <button class="h-icon-btn" title="Settings">&#9881;</button>
+        <button class="h-icon-btn" title="Settings" onclick="openSettings()">&#9881;</button>
         <button class="h-icon-btn" title="Notifications">&#128276;</button>
         <div class="h-avatar" title="Sameet Dandawate">SD</div>
     </div>
@@ -1008,6 +1054,57 @@ async function downloadPDF() {
 }
 
 // Login
+// ═══ SETTINGS / TOKEN MANAGEMENT ═══
+function openSettings() {
+    document.getElementById('settings-modal').classList.add('show');
+    checkTokenStatus();
+}
+function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('show');
+}
+document.getElementById('settings-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSettings();
+});
+async function checkTokenStatus() {
+    const badge = document.getElementById('token-status-badge');
+    try {
+        const r = await fetch(API + '/api/token/status');
+        const d = await r.json();
+        badge.className = 'token-status ' + d.status;
+        if (d.status === 'valid') badge.innerHTML = '&#9679; Valid &mdash; expires in ' + d.minutes_remaining + ' min';
+        else if (d.status === 'expiring_soon') badge.innerHTML = '&#9888; Expiring soon &mdash; ' + d.minutes_remaining + ' min left';
+        else if (d.status === 'expired') badge.innerHTML = '&#9679; Expired &mdash; paste a new token';
+        else badge.innerHTML = '&#9679; No token set';
+    } catch(e) {
+        badge.className = 'token-status unknown';
+        badge.innerHTML = '&#9679; Cannot reach server';
+    }
+}
+async function saveToken() {
+    const token = document.getElementById('token-input').value.trim();
+    if (!token) return alert('Please paste a token first');
+    try {
+        const r = await fetch(API + '/api/token', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({token: token})
+        });
+        const d = await r.json();
+        if (d.status === 'ok') {
+            document.getElementById('token-input').value = '';
+            await checkTokenStatus();
+            // Update header badge
+            const bv = document.querySelector('.bv-badge');
+            if (bv) { bv.style.background = '#DCFCE7'; bv.style.color = '#166534'; bv.innerHTML = '&#9679; BlueVerse Agent Live'; }
+            alert('Token updated successfully!');
+        } else {
+            alert('Error: ' + (d.detail || 'Unknown error'));
+        }
+    } catch(e) {
+        alert('Failed to save token: ' + e.message);
+    }
+}
+
 function doLogin() {
     document.getElementById('login-screen').classList.add('hidden');
     setTimeout(() => { document.getElementById('login-screen').style.display = 'none'; }, 600);
