@@ -20,6 +20,7 @@ from pydantic import BaseModel
 from parsers import parse_file, parse_files
 from graph.engine import DependencyGraph
 from ai.oci_genai import generate_analysis, get_ai_mode
+from ai.blueverse import update_token, get_token_status
 from pdf_report import generate_pdf_report
 
 app = FastAPI(
@@ -53,6 +54,7 @@ async def health_check():
         "status": "ok",
         "ai_mode": get_ai_mode(),
         "objects_loaded": graph.graph.number_of_nodes(),
+        "token_status": get_token_status(),
         "version": "1.0.0",
     }
 
@@ -195,6 +197,23 @@ async def download_report(object_name: str):
             "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
+
+
+class TokenRequest(BaseModel):
+    token: str
+
+
+@app.post("/api/token")
+async def refresh_token(request: TokenRequest):
+    """Update the BlueVerse JWT token at runtime without restarting the server."""
+    result = update_token(request.token)
+    return result
+
+
+@app.get("/api/token/status")
+async def token_status():
+    """Check current BlueVerse token status (valid/expiring/expired)."""
+    return get_token_status()
 
 
 @app.get("/api/objects")
