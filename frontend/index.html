@@ -170,7 +170,7 @@
         .pc-tab{padding:10px 20px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
         .pc-tab:hover{color:var(--text)}
         .pc-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-        .pc-tab-content{display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border-light);max-height:140px;overflow-y:auto;font-size:11px;line-height:1.6;flex-shrink:0}
+        .pc-tab-content{display:none;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border-light);min-height:100px;max-height:180px;overflow-y:auto;font-size:11px;line-height:1.6;flex-shrink:0}
         .pc-tab-content.show{display:block}
         .pc-tab-content h4{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
         .pc-tab-content ol,.pc-tab-content ul{padding-left:18px;margin:0}
@@ -487,20 +487,31 @@ function navTo(ev, section) {
     document.querySelectorAll('.h-nav a').forEach(a => a.classList.remove('active'));
     ev.target.classList.add('active');
     if (section === 'dashboard') {
-        // Already on dashboard, scroll to top
+        // Show dashboard with current state
+        showPhaseEl('dashboard');
+        if (targetNode && graphData) renderGraph();
+        else showGraphPlaceholder();
     } else if (section === 'analyze') {
-        // Focus on the object selector for analysis
-        const sel = document.getElementById('object-select');
-        if (sel) { sel.focus(); sel.click(); }
+        // Show dashboard and focus on object selector
+        showPhaseEl('dashboard');
+        if (!targetNode) showGraphPlaceholder();
+        setTimeout(() => {
+            const sel = document.getElementById('object-select');
+            if (sel) sel.focus();
+        }, 150);
     } else if (section === 'explorer') {
-        // Show full graph (reset filter)
-        if (graphData) { showFiltered = false; renderGraph(); }
-        const btn = document.getElementById('btn-toggle');
-        if (btn) { btn.style.display = 'inline-flex'; btn.textContent = 'Impact Only'; }
+        // Show full dependency graph (all nodes, no filter)
+        showPhaseEl('dashboard');
+        if (graphData) {
+            showFiltered = false;
+            targetNode = null; directNodes.clear(); indirectNodes.clear(); impactedNodes.clear();
+            renderGraph();
+            const btn = document.getElementById('btn-toggle');
+            if (btn) { btn.style.display = 'inline-flex'; btn.textContent = 'Impact Only'; }
+        }
     } else if (section === 'reports') {
-        // Trigger PDF export if analysis exists
         if (targetNode) { downloadPDF(); }
-        else { alert('Run an analysis first to generate a report'); }
+        else { alert('Run an analysis first to generate a report.'); }
     }
 }
 
@@ -530,7 +541,21 @@ async function goPhase2() {
 
 function goPhase3() {
     showPhaseEl('dashboard');
-    setTimeout(() => { if (graphData) renderGraph(); }, 100);
+    setTimeout(() => { showGraphPlaceholder(); }, 100);
+}
+
+function showGraphPlaceholder() {
+    const c = document.getElementById('graph-container');
+    const old = c.querySelector('svg'); if (old) old.remove();
+    // Remove any existing placeholder
+    const oldPh = c.querySelector('.graph-placeholder'); if (oldPh) oldPh.remove();
+    const ph = document.createElement('div');
+    ph.className = 'graph-placeholder';
+    ph.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:40px;';
+    ph.innerHTML = '<div style="font-size:48px;margin-bottom:16px;opacity:.3">&#128269;</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--dim);margin-bottom:6px">Select an object to analyze</div>' +
+        '<div style="font-size:12px;max-width:320px;line-height:1.6">Choose an artifact from the dropdown above and click <strong>Analyze</strong> to visualize its blast radius and dependency impact.</div>';
+    c.appendChild(ph);
 }
 
 function showPhase(p) {
@@ -549,7 +574,7 @@ async function loadDemo() {
         await fetch(API + '/api/demo', {method: 'POST'});
         await refreshStats(); await refreshObjects();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
-        renderGraph();
+        showGraphPlaceholder();
     } catch(e) { alert('Failed to load demo: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '&#127917; Load Demo'; }
 }
@@ -728,6 +753,7 @@ function toggleFiltered() {
 function renderGraph() {
     const c = document.getElementById('graph-container');
     const old = c.querySelector('svg'); if (old) old.remove();
+    const oldPh = c.querySelector('.graph-placeholder'); if (oldPh) oldPh.remove();
     const w = c.clientWidth, h = c.clientHeight; if (!w || !h) return;
 
     let nodes = graphData.nodes.map(n => ({...n})), edges = graphData.edges.map(e => ({...e}));
@@ -953,7 +979,8 @@ function highlightGraph() {
         const el = d3.select(this);
         const isTarget = s === targetNode || t === targetNode;
         const isDirect = (directNodes.has(s) || s === targetNode) && (directNodes.has(t) || t === targetNode);
-        if (isTarget || isDirect) { el.attr('stroke','#9CA3AF').attr('stroke-width', 1.5).attr('marker-end','url(#arr)').attr('opacity', .6).attr('stroke-dasharray','none'); }
+        if (isTarget) { el.attr('stroke','#DC2626').attr('stroke-width', 2).attr('marker-end','url(#arr-r)').attr('opacity', .7).attr('stroke-dasharray','none'); }
+        else if (isDirect) { el.attr('stroke','#F97316').attr('stroke-width', 1.5).attr('marker-end','url(#arr-o)').attr('opacity', .6).attr('stroke-dasharray','none'); }
         else if (rel.has(s) && rel.has(t)) { el.attr('stroke','#9CA3AF').attr('stroke-width', 1).attr('marker-end','url(#arr)').attr('opacity', .4).attr('stroke-dasharray','4,2'); }
         else { el.attr('stroke','#D1D5DB').attr('stroke-width', .5).attr('marker-end','url(#arr)').attr('opacity', !showFiltered ? .05 : .25).attr('stroke-dasharray','4,2'); }
     });
@@ -999,7 +1026,8 @@ document.addEventListener('keydown', e => {
             document.getElementById('art-objects').textContent = graphData.node_count || graphData.nodes?.length || 0;
             document.getElementById('art-deps').textContent = graphData.edge_count || graphData.edges?.length || 0;
             showPhaseEl('dashboard');
-            setTimeout(() => { renderGraph(); }, 100);
+            // Don't render graph yet — show placeholder until user runs analysis
+            showGraphPlaceholder();
         } else {
             showPhaseEl('phase-connect');
         }
