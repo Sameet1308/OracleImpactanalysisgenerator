@@ -63,6 +63,37 @@
         .h-icon-btn{width:32px;height:32px;border-radius:6px;border:none;background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .15s}
         .h-icon-btn:hover{background:rgba(255,255,255,.15);color:#fff}
         .h-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#E65100);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;cursor:pointer}
+        .llm-badge{padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+        .llm-badge.live{background:#DCFCE7;color:#166534}
+        .llm-badge.expiring{background:#FEF3C7;color:#92400E}
+        .llm-badge.expired{background:#FEE2E2;color:#991B1B}
+        .llm-badge.mock{background:var(--surface2);color:var(--dim)}
+        .llm-badge.checking{background:var(--surface2);color:var(--muted)}
+
+        /* ═══ SETTINGS MODAL ═══ */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+        .modal-overlay.show{display:flex}
+        .modal{background:#fff;border-radius:12px;width:480px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.2);overflow:hidden}
+        .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+        .modal-header h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+        .modal-close{width:28px;height:28px;border:none;background:none;cursor:pointer;font-size:18px;color:var(--dim);border-radius:4px;display:flex;align-items:center;justify-content:center}
+        .modal-close:hover{background:var(--border-light);color:var(--text)}
+        .modal-body{padding:20px}
+        .modal-section{margin-bottom:18px}
+        .modal-section label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+        .modal-section textarea{width:100%;height:80px;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:'Courier New',monospace;resize:vertical;outline:none;background:var(--surface2);word-break:break-all}
+        .modal-section textarea:focus{border-color:var(--blue);background:#fff}
+        .token-status{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;margin-top:8px}
+        .token-status.valid{background:#DCFCE7;color:#166534}
+        .token-status.expiring{background:#FEF3C7;color:#92400E}
+        .token-status.expired{background:#FEE2E2;color:#991B1B}
+        .token-status.unknown{background:var(--surface2);color:var(--dim)}
+        .modal-actions{display:flex;gap:8px;margin-top:18px}
+        .modal-actions button{flex:1;padding:10px;border-radius:6px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .15s}
+        .btn-blueverse{border:1.5px solid var(--blue);background:var(--blue-bg);color:var(--blue)}
+        .btn-blueverse:hover{background:var(--blue);color:#fff}
+        .btn-save-token{border:none;background:var(--blue);color:#fff}
+        .btn-save-token:hover{background:#1D4ED8}
 
         /* ═══ TOOLBAR ═══ */
         .toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:8px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
@@ -170,7 +201,7 @@
         .pc-tab{padding:10px 20px;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
         .pc-tab:hover{color:var(--text)}
         .pc-tab.active{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
-        .pc-tab-content{display:none;padding:10px 14px;background:var(--surface);border-top:1px solid var(--border-light);max-height:140px;overflow-y:auto;font-size:11px;line-height:1.6;flex-shrink:0}
+        .pc-tab-content{display:none;padding:12px 16px;background:var(--surface);border-top:1px solid var(--border-light);min-height:100px;max-height:180px;overflow-y:auto;font-size:11px;line-height:1.6;flex-shrink:0}
         .pc-tab-content.show{display:block}
         .pc-tab-content h4{font-size:11px;font-weight:700;color:var(--blue);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
         .pc-tab-content ol,.pc-tab-content ul{padding-left:18px;margin:0}
@@ -281,6 +312,27 @@
     </div>
 </div>
 
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-overlay" id="settings-modal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>&#9881; Settings</h3>
+            <button class="modal-close" onclick="closeSettings()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-section">
+                <label>BlueVerse Agent Token</label>
+                <textarea id="token-input" placeholder="Paste your Bearer token here..."></textarea>
+                <div id="token-status-badge" class="token-status unknown">&#9679; Checking...</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-blueverse" onclick="window.open('https://blueverse-foundry.ltimindtree.com/studio','_blank')">&#9741; Open BlueVerse</button>
+                <button class="btn-save-token" onclick="saveToken()">Save Token</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ═══ HEADER ═══ -->
 <header>
     <div class="h-left">
@@ -296,7 +348,9 @@
         </nav>
     </div>
     <div class="h-right">
-        <button class="h-icon-btn" title="Settings">&#9881;</button>
+        <div id="llm-badge" class="llm-badge checking" title="Click to refresh" onclick="openSettings()">&#9679; Checking...</div>
+        <div id="kb-badge" class="llm-badge mock" style="display:none" title="RAG Knowledge Base">&#128218; KB: --</div>
+        <button class="h-icon-btn" title="Settings" onclick="openSettings()">&#9881;</button>
         <button class="h-icon-btn" title="Notifications">&#128276;</button>
         <div class="h-avatar" title="Sameet Dandawate">SD</div>
     </div>
@@ -364,7 +418,6 @@
             <div class="tb-spacer"></div>
             <div class="tb-quick">
                 <button onclick="loadDemo()" id="demo-btn">&#127917; Load Demo</button>
-                <button onclick="document.getElementById('file-input').click()">&#128194; Upload</button>
             </div>
         </div>
 
@@ -487,20 +540,31 @@ function navTo(ev, section) {
     document.querySelectorAll('.h-nav a').forEach(a => a.classList.remove('active'));
     ev.target.classList.add('active');
     if (section === 'dashboard') {
-        // Already on dashboard, scroll to top
+        // Show dashboard with current state
+        showPhaseEl('dashboard');
+        if (targetNode && graphData) renderGraph();
+        else showGraphPlaceholder();
     } else if (section === 'analyze') {
-        // Focus on the object selector for analysis
-        const sel = document.getElementById('object-select');
-        if (sel) { sel.focus(); sel.click(); }
+        // Show dashboard and focus on object selector
+        showPhaseEl('dashboard');
+        if (!targetNode) showGraphPlaceholder();
+        setTimeout(() => {
+            const sel = document.getElementById('object-select');
+            if (sel) sel.focus();
+        }, 150);
     } else if (section === 'explorer') {
-        // Show full graph (reset filter)
-        if (graphData) { showFiltered = false; renderGraph(); }
-        const btn = document.getElementById('btn-toggle');
-        if (btn) { btn.style.display = 'inline-flex'; btn.textContent = 'Impact Only'; }
+        // Show full dependency graph (all nodes, no filter)
+        showPhaseEl('dashboard');
+        if (graphData) {
+            showFiltered = false;
+            targetNode = null; directNodes.clear(); indirectNodes.clear(); impactedNodes.clear();
+            renderGraph();
+            const btn = document.getElementById('btn-toggle');
+            if (btn) { btn.style.display = 'inline-flex'; btn.textContent = 'Impact Only'; }
+        }
     } else if (section === 'reports') {
-        // Trigger PDF export if analysis exists
         if (targetNode) { downloadPDF(); }
-        else { alert('Run an analysis first to generate a report'); }
+        else { alert('Run an analysis first to generate a report.'); }
     }
 }
 
@@ -530,7 +594,21 @@ async function goPhase2() {
 
 function goPhase3() {
     showPhaseEl('dashboard');
-    setTimeout(() => { if (graphData) renderGraph(); }, 100);
+    setTimeout(() => { showGraphPlaceholder(); }, 100);
+}
+
+function showGraphPlaceholder() {
+    const c = document.getElementById('graph-container');
+    const old = c.querySelector('svg'); if (old) old.remove();
+    // Remove any existing placeholder
+    const oldPh = c.querySelector('.graph-placeholder'); if (oldPh) oldPh.remove();
+    const ph = document.createElement('div');
+    ph.className = 'graph-placeholder';
+    ph.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:40px;';
+    ph.innerHTML = '<div style="font-size:48px;margin-bottom:16px;opacity:.3">&#128269;</div>' +
+        '<div style="font-size:15px;font-weight:700;color:var(--dim);margin-bottom:6px">Select an object to analyze</div>' +
+        '<div style="font-size:12px;max-width:320px;line-height:1.6">Choose an artifact from the dropdown above and click <strong>Analyze</strong> to visualize its blast radius and dependency impact.</div>';
+    c.appendChild(ph);
 }
 
 function showPhase(p) {
@@ -549,7 +627,8 @@ async function loadDemo() {
         await fetch(API + '/api/demo', {method: 'POST'});
         await refreshStats(); await refreshObjects();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
-        renderGraph();
+        showGraphPlaceholder();
+        refreshKBStatus();
     } catch(e) { alert('Failed to load demo: ' + e.message); }
     finally { btn.disabled = false; btn.innerHTML = '&#127917; Load Demo'; }
 }
@@ -560,12 +639,27 @@ document.getElementById('file-input').addEventListener('change', async e => {
     const fd = new FormData();
     for (const f of e.target.files) fd.append('files', f);
     try {
-        await fetch(API + '/api/upload', {method: 'POST', body: fd});
-        await refreshStats(); await refreshObjects();
+        const uploadRes = await fetch(API + '/api/upload', {method: 'POST', body: fd});
+        const uploadData = await uploadRes.json();
+        await refreshStats(); await refreshObjects(); refreshKBStatus();
         const r = await fetch(API + '/api/graph'); graphData = await r.json();
         document.getElementById('art-objects').textContent = graphData.node_count || graphData.nodes?.length || 0;
         document.getElementById('art-deps').textContent = graphData.edge_count || graphData.edges?.length || 0;
-        if (document.getElementById('dashboard').classList.contains('show')) renderGraph();
+        // Auto-populate Change Details and trigger analysis
+        showPhaseEl('dashboard');
+        if (graphData.nodes && graphData.nodes.length > 0) {
+            // Find first object from uploaded file and auto-select it
+            const uploadedFileName = e.target.files[0]?.name || '';
+            const match = graphData.nodes.find(n => n.file === uploadedFileName) || graphData.nodes[0];
+            if (match) {
+                const sel = document.getElementById('object-select');
+                sel.value = match.id;
+                document.getElementById('pl-artifact').textContent = match.id;
+                document.getElementById('pl-type').textContent = (match.type || 'UNKNOWN').replace('_', ' ');
+                // Auto-run analysis
+                analyzeImpact();
+            }
+        }
     } catch(e) { alert('Upload failed: ' + e.message); }
     e.target.value = '';
 });
@@ -728,6 +822,7 @@ function toggleFiltered() {
 function renderGraph() {
     const c = document.getElementById('graph-container');
     const old = c.querySelector('svg'); if (old) old.remove();
+    const oldPh = c.querySelector('.graph-placeholder'); if (oldPh) oldPh.remove();
     const w = c.clientWidth, h = c.clientHeight; if (!w || !h) return;
 
     let nodes = graphData.nodes.map(n => ({...n})), edges = graphData.edges.map(e => ({...e}));
@@ -777,7 +872,7 @@ function renderGraph() {
             else if (directNodes.has(n.id)) {
                 const idx = [...directNodes].indexOf(n.id);
                 const angle = (2 * Math.PI * idx) / directNodes.size - Math.PI / 2;
-                const r1 = Math.min(w, h) * 0.28;
+                const r1 = Math.min(w, h) * 0.32;
                 n.x = cx + Math.cos(angle) * r1; n.y = cy + Math.sin(angle) * r1;
             } else if (indirectNodes.has(n.id)) {
                 const idx = [...indirectNodes].indexOf(n.id);
@@ -831,7 +926,7 @@ function renderGraph() {
         .call(d3.drag()
             .on('start', (e, d) => { if (!e.active) sim.alphaTarget(.05).restart(); d.fx = d.x; d.fy = d.y; })
             .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; })
-            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); }));
+            .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); /* Keep fx/fy so node stays pinned where dropped */ }));
 
     // Target glow
     node.filter(d => d.id === targetNode).append('circle')
@@ -920,10 +1015,10 @@ function renderGraph() {
     svg.on('click', () => { document.getElementById('node-card').style.display = 'none'; });
 
     const sim = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink(edges).id(d => d.id).distance(140).strength(.04))
-        .force('charge', d3.forceManyBody().strength(-350))
-        .force('center', d3.forceCenter(cx, cy).strength(.015))
-        .force('collision', d3.forceCollide().radius(d => getCardW(d) / 2 + 12));
+        .force('link', d3.forceLink(edges).id(d => d.id).distance(160).strength(.03))
+        .force('charge', d3.forceManyBody().strength(-500))
+        .force('center', d3.forceCenter(cx, cy).strength(.01))
+        .force('collision', d3.forceCollide().radius(d => getCardW(d) / 2 + 25).strength(.8));
 
     if (targetNode) {
         sim.force('targetPin', () => {
@@ -953,7 +1048,8 @@ function highlightGraph() {
         const el = d3.select(this);
         const isTarget = s === targetNode || t === targetNode;
         const isDirect = (directNodes.has(s) || s === targetNode) && (directNodes.has(t) || t === targetNode);
-        if (isTarget || isDirect) { el.attr('stroke','#9CA3AF').attr('stroke-width', 1.5).attr('marker-end','url(#arr)').attr('opacity', .6).attr('stroke-dasharray','none'); }
+        if (isTarget) { el.attr('stroke','#DC2626').attr('stroke-width', 2).attr('marker-end','url(#arr-r)').attr('opacity', .7).attr('stroke-dasharray','none'); }
+        else if (isDirect) { el.attr('stroke','#F97316').attr('stroke-width', 1.5).attr('marker-end','url(#arr-o)').attr('opacity', .6).attr('stroke-dasharray','none'); }
         else if (rel.has(s) && rel.has(t)) { el.attr('stroke','#9CA3AF').attr('stroke-width', 1).attr('marker-end','url(#arr)').attr('opacity', .4).attr('stroke-dasharray','4,2'); }
         else { el.attr('stroke','#D1D5DB').attr('stroke-width', .5).attr('marker-end','url(#arr)').attr('opacity', !showFiltered ? .05 : .25).attr('stroke-dasharray','4,2'); }
     });
@@ -981,6 +1077,110 @@ async function downloadPDF() {
 }
 
 // Login
+// ═══ LLM STATUS BADGE ═══
+async function updateLLMBadge() {
+    const badge = document.getElementById('llm-badge');
+    try {
+        const r = await fetch(API + '/');
+        const d = await r.json();
+        const ts = d.token_status;
+        if (ts && ts.status === 'valid') {
+            badge.className = 'llm-badge live';
+            badge.innerHTML = '&#9679; BlueVerse Live (' + Math.round(ts.expires_in_minutes) + 'm)';
+            badge.title = 'BlueVerse agent active — expires ' + ts.expires_at;
+        } else if (ts && ts.status === 'expiring_soon') {
+            badge.className = 'llm-badge expiring';
+            badge.innerHTML = '&#9888; Expiring (' + Math.round(ts.expires_in_minutes) + 'm)';
+            badge.title = 'Token expiring soon — click Settings to refresh';
+        } else if (d.ai_mode === 'blueverse' && (!ts || ts.status === 'expired')) {
+            badge.className = 'llm-badge expired';
+            badge.innerHTML = '&#9679; Token Expired';
+            badge.title = 'BlueVerse token expired — click Settings to paste new one';
+        } else {
+            badge.className = 'llm-badge mock';
+            badge.innerHTML = '&#9679; Mock Mode';
+            badge.title = 'Running with mock AI — paste BlueVerse token in Settings';
+        }
+    } catch(e) {
+        badge.className = 'llm-badge mock';
+        badge.innerHTML = '&#9679; Offline';
+    }
+}
+// Check every 60 seconds
+setInterval(updateLLMBadge, 60000);
+
+// ═══ KB STATUS ═══
+async function refreshKBStatus() {
+    const badge = document.getElementById('kb-badge');
+    try {
+        const r = await fetch(API + '/api/knowledge/status');
+        const kb = await r.json();
+        if (kb.enabled && kb.chunks > 0) {
+            badge.style.display = 'inline-block';
+            badge.className = 'llm-badge live';
+            badge.innerHTML = '&#128218; KB: ' + kb.chunks + ' chunks';
+            badge.title = 'RAG Knowledge Base — ' + kb.objects + ' objects, ' + kb.files + ' files indexed';
+        } else if (kb.enabled) {
+            badge.style.display = 'inline-block';
+            badge.className = 'llm-badge mock';
+            badge.innerHTML = '&#128218; KB: empty';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch(e) { badge.style.display = 'none'; }
+}
+
+// ═══ SETTINGS / TOKEN MANAGEMENT ═══
+function openSettings() {
+    document.getElementById('settings-modal').classList.add('show');
+    checkTokenStatus();
+}
+function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('show');
+}
+document.getElementById('settings-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSettings();
+});
+async function checkTokenStatus() {
+    const badge = document.getElementById('token-status-badge');
+    try {
+        const r = await fetch(API + '/api/token/status');
+        const d = await r.json();
+        badge.className = 'token-status ' + d.status;
+        if (d.status === 'valid') badge.innerHTML = '&#9679; Valid &mdash; expires in ' + d.minutes_remaining + ' min';
+        else if (d.status === 'expiring_soon') badge.innerHTML = '&#9888; Expiring soon &mdash; ' + d.minutes_remaining + ' min left';
+        else if (d.status === 'expired') badge.innerHTML = '&#9679; Expired &mdash; paste a new token';
+        else badge.innerHTML = '&#9679; No token set';
+    } catch(e) {
+        badge.className = 'token-status unknown';
+        badge.innerHTML = '&#9679; Cannot reach server';
+    }
+}
+async function saveToken() {
+    const token = document.getElementById('token-input').value.trim();
+    if (!token) return alert('Please paste a token first');
+    try {
+        const r = await fetch(API + '/api/token', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({token: token})
+        });
+        const d = await r.json();
+        if (d.status === 'valid' || d.status === 'expiring_soon') {
+            document.getElementById('token-input').value = '';
+            await checkTokenStatus();
+            await updateLLMBadge();
+            alert('Token saved! Valid for ' + Math.round(d.expires_in_minutes) + ' minutes.');
+        } else if (d.status === 'expired') {
+            alert('Token is already expired. Please copy a fresh one from BlueVerse.');
+        } else {
+            alert('Error: ' + (d.detail || d.status || 'Unknown error'));
+        }
+    } catch(e) {
+        alert('Failed to save token: ' + e.message);
+    }
+}
+
 function doLogin() {
     document.getElementById('login-screen').classList.add('hidden');
     setTimeout(() => { document.getElementById('login-screen').style.display = 'none'; }, 600);
@@ -999,10 +1199,13 @@ document.addEventListener('keydown', e => {
             document.getElementById('art-objects').textContent = graphData.node_count || graphData.nodes?.length || 0;
             document.getElementById('art-deps').textContent = graphData.edge_count || graphData.edges?.length || 0;
             showPhaseEl('dashboard');
-            setTimeout(() => { renderGraph(); }, 100);
+            // Don't render graph yet — show placeholder until user runs analysis
+            showGraphPlaceholder();
         } else {
             showPhaseEl('phase-connect');
         }
+        updateLLMBadge();
+        refreshKBStatus();
     } catch(e) { console.log('Backend not reachable'); showPhaseEl('phase-connect'); }
 })();
 </script>

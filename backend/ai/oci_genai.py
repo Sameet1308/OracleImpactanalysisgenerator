@@ -34,28 +34,32 @@ def get_ai_mode() -> str:
     return "live" if OCI_GENAI_ENABLED else "mock"
 
 
-async def generate_analysis(impact_result: Dict[str, Any]) -> Dict[str, Any]:
+async def generate_analysis(impact_result: Dict[str, Any], code_context: list = None) -> Dict[str, Any]:
     """
     Generate AI-powered root cause analysis and fix recommendations.
     Priority: BlueVerse agent → OCI GenAI → Mock fallback.
+
+    Args:
+        impact_result: Impact analysis data from graph engine
+        code_context: Optional list of RAG-retrieved source code chunks
     """
     # 1. Try BlueVerse agent first
     if BLUEVERSE_ENABLED:
-        result = await _call_blueverse(impact_result)
+        result = await _call_blueverse(impact_result, code_context)
         if result is not None:
             return result
         logger.info("BlueVerse failed, falling back...")
 
     # 2. Try OCI GenAI
     if OCI_GENAI_ENABLED:
-        return await _call_oci_genai(impact_result)
+        return await _call_oci_genai(impact_result, code_context)
 
     # 3. Mock fallback
     return _mock_analysis(impact_result)
 
 
-def _build_prompt(impact_result: Dict[str, Any]) -> str:
-    """Build the structured analysis prompt from impact data."""
+def _build_prompt(impact_result: Dict[str, Any], code_context: list = None) -> str:
+    """Build the structured analysis prompt from impact data and optional source code."""
     target = impact_result["object_name"]
     obj_type = impact_result.get("object_type", "UNKNOWN")
     severity = impact_result["severity"]
@@ -66,14 +70,26 @@ def _build_prompt(impact_result: Dict[str, Any]) -> str:
     direct_names = ", ".join(d["name"] for d in direct) or "None"
     indirect_names = ", ".join(d["name"] for d in indirect) or "None"
 
-    return f"""You are an Oracle ERP impact analysis expert. A developer is about to modify an Oracle artifact. Analyze the dependency impact and provide actionable guidance.
+    prompt = f"""You are an Oracle ERP impact analysis expert. A developer is about to modify an Oracle artifact. Analyze the dependency impact and provide actionable guidance.
 
 TARGET OBJECT: {target} (Type: {obj_type})
 SEVERITY: {severity}
 IMPACT SCORE: {score}/100
 DIRECTLY IMPACTED OBJECTS ({len(direct)}): {direct_names}
-INDIRECTLY IMPACTED OBJECTS ({len(indirect)}): {indirect_names}
+INDIRECTLY IMPACTED OBJECTS ({len(indirect)}): {indirect_names}"""
 
+    # Append RAG-retrieved source code context if available
+    if code_context:
+        prompt += "\n\n## RELEVANT SOURCE CODE\n"
+        prompt += "The following code snippets are from the actual Oracle artifacts involved. "
+        prompt += "Use them to provide SPECIFIC recommendations referencing actual column names, procedure parameters, and SQL logic.\n\n"
+        for i, chunk in enumerate(code_context[:5], 1):
+            obj_name = chunk.get("object_name", "UNKNOWN")
+            src_file = chunk.get("source_file", "")
+            text = chunk.get("text", "")[:500]  # Cap at 500 chars per chunk
+            prompt += f"### Snippet {i}: {obj_name} ({src_file})\n```\n{text}\n```\n\n"
+
+    prompt += f"""
 Provide your analysis in exactly these 4 sections:
 
 ## ROOT CAUSE ANALYSIS
@@ -88,11 +104,13 @@ Provide 4-5 bullet points of specific tests to run after the change.
 ## ROLLBACK PLAN
 Provide 5 numbered steps to revert the change if something breaks in production."""
 
+    return prompt
 
-async def _call_blueverse(impact_result: Dict[str, Any]) -> Dict[str, Any] | None:
+
+async def _call_blueverse(impact_result: Dict[str, Any], code_context: list = None) -> Dict[str, Any] | None:
     """Call BlueVerse AI_Elite_Ora1 agent for analysis. Returns None on failure."""
     try:
-        prompt = _build_prompt(impact_result)
+        prompt = _build_prompt(impact_result, code_context)
         response_text = await call_blueverse(prompt)
 
         if response_text is None:
@@ -115,7 +133,7 @@ async def _call_blueverse(impact_result: Dict[str, Any]) -> Dict[str, Any] | Non
         return None
 
 
-async def _call_oci_genai(impact_result: Dict[str, Any]) -> Dict[str, Any]:
+async def _call_oci_genai(impact_result: Dict[str, Any], code_context: list = None) -> Dict[str, Any]:
     """Call OCI Generative AI (Cohere Command R+) for analysis."""
     try:
         import oci
@@ -127,7 +145,7 @@ async def _call_oci_genai(impact_result: Dict[str, Any]) -> Dict[str, Any]:
             timeout=(OCI_TIMEOUT, OCI_TIMEOUT),
         )
 
-        prompt = _build_prompt(impact_result)
+        prompt = _build_prompt(impact_result, code_context)
 
         chat_detail = oci.generative_ai_inference.models.ChatDetails(
             compartment_id=OCI_COMPARTMENT_ID,
