@@ -29,9 +29,9 @@ CALL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
-# REFERENCES in FK constraints
+# REFERENCES in FK constraints (handles multi-line with tabs/spaces)
 FK_PATTERN = re.compile(
-    r"REFERENCES\s+(\w+)\s*\(",
+    r"REFERENCES\s+(\w+)",
     re.IGNORECASE,
 )
 
@@ -135,6 +135,45 @@ def parse_sql(filename: str, content: str) -> Tuple[List[Dict], List[Dict]]:
                     "relationship": "TRIGGER_ON",
                     "source_file": filename,
                 })
+
+    # --- Parse ALTER TABLE ... ADD CONSTRAINT ... REFERENCES (common in Oracle official schemas) ---
+    alter_pattern = re.compile(
+        r"ALTER\s+TABLE\s+(\w+)\s+.*?REFERENCES\s+(\w+)",
+        re.IGNORECASE | re.DOTALL,
+    )
+    for match in alter_pattern.finditer(content):
+        source = match.group(1).upper()
+        target = match.group(2).upper()
+        if source != target:
+            dependencies.append({
+                "source": source,
+                "target": target,
+                "relationship": "FK_REFERENCES",
+                "source_file": filename,
+            })
+
+    # --- Global FK scan with context: find every FOREIGN KEY ... REFERENCES and determine source table ---
+    # Normalize whitespace to handle Oracle's multi-line tab-indented FK constraints
+    normalized = re.sub(r"\s+", " ", content)
+
+    # Strategy: find all CREATE TABLE positions, then for each FK, assign to nearest preceding CREATE TABLE
+    table_positions = [(m.start(), m.group(1).upper()) for m in re.finditer(r"CREATE\s+TABLE\s+(\w+)", normalized, re.IGNORECASE)]
+
+    for fk in re.finditer(r"FOREIGN\s+KEY\s*\([^)]+\)\s*REFERENCES\s+(\w+)", normalized, re.IGNORECASE):
+        target = fk.group(1).upper()
+        # Find which CREATE TABLE this FK belongs to (nearest preceding one)
+        source_name = None
+        for pos, name in reversed(table_positions):
+            if pos < fk.start():
+                source_name = name
+                break
+        if source_name and target != source_name:
+            dependencies.append({
+                "source": source_name,
+                "target": target,
+                "relationship": "FK_REFERENCES",
+                "source_file": filename,
+            })
 
     # Deduplicate dependencies
     seen = set()
