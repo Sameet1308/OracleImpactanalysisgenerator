@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI_Elite_Ora1 — How It Works</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:#0d1117;color:#e6edf3;overflow-x:hidden}
+.hero{padding:60px 40px;text-align:center;background:linear-gradient(135deg,#1a1a2e,#0d1117);border-bottom:2px solid #C74634}
+.hero h1{font-size:36px;color:#C74634;margin-bottom:8px}
+.hero p{font-size:16px;color:#8b949e;max-width:700px;margin:0 auto}
+.flow{max-width:1100px;margin:0 auto;padding:40px 20px}
+.step{margin-bottom:48px;display:grid;grid-template-columns:80px 1fr;gap:24px;align-items:start}
+.step-num{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;flex-shrink:0}
+.step-content h2{font-size:20px;margin-bottom:6px;color:#e6edf3}
+.step-content .sub{font-size:13px;color:#8b949e;margin-bottom:16px}
+.card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;margin-bottom:12px}
+.card h3{font-size:14px;color:#C74634;margin-bottom:8px}
+.card p,.card li{font-size:13px;color:#8b949e;line-height:1.7}
+.card ul,.card ol{padding-left:20px}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;margin:2px}
+.tag-sql{background:#1565C0;color:#fff}.tag-xml{background:#D84315;color:#fff}
+.tag-groovy{background:#2E7D32;color:#fff}.tag-table{background:#1565C0;color:#fff}
+.tag-view{background:#0097A7;color:#fff}.tag-proc{background:#2E7D32;color:#fff}
+.tag-func{background:#F57F17;color:#fff}.tag-pkg{background:#7B1FA2;color:#fff}
+.tag-trigger{background:#EA580C;color:#fff}.tag-oic{background:#D84315;color:#fff}
+.tag-bip{background:#C2185B;color:#fff}.tag-groovy-tag{background:#00695C;color:#fff}
+.pipeline{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0}
+.pipe-box{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;border:1px solid #30363d;background:#0d1117}
+.pipe-arrow{color:#C74634;font-size:18px}
+.example{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;margin:12px 0;font-family:monospace;font-size:12px;line-height:1.8;color:#79c0ff;overflow-x:auto;white-space:pre}
+.highlight{color:#C74634;font-weight:700}
+.green{color:#3fb950}.orange{color:#f0883e}.blue{color:#58a6ff}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid #21262d;font-size:12px}
+th{color:#8b949e;font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:0.5px}
+td{color:#c9d1d9}
+.score-box{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;font-weight:700;font-size:14px}
+.critical{background:#fef2f2;color:#dc2626}.high{background:#fff7ed;color:#ea580c}
+.medium{background:#fefce8;color:#d97706}.low{background:#f0fdf4;color:#16a34a}
+.section-divider{border:0;border-top:1px solid #21262d;margin:40px 0}
+.demo-note{background:#161b22;border-left:3px solid #C74634;padding:16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px;color:#8b949e}
+.demo-note strong{color:#C74634}
+.qa{margin:20px 0}
+.qa-q{font-size:14px;color:#e6edf3;font-weight:700;margin-bottom:6px;cursor:pointer}
+.qa-q:before{content:"Q: ";color:#C74634}
+.qa-a{font-size:13px;color:#8b949e;margin-bottom:16px;padding-left:20px;line-height:1.6}
+footer{text-align:center;padding:40px;color:#484f58;font-size:11px;border-top:1px solid #21262d}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>AI_Elite_Ora1</h1>
+  <p>Oracle Impact Analysis Platform — How It Works</p>
+  <p style="margin-top:12px;font-size:13px;color:#6e7681">Interactive guide to understand the complete data pipeline, from artifact ingestion to AI-powered impact analysis</p>
+</div>
+
+<div class="flow">
+
+<!-- STEP 1: DATA SOURCES -->
+<div class="step">
+  <div class="step-num" style="background:#C74634">1</div>
+  <div class="step-content">
+    <h2>Connect to Oracle Ecosystem</h2>
+    <div class="sub">Three ways to get Oracle artifacts into the system</div>
+
+    <div class="card">
+      <h3>Path A: Oracle Database Connection</h3>
+      <p>Connect directly to Oracle DB to auto-discover artifacts from DBA_OBJECTS and DBA_SOURCE system views. The system queries for tables, views, procedures, functions, packages, triggers, and sequences.</p>
+      <div class="demo-note"><strong>Demo mode:</strong> Loads 5 pre-built sample artifacts simulating a real Oracle HR/Payroll schema with 25 objects and 34 cross-artifact dependencies.</div>
+    </div>
+
+    <div class="card">
+      <h3>Path B: Upload Oracle Artifacts</h3>
+      <p>Drag and drop actual Oracle ERP files for analysis:</p>
+      <ul>
+        <li><span class="tag tag-sql">SQL / PL-SQL</span> — DDL scripts with CREATE TABLE, VIEW, PROCEDURE, FUNCTION, PACKAGE, TRIGGER</li>
+        <li><span class="tag tag-xml">OIC XML</span> — Oracle Integration Cloud flow definitions with connections, steps, and queries</li>
+        <li><span class="tag tag-xml">BIP XML</span> — BI Publisher report definitions with data models and embedded SQL</li>
+        <li><span class="tag tag-groovy">Groovy</span> — HCM/ERP Cloud scripts with executeQuery, executeFunction, executeProcedure calls</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Path C: Load Demo Data</h3>
+      <p>The system ships with 5 real Oracle artifact files:</p>
+      <table>
+        <tr><th>File</th><th>Type</th><th>Objects</th><th>What it contains</th></tr>
+        <tr><td>employees.sql</td><td><span class="tag tag-sql">SQL</span></td><td>12</td><td>Tables (EMPLOYEES, DEPARTMENTS, JOBS), Views, Procedures, Functions, Package, Trigger, Sequence</td></tr>
+        <tr><td>compensation.groovy</td><td><span class="tag tag-groovy">Groovy</span></td><td>1</td><td>HCM compensation script calling CALC_ANNUAL_BONUS and HR_PACKAGE</td></tr>
+        <tr><td>hr_sync.xml</td><td><span class="tag tag-oic">OIC</span></td><td>4</td><td>Employee sync flow with HR_EMPLOYEE_SUMMARY + GET_EMPLOYEE_SALARY</td></tr>
+        <tr><td>onboarding_flow.xml</td><td><span class="tag tag-oic">OIC</span></td><td>4</td><td>Onboarding flow calling HR_PACKAGE procedures</td></tr>
+        <tr><td>payroll_report.xml</td><td><span class="tag tag-bip">BIP</span></td><td>4</td><td>Monthly payroll report querying PAYROLL_VIEW and DEPARTMENTS</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: PARSING -->
+<div class="step">
+  <div class="step-num" style="background:#d29922">2</div>
+  <div class="step-content">
+    <h2>Smart Parsing Engine</h2>
+    <div class="sub">Each file type is parsed with specialized regex + AST extraction</div>
+
+    <div class="pipeline">
+      <div class="pipe-box">.sql file</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box">sql_parser (sqlparse + regex)</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box green">Objects + Dependencies</div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-box">.xml file</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box">oic_parser (xml.etree)</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box green">Flows + Connections + Queries</div>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-box">.groovy file</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box">groovy_parser (regex)</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box green">Script + Function Calls</div>
+    </div>
+
+    <div class="card">
+      <h3>What Gets Extracted</h3>
+      <table>
+        <tr><th>Object Type</th><th>Detected From</th><th>Example</th></tr>
+        <tr><td><span class="tag tag-table">TABLE</span></td><td>CREATE TABLE statements</td><td>EMPLOYEES, DEPARTMENTS, JOBS</td></tr>
+        <tr><td><span class="tag tag-view">VIEW</span></td><td>CREATE VIEW + FROM/JOIN clauses</td><td>HR_EMPLOYEE_SUMMARY, PAYROLL_VIEW</td></tr>
+        <tr><td><span class="tag tag-proc">PROCEDURE</span></td><td>CREATE PROCEDURE + CALL references</td><td>GET_EMPLOYEE_SALARY</td></tr>
+        <tr><td><span class="tag tag-func">FUNCTION</span></td><td>CREATE FUNCTION + := calls</td><td>CALC_ANNUAL_BONUS</td></tr>
+        <tr><td><span class="tag tag-pkg">PACKAGE</span></td><td>CREATE PACKAGE + PKG.FUNC notation</td><td>HR_PACKAGE, HR_PACKAGE.GET_HEADCOUNT</td></tr>
+        <tr><td><span class="tag tag-trigger">TRIGGER</span></td><td>CREATE TRIGGER + BEFORE/AFTER ON</td><td>PAYROLL_TRIGGER on EMPLOYEES</td></tr>
+        <tr><td><span class="tag tag-oic">OIC_FLOW</span></td><td>XML &lt;integration&gt; elements</td><td>HR_EMPLOYEE_SYNC, ONBOARDING_FLOW</td></tr>
+        <tr><td><span class="tag tag-bip">BIP_REPORT</span></td><td>XML &lt;report&gt; + &lt;dataset&gt; SQL</td><td>MONTHLY_PAYROLL_REPORT</td></tr>
+        <tr><td><span class="tag tag-groovy-tag">GROOVY_SCRIPT</span></td><td>executeQuery/Function/Procedure</td><td>COMPENSATION</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Dependency Relationships Detected</h3>
+      <table>
+        <tr><th>Relationship</th><th>Detected By</th><th>Example</th></tr>
+        <tr><td>REFERENCES</td><td>FROM, JOIN, INTO, UPDATE clauses</td><td>VIEW reads TABLE</td></tr>
+        <tr><td>CALLS</td><td>Function/procedure invocations</td><td>Groovy calls CALC_ANNUAL_BONUS</td></tr>
+        <tr><td>FK_REFERENCES</td><td>REFERENCES in constraints</td><td>EMPLOYEES references JOBS</td></tr>
+        <tr><td>TRIGGER_ON</td><td>BEFORE/AFTER ON table</td><td>PAYROLL_TRIGGER on EMPLOYEES</td></tr>
+        <tr><td>USES_SEQUENCE</td><td>SEQ.NEXTVAL/CURRVAL</td><td>EMPLOYEES uses EMP_ID_SEQ</td></tr>
+        <tr><td>WRITES_TO</td><td>OIC step target tables</td><td>HR_SYNC writes to audit log</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: GRAPH + RAG -->
+<div class="step">
+  <div class="step-num" style="background:#a371f7">3</div>
+  <div class="step-content">
+    <h2>Dependency Graph + RAG Knowledge Base</h2>
+    <div class="sub">Parsed objects feed two parallel systems</div>
+
+    <div class="pipeline">
+      <div class="pipe-box">Parsed Objects</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box" style="border-color:#a371f7">NetworkX DiGraph</div>
+      <span style="color:#6e7681;font-size:12px">&nbsp;(nodes = objects, edges = dependencies)</span>
+    </div>
+    <div class="pipeline">
+      <div class="pipe-box">Source Code</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box" style="border-color:#f0883e">sentence-transformers</div><span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box" style="border-color:#d29922">ChromaDB</div>
+      <span style="color:#6e7681;font-size:12px">&nbsp;(384-dim embeddings, cosine search)</span>
+    </div>
+
+    <div class="card">
+      <h3>Graph Engine — Blast Radius Computation</h3>
+      <p>Edge direction: A &rarr; B means "A depends on B". Impact analysis walks <strong>predecessors</strong> (reverse direction) to find everything that would break if B changes.</p>
+      <div class="example">compute_impact("EMPLOYEES")
+  <span class="green">Direct:</span> HR_EMPLOYEE_SUMMARY, PAYROLL_VIEW, GET_EMPLOYEE_SALARY,
+          CALC_ANNUAL_BONUS, HR_PACKAGE, PAYROLL_TRIGGER (6 objects)
+  <span class="orange">Indirect:</span> COMPENSATION, HR_SYNC, MONTHLY_PAYROLL_REPORT (3 objects via chains)
+  <span class="highlight">Total blast radius: 9 artifacts affected</span></div>
+    </div>
+
+    <div class="card">
+      <h3>Risk Score Formula (0-100)</h3>
+      <div class="example">risk_score = (direct_weight * <span class="highlight">0.52</span>)      <span class="green">← 52% weight on direct dependencies</span>
+             + (indirect_weight * <span class="highlight">0.18</span>)    <span class="green">← 18% weight on transitive chain</span>
+             + (type_criticality * <span class="highlight">0.30</span>)   <span class="green">← 30% weight on object type</span>
+
+Type criticality: TABLE=10, PACKAGE=9, PROCEDURE=8, OIC_FLOW=8,
+                  VIEW=7, BIP_REPORT=7, GROOVY=6, TRIGGER=6, SEQUENCE=4</div>
+      <p style="margin-top:12px">
+        <span class="score-box critical">80-100: CRITICAL</span>
+        <span class="score-box high">60-79: HIGH</span>
+        <span class="score-box medium">40-59: MEDIUM</span>
+        <span class="score-box low">0-39: LOW</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <h3>RAG Knowledge Base — 2-Stage Retrieval</h3>
+      <p><strong>Stage 1: Exact metadata match</strong> — Find code chunks belonging to the target object (score: 1.0)</p>
+      <p><strong>Stage 2: Semantic search</strong> — Vector similarity on impacted object names + source code (top-k=5)</p>
+      <p>Result: The most relevant code snippets are injected into the AI prompt for context-aware analysis.</p>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4: AI ANALYSIS -->
+<div class="step">
+  <div class="step-num" style="background:#f0883e">4</div>
+  <div class="step-content">
+    <h2>AI-Powered Impact Analysis</h2>
+    <div class="sub">BlueVerse Foundry generates Oracle-specific recommendations</div>
+
+    <div class="pipeline">
+      <div class="pipe-box">Impact Data</div>
+      <span class="pipe-arrow">+</span>
+      <div class="pipe-box">RAG Code Context</div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box" style="border-color:#f0883e;color:#f0883e">BlueVerse AI (AI_Elite_Ora1)</div>
+      <span class="pipe-arrow">&rarr;</span>
+      <div class="pipe-box green">4-Section Report</div>
+    </div>
+
+    <div class="card">
+      <h3>What AI Generates</h3>
+      <ol>
+        <li><strong>Root Cause Analysis</strong> — Why this change is risky, which dependency chains break</li>
+        <li><strong>Fix Recommendations</strong> — Step-by-step remediation with Oracle ORA error codes (ORA-04021, ORA-06508, ORA-00942)</li>
+        <li><strong>Testing Checklist</strong> — Regression tests: recompile PL/SQL, validate views, test OIC flows, generate BIP reports</li>
+        <li><strong>Rollback Plan</strong> — Safe reversal using DBMS_METADATA, ALTER COMPILE, OIC version history</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h3>AI Prompt Structure</h3>
+      <div class="example"><span class="blue">TARGET OBJECT:</span> EMPLOYEES (TABLE)
+<span class="blue">SEVERITY:</span> CRITICAL | <span class="blue">SCORE:</span> 82/100
+<span class="blue">DIRECT IMPACT (6):</span> HR_EMPLOYEE_SUMMARY, PAYROLL_VIEW, GET_EMPLOYEE_SALARY...
+<span class="blue">INDIRECT IMPACT (3):</span> COMPENSATION, HR_SYNC, MONTHLY_PAYROLL_REPORT
+
+<span class="orange">## RELEVANT SOURCE CODE (from RAG)</span>
+[EMPLOYEES (TABLE)]: CREATE TABLE EMPLOYEES (employee_id NUMBER, first_name VARCHAR2...
+[HR_EMPLOYEE_SUMMARY (VIEW)]: CREATE VIEW HR_EMPLOYEE_SUMMARY AS SELECT e.employee_id...
+[COMPENSATION (GROOVY_SCRIPT)]: def annualBonus = sql.executeFunction("CALC_ANNUAL_BONUS"...</div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5: VISUALIZATION -->
+<div class="step">
+  <div class="step-num" style="background:#58a6ff">5</div>
+  <div class="step-content">
+    <h2>Interactive Visualization + Chat</h2>
+    <div class="sub">D3.js radial spoke graph + conversational AI follow-up</div>
+
+    <div class="card">
+      <h3>Dependency Graph (D3.js)</h3>
+      <ul>
+        <li><strong>Radial spoke layout</strong> — target object at center, direct impacts on inner ring, indirect on outer ring</li>
+        <li><strong>Card-style nodes</strong> — colored by type (blue=TABLE, green=PROCEDURE, red=OIC, purple=PACKAGE)</li>
+        <li><strong>Edge labels</strong> — "Reads", "Calls", "Triggers", "Depends On", "Uses"</li>
+        <li><strong>Risk-colored edges</strong> — red (target), orange (direct-to-direct), gray dashed (other)</li>
+        <li><strong>Zoom/pan/drag</strong> — interactive exploration</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Ask Ora1 (Chat Interface)</h3>
+      <p>Users can ask follow-up questions about the analysis. The chat is context-aware:</p>
+      <ul>
+        <li>Knows which object is selected and its impact analysis results</li>
+        <li>Retrieves relevant source code via RAG for each question</li>
+        <li>Includes conversation history for multi-turn dialogue</li>
+        <li>Supports file upload directly from chat (paperclip button)</li>
+      </ul>
+      <p style="margin-top:8px"><strong>Example questions:</strong> "What tables are affected?", "Show rollback plan", "Explain risk score", "What tests should I run?"</p>
+    </div>
+
+    <div class="card">
+      <h3>PDF Export</h3>
+      <p>Full impact analysis report generated as PDF (ReportLab) with: risk score, severity, direct/indirect impact tables, root cause, recommendations, testing checklist, and rollback plan.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="section-divider">
+
+<!-- FAQ -->
+<h2 style="margin-bottom:24px;color:#C74634">Frequently Asked Questions</h2>
+
+<div class="qa">
+  <div class="qa-q">Where does the data come from?</div>
+  <div class="qa-a">From real Oracle artifact files (.sql, .xml, .groovy) that are uploaded by the user or loaded from the sample dataset. The system parses these files using regex and AST extraction to discover objects and their cross-artifact dependencies. Nothing is hardcoded.</div>
+</div>
+
+<div class="qa">
+  <div class="qa-q">Can it connect to a live Oracle database?</div>
+  <div class="qa-a">The architecture supports it (querying DBA_OBJECTS and DBA_SOURCE), and the UI has a connection form for Oracle DB. In the current demo, "connecting" loads the sample dataset which simulates a real Oracle HR/Payroll schema. Full live DB connectivity is on the roadmap.</div>
+</div>
+
+<div class="qa">
+  <div class="qa-q">How is the risk score calculated?</div>
+  <div class="qa-a">52% from direct dependency count, 18% from indirect (transitive) dependency count, and 30% from object type criticality (TABLEs score highest at 10/10, SEQUENCEs lowest at 4/10). EMPLOYEES gets 82 (CRITICAL) because it has 6 direct dependents and is a TABLE.</div>
+</div>
+
+<div class="qa">
+  <div class="qa-q">What makes this different from Oracle DBA_DEPENDENCIES?</div>
+  <div class="qa-a">Oracle's built-in DBA_DEPENDENCIES only tracks PL/SQL dependencies within the database. It completely misses OIC integration flows, BI Publisher reports, and Groovy/HCM scripts. This system discovers ALL cross-artifact dependencies across the entire Oracle ecosystem.</div>
+</div>
+
+<div class="qa">
+  <div class="qa-q">How does the AI generate recommendations?</div>
+  <div class="qa-a">The system builds a rich prompt containing: impact analysis data + actual source code retrieved via RAG (ChromaDB + sentence-transformers). This prompt is sent to BlueVerse Foundry's pre-trained Oracle ERP agent (AI_Elite_Ora1), which generates Oracle-specific recommendations with real ORA error codes.</div>
+</div>
+
+<div class="qa">
+  <div class="qa-q">What if the BlueVerse token expires?</div>
+  <div class="qa-a">The UI shows token status (green/yellow/red) and has a paste input to refresh the JWT token at runtime without restarting the server. The system also falls back to a rule-based mock engine that generates deterministic analysis for demo purposes.</div>
+</div>
+
+</div>
+
+<footer>AI_Elite_Ora1 | Oracle Pythia-26 Hackathon | Team: Sameet (Lead), Pranali, Suraj | LTIMindtree</footer>
+
+</body>
+</html>
