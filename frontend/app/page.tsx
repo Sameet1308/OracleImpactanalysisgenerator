@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import Header from "../components/Header";
-import Footer from "../components/Footer";
+import LoginScreen from "../components/LoginScreen";
+import ChatPanel from "../components/ChatPanel";
+import ConnectorTiles from "../components/ConnectorTiles";
 import { AppProvider } from "../context/AppContext";
 
 type DepNode = d3.SimulationNodeDatum & { id: string; type: string };
@@ -69,6 +71,12 @@ const EL: Record<string, Record<string, string>> = {
   GROOVY_SCRIPT: { TABLE: "Uses", PROCEDURE: "Calls" },
 };
 
+const TA: Record<string, string> = {
+  TABLE: "T", VIEW: "V", PROCEDURE: "P", FUNCTION: "f", PACKAGE: "Pk",
+  "PACKAGE BODY": "Pk", TRIGGER: "Tr", SEQUENCE: "#",
+  OIC_FLOW: "O", OIC_CONNECTION: "O", BIP_REPORT: "B", GROOVY_SCRIPT: "G", UNKNOWN: "?",
+};
+
 function getEdgeLabel(sType: string, tType: string) {
   if (EL[sType] && EL[sType][tType]) return EL[sType][tType];
   if (EL[tType] && EL[tType][sType]) return EL[tType][sType];
@@ -76,13 +84,14 @@ function getEdgeLabel(sType: string, tType: string) {
 }
 
 export default function Home() {
-  const [phase, setPhase] = useState<"connect" | "artifacts" | "dashboard">("connect");
+  const [loggedIn, setLoggedIn] = useState(false);
   const [graphData, setGraphData] = useState<GraphJson>({ nodes: [], edges: [] });
   type ObjectItem = { name: string; type?: string; file?: string; dependency_count?: number };
   const [objects, setObjects] = useState<ObjectItem[]>([]);
   const [selected, setSelected] = useState("");
   const [analysis, setAnalysis] = useState<ImpactResult | null>(null);
   const [status, setStatus] = useState("Ready");
+  const [toast, setToast] = useState<string | null>(null);
   const [targetNode, setTargetNode] = useState<string | null>(null);
   const [showFiltered, setShowFiltered] = useState(false);
   const [impactedNodes, setImpactedNodes] = useState<Set<string>>(new Set());
@@ -91,6 +100,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [graphStats, setGraphStats] = useState({ nodes: 0, edges: 0 });
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
   const d3Ref = useRef<{ node: any; link: any; edgeLabel: any; edges: DepEdge[] } | null>(null);
 
   async function apiGet(path: string) {
@@ -135,18 +145,22 @@ export default function Home() {
     }
   }
 
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 5000);
+  }
+
   async function loadDemo() {
     setLoading(true);
     try {
-      await apiPost("/api/demo");
+      const result = await apiPost("/api/demo");
       await fetchGraph();
       await fetchObjects();
-      setPhase("artifacts");
-      setStatus("Demo artifacts loaded");
-      setTimeout(() => renderGraph(), 50);
+      setStatus(`${result.objects_found} objects from ${result.files_processed} files`);
+      showToast(`Parsed ${result.files_processed} artifacts \u2192 ${result.objects_found} objects, ${result.dependencies_found} dependencies discovered`);
     } catch (err) {
       console.error(err);
-      setStatus(`Demo failed: ${err}`);
+      setStatus(`Load failed: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -160,12 +174,12 @@ export default function Home() {
       Array.from(files).forEach((file) => fd.append("files", file));
       const res = await fetch(`${API_BASE}/api/upload`, { method: "POST", body: fd });
       if (!res.ok) throw new Error(`Upload failed: ${res.statusText}`);
-      await res.json();
+      const result = await res.json();
       await fetchGraph();
       await fetchObjects();
-      setPhase("artifacts");
-      setStatus("Upload successful");
-      setTimeout(() => renderGraph(), 50);
+      const fileNames = Array.from(files).map(f => f.name).join(", ");
+      setStatus(`${result.objects_found} objects from ${result.files_processed} files`);
+      showToast(`Uploaded ${fileNames} \u2192 ${result.objects_found} objects, ${result.dependencies_found} dependencies parsed`);
     } catch (err) {
       console.error(err);
       setStatus(`Upload failed: ${err}`);
@@ -191,11 +205,8 @@ export default function Home() {
       setImpactedNodes(all);
       setTargetNode(res.object_name);
       setShowFiltered(true);
-      setPhase("dashboard");
+      // data loaded
       setStatus(`Impact analysis ready for ${res.object_name}`);
-      setTimeout(() => {
-        renderGraph();
-      }, 50);
     } catch (err) {
       console.error(err);
       setStatus(`Analysis failed: ${err}`);
@@ -249,12 +260,12 @@ export default function Home() {
     const container = graphContainerRef.current;
     if (!container) return;
     container.innerHTML = "";
-    if (!graphData?.nodes?.length) {
-      return;
-    }
+    if (!graphData?.nodes?.length) return;
 
     const width = container.clientWidth || 800;
     const height = container.clientHeight || 500;
+    const cx = width / 2;
+    const cy = height / 2;
     const nodes = graphData.nodes.map((n) => ({ ...n }));
     let edges = graphData.edges.map((e) => ({ ...e }));
 
@@ -266,70 +277,216 @@ export default function Home() {
       nodes.splice(0, nodes.length, ...filteredNodes);
     }
 
+    // Card sizing helpers
+    function getCardW(d: DepNode): number {
+      return d.id === targetNode ? 140 : Math.max(90, d.id.length * 7.5 + 40);
+    }
+    function getCardH(d: DepNode): number {
+      return d.id === targetNode ? 36 : 28;
+    }
+
     const svg = d3
       .select(container)
       .append("svg")
       .attr("width", width)
       .attr("height", height)
-      .style("background", "#f8fafc");
+      .style("background", "#F5F6F8");
 
+    // --- SVG Defs: markers, filters ---
     const defs = svg.append("defs");
-    defs
-      .append("marker")
-      .attr("id", "arrow")
-      .attr("viewBox", "0 -5 10 10")
-      .attr("refX", 18)
-      .attr("refY", 0)
-      .attr("markerWidth", 6)
-      .attr("markerHeight", 6)
-      .attr("orient", "auto")
-      .append("path")
-      .attr("d", "M0,-5L10,0L0,5")
-      .attr("fill", "#9CA3AF");
 
-    const link = svg
-      .append("g")
-      .attr("stroke", "#9CA3AF")
-      .attr("stroke-width", 1.2)
-      .selectAll("line")
-      .data(edges)
-      .join("line")
-      .attr("marker-end", "url(#arrow)");
+    // Color-coded arrow markers
+    [["arr", "#9CA3AF"], ["arr-r", "#DC2626"], ["arr-o", "#F97316"]].forEach(([id, color]) => {
+      defs.append("marker")
+        .attr("id", id)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 55)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("path")
+        .attr("d", "M0,-5L10,0L0,5")
+        .attr("fill", color);
+    });
 
-    const forceLink = d3
-      .forceLink<DepNode, DepEdge>()
-      .id((d) => d.id)
-      .distance(120)
-      .strength(0.6);
+    // Card shadow filter
+    const shadowFilter = defs.append("filter").attr("id", "cardShadow")
+      .attr("x", "-20%").attr("y", "-20%").attr("width", "140%").attr("height", "140%");
+    shadowFilter.append("feDropShadow")
+      .attr("dx", 0).attr("dy", 1).attr("stdDeviation", 2).attr("flood-opacity", 0.1);
 
-    const simulation = d3
-      .forceSimulation<DepNode>(nodes)
-      .force("link", forceLink)
-      .force("charge", d3.forceManyBody().strength(-120))
-      .force("center", d3.forceCenter(width / 2, height / 2))
-      .force("collide", d3.forceCollide(32));
+    // Target glow filter
+    const glowFilter = defs.append("filter").attr("id", "targetGlow")
+      .attr("x", "-50%").attr("y", "-50%").attr("width", "200%").attr("height", "200%");
+    glowFilter.append("feGaussianBlur").attr("in", "SourceGraphic").attr("stdDeviation", 8).attr("result", "blur");
+    glowFilter.append("feColorMatrix").attr("in", "blur").attr("type", "matrix")
+      .attr("values", "0 0 0 0 0.15  0 0 0 0 0.39  0 0 0 0 0.92  0 0 0 0.3 0").attr("result", "glow");
+    const glowMerge = glowFilter.append("feMerge");
+    glowMerge.append("feMergeNode").attr("in", "glow");
+    glowMerge.append("feMergeNode").attr("in", "SourceGraphic");
 
-    forceLink.links(edges as any);
+    // --- Zoom/Pan ---
+    const g = svg.append("g");
+    const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.2, 4])
+      .on("zoom", (event) => g.attr("transform", event.transform));
+    svg.call(zoom);
 
-    const nodeGroup = svg
-      .append("g")
-      .selectAll("g")
-      .data(nodes)
-      .join("g")
+    // Background radial gradient when target is selected
+    if (targetNode) {
+      const bgGrad = defs.append("radialGradient").attr("id", "bgGrad");
+      bgGrad.append("stop").attr("offset", "0%").attr("stop-color", "#E0E7FF").attr("stop-opacity", 0.3);
+      bgGrad.append("stop").attr("offset", "100%").attr("stop-color", "#E0E7FF").attr("stop-opacity", 0);
+      g.append("circle").attr("cx", cx).attr("cy", cy)
+        .attr("r", Math.min(width, height) * 0.48).attr("fill", "url(#bgGrad)");
+    }
+
+    // --- Radial/spoke initial positioning ---
+    const directArr = nodes.filter((n) => directNodes.has(n.id) && n.id !== targetNode);
+    const indirectArr = nodes.filter((n) => indirectNodes.has(n.id) && !directNodes.has(n.id) && n.id !== targetNode);
+
+    nodes.forEach((n) => {
+      if (targetNode && n.id === targetNode) {
+        n.x = cx; n.y = cy; n.fx = cx; n.fy = cy;
+      } else if (targetNode && directNodes.has(n.id)) {
+        const idx = directArr.indexOf(n);
+        const angle = (2 * Math.PI * idx) / Math.max(directArr.length, 1) - Math.PI / 2;
+        const r = Math.min(width, height) * 0.32;
+        n.x = cx + r * Math.cos(angle);
+        n.y = cy + r * Math.sin(angle);
+      } else if (targetNode && indirectNodes.has(n.id)) {
+        const idx = indirectArr.indexOf(n);
+        const angle = (2 * Math.PI * idx) / Math.max(indirectArr.length, 1) - Math.PI / 4;
+        const r = Math.min(width, height) * 0.44;
+        n.x = cx + r * Math.cos(angle);
+        n.y = cy + r * Math.sin(angle);
+      } else {
+        const cols = Math.ceil(Math.sqrt(nodes.length));
+        const idx = nodes.indexOf(n);
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const spacing = Math.min(width / (cols + 1), 120);
+        n.x = spacing + col * spacing;
+        n.y = spacing + row * spacing;
+      }
+    });
+
+    // --- Edges ---
+    const link = g.append("g").selectAll("line").data(edges).join("line")
+      .attr("stroke", "#D1D5DB")
+      .attr("stroke-width", 0.8)
+      .attr("stroke-dasharray", "4,2")
+      .attr("marker-end", "url(#arr)")
+      .attr("opacity", 0.35);
+
+    // --- Edge labels ---
+    const nodeMap: Record<string, DepNode> = {};
+    nodes.forEach((n) => (nodeMap[n.id] = n));
+
+    const edgeLabel = g.append("g").selectAll("text").data(edges).join("text")
+      .attr("class", "edge-label")
+      .text((d: any) => {
+        const sId = typeof d.source === "object" ? d.source.id : d.source;
+        const tId = typeof d.target === "object" ? d.target.id : d.target;
+        const sn = nodeMap[sId];
+        const tn = nodeMap[tId];
+        if (sn && tn) return getEdgeLabel(sn.type, tn.type);
+        return "";
+      })
+      .attr("opacity", 0.3);
+
+    // --- Card-style nodes ---
+    const nodeGroup = g.append("g").selectAll("g").data(nodes).join("g")
+      .style("cursor", "grab");
+
+    // Glow ring for target
+    nodeGroup.filter((d) => d.id === targetNode)
+      .append("circle")
+      .attr("r", 45)
+      .attr("fill", "none")
+      .attr("stroke", "rgba(37,99,235,0.12)")
+      .attr("stroke-width", 20);
+
+    // Card background rect
+    nodeGroup.append("rect")
+      .attr("x", (d) => -getCardW(d) / 2)
+      .attr("y", (d) => -getCardH(d) / 2)
+      .attr("width", (d) => getCardW(d))
+      .attr("height", (d) => getCardH(d))
+      .attr("rx", 6).attr("ry", 6)
+      .attr("fill", (d) => d.id === targetNode ? "#1B2A4A" : "#FFFFFF")
+      .attr("stroke", (d) => {
+        if (d.id === targetNode) return "#1B2A4A";
+        if (directNodes.has(d.id)) return "#DC2626";
+        if (indirectNodes.has(d.id)) return "#F97316";
+        return "#D8DCE3";
+      })
+      .attr("stroke-width", (d) => (d.id === targetNode || directNodes.has(d.id) || indirectNodes.has(d.id)) ? 1.5 : 1)
+      .attr("filter", "url(#cardShadow)");
+
+    // Type icon circle (small colored dot)
+    nodeGroup.append("circle")
+      .attr("cx", (d) => -getCardW(d) / 2 + 14)
+      .attr("cy", 0)
+      .attr("r", 8)
+      .attr("fill", (d) => d.id === targetNode ? "#2563EB" : (TC[d.type] || TC.UNKNOWN))
+      .attr("stroke", "#fff")
+      .attr("stroke-width", 1.5);
+
+    // Type abbreviation letter
+    nodeGroup.append("text")
+      .attr("x", (d) => -getCardW(d) / 2 + 14)
+      .attr("y", 0)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("font-size", 8)
+      .attr("fill", "#fff")
+      .attr("font-weight", 700)
+      .style("pointer-events", "none")
+      .text((d) => TA[d.type] || TA.UNKNOWN);
+
+    // Node name text
+    nodeGroup.append("text")
+      .attr("x", (d) => -getCardW(d) / 2 + 28)
+      .attr("dominant-baseline", "central")
+      .attr("font-size", (d) => d.id === targetNode ? 12 : 10)
+      .attr("font-weight", (d) => d.id === targetNode ? 800 : 600)
+      .attr("fill", (d) => d.id === targetNode ? "#FFFFFF" : "#1A1D23")
+      .style("pointer-events", "none")
+      .text((d) => d.id.length > 20 ? d.id.substring(0, 18) + "..." : d.id);
+
+    // --- Interactions ---
+    nodeGroup
       .on("click", (_, d) => {
         setSelected(d.id);
         setTargetNode(d.id);
         setStatus(`Selected ${d.id}`);
         analyzeImpact();
       })
-      .on("mouseover", (_, d) => {
-        setStatus(`Node ${d.id} (${d.type})`);
+      .on("mouseover", (ev: any, d: DepNode) => {
+        const tip = tooltipRef.current;
+        if (tip) {
+          tip.style.display = "block";
+          tip.innerHTML = `<strong>${d.id}</strong><br>Type: ${d.type}`;
+          tip.style.left = (ev.clientX + 12) + "px";
+          tip.style.top = (ev.clientY - 12) + "px";
+        }
+      })
+      .on("mousemove", (ev: any) => {
+        const tip = tooltipRef.current;
+        if (tip) {
+          tip.style.left = (ev.clientX + 12) + "px";
+          tip.style.top = (ev.clientY - 12) + "px";
+        }
+      })
+      .on("mouseout", () => {
+        const tip = tooltipRef.current;
+        if (tip) tip.style.display = "none";
       })
       .call(
-        d3
-          .drag<any, DepNode>()
+        d3.drag<any, DepNode>()
           .on("start", (event: any, d: any) => {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
+            if (!event.active) simulation.alphaTarget(0.05).restart();
             d.fx = d.x;
             d.fy = d.y;
           })
@@ -339,77 +496,101 @@ export default function Home() {
           })
           .on("end", (event: any, d: any) => {
             if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
+            // Keep pinned where dropped
           })
       );
 
-    // circle with small icon
-    nodeGroup
-      .append("circle")
-      .attr("r", 16)
-      .attr("fill", (d) => TC[d.type] || TC.UNKNOWN)
-      .attr("stroke", "#ffffff")
-      .attr("stroke-width", 1.7);
+    // --- Force simulation (soft params) ---
+    const forceLink = d3.forceLink<DepNode, DepEdge>()
+      .id((d) => d.id)
+      .distance(160)
+      .strength(0.03);
 
-    nodeGroup
-      .append("text")
-      .attr("class", "node-icon")
-      .text((d) => TI[d.type] || TI.UNKNOWN)
-      .attr("text-anchor", "middle")
-      .attr("dy", 5)
-      .style("pointer-events", "none");
+    const simulation = d3.forceSimulation<DepNode>(nodes)
+      .force("link", forceLink)
+      .force("charge", d3.forceManyBody().strength(-500))
+      .force("center", d3.forceCenter(cx, cy).strength(0.01))
+      .force("collision", d3.forceCollide().radius((d: any) => getCardW(d) / 2 + 25).strength(0.8));
 
-    // label to the right of the node
-    nodeGroup
-      .append("text")
-      .attr("class", "node-label")
-      .text((d) => d.id)
-      .attr("x", 22)
-      .attr("y", 4)
-      .style("pointer-events", "none");
+    forceLink.links(edges as any);
 
-    // ensure the simulation starts strongly so animation is visible
+    // Pin target at center
+    if (targetNode) {
+      simulation.force("targetPin", (() => {
+        nodes.forEach((n) => {
+          if (n.id === targetNode) { n.x = cx; n.y = cy; n.fx = cx; n.fy = cy; }
+        });
+      }) as any);
+    }
+
     simulation.alpha(1).restart();
 
     simulation.on("tick", () => {
       link
-        .attr("x1", (d: any) => (d.source.x))
-        .attr("y1", (d: any) => (d.source.y))
-        .attr("x2", (d: any) => (d.target.x))
-        .attr("y2", (d: any) => (d.target.y));
+        .attr("x1", (d: any) => d.source.x)
+        .attr("y1", (d: any) => d.source.y)
+        .attr("x2", (d: any) => d.target.x)
+        .attr("y2", (d: any) => d.target.y);
 
       nodeGroup.attr("transform", (d: any) => `translate(${d.x},${d.y})`);
+
+      edgeLabel
+        .attr("x", (d: any) => (d.source.x + d.target.x) / 2)
+        .attr("y", (d: any) => (d.source.y + d.target.y) / 2 - 6);
     });
 
-    d3Ref.current = { node: nodeGroup, link, edgeLabel: null as any, edges };
+    d3Ref.current = { node: nodeGroup, link, edgeLabel, edges };
     if (showFiltered || targetNode) {
-      // highlight now and after tick
       highlightGraph();
-      simulation.on("tick", () => highlightGraph());
     }
   }
 
   function highlightGraph() {
     if (!d3Ref.current) return;
-    const { node, link } = d3Ref.current;
+    const { node, link, edgeLabel } = d3Ref.current;
     const rel = new Set(impactedNodes);
     if (targetNode) rel.add(targetNode);
 
-    node.attr("opacity", (d: any) => (!showFiltered || rel.has(d.id) ? 1 : 0.15));
+    // Node opacity
+    node.attr("opacity", (d: any) => (!showFiltered || rel.has(d.id) ? 1 : 0.12));
 
-    link.attr("stroke", (d: any) => {
-      const sourceId = d.source?.id || d.source;
-      const targetId = d.target?.id || d.target;
-      if (rel.has(sourceId) && rel.has(targetId)) return "#DC2626";
-      return "#9CA3AF";
+    // Granular edge coloring
+    link.each(function (d: any) {
+      const el = d3.select(this);
+      const sId = d.source?.id || d.source;
+      const tId = d.target?.id || d.target;
+
+      if (sId === targetNode || tId === targetNode) {
+        // Target connections: red, solid, thick
+        el.attr("stroke", "#DC2626").attr("stroke-width", 2)
+          .attr("marker-end", "url(#arr-r)").attr("opacity", 0.7)
+          .attr("stroke-dasharray", "none");
+      } else if ((directNodes.has(sId) || sId === targetNode) && (directNodes.has(tId) || tId === targetNode)) {
+        // Direct-to-direct: orange
+        el.attr("stroke", "#F97316").attr("stroke-width", 1.5)
+          .attr("marker-end", "url(#arr-o)").attr("opacity", 0.6)
+          .attr("stroke-dasharray", "none");
+      } else if (rel.has(sId) && rel.has(tId)) {
+        // Other impacted: gray dashed
+        el.attr("stroke", "#9CA3AF").attr("stroke-width", 1)
+          .attr("marker-end", "url(#arr)").attr("opacity", 0.4)
+          .attr("stroke-dasharray", "4,2");
+      } else {
+        // Non-impacted: very faded
+        el.attr("stroke", "#D1D5DB").attr("stroke-width", 0.5)
+          .attr("marker-end", "url(#arr)").attr("opacity", showFiltered ? 0.05 : 0.25)
+          .attr("stroke-dasharray", "4,2");
+      }
     });
 
-    link.attr("stroke-opacity", (d: any) => {
-      const sourceId = d.source?.id || d.source;
-      const targetId = d.target?.id || d.target;
-      return !showFiltered || (rel.has(sourceId) && rel.has(targetId)) ? 0.8 : 0.2;
-    });
+    // Edge label opacity
+    if (edgeLabel) {
+      edgeLabel.attr("opacity", (d: any) => {
+        const sId = typeof d.source === "object" ? d.source.id : d.source;
+        const tId = typeof d.target === "object" ? d.target.id : d.target;
+        return (rel.has(sId) && rel.has(tId)) ? 0.8 : (showFiltered ? 0.05 : 0.3);
+      });
+    }
   }
 
   useEffect(() => {
@@ -428,11 +609,7 @@ export default function Home() {
 
   useEffect(() => {
     renderGraph();
-  }, [graphData]);
-
-  useEffect(() => {
-    if (showFiltered || targetNode) highlightGraph();
-  }, [showFiltered, impactedNodes, targetNode]);
+  }, [graphData, targetNode, directNodes, indirectNodes, showFiltered]);
 
   function renderAnalysisTabs() {
     if (!analysis) return null;
@@ -467,107 +644,101 @@ export default function Home() {
     );
   }
 
+  if (!loggedIn) {
+    return <LoginScreen onLogin={() => setLoggedIn(true)} />;
+  }
+
   return (
     <AppProvider>
       <div className="app">
-        <Header />
-
-        {/* <div style={{ padding: '8px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ fontSize: 13, color: 'var(--muted)' }}>{status}</div>
-        </div> */}
+        <Header onLogout={() => setLoggedIn(false)} />
 
         <div className="toolbar">
-        <div className="tb-search">
-          <input type="text" placeholder="Filter objects" onChange={(e) => {
-            const q = e.target.value.toLowerCase();
-            const sel = document.getElementById("object-select") as HTMLSelectElement | null;
-            if (!sel) return;
-            Array.from(sel.options).forEach((opt) => {
-              if (opt.value === "") return;
-              opt.style.display = opt.text.toLowerCase().includes(q) ? "" : "none";
-            });
-          }} />
+          <div className="tb-select">
+            <select id="object-select" value={selected} onChange={(e) => setSelected(e.target.value)}>
+              <option value="">Select an object...</option>
+              {objects.map((o) => (
+                <option key={o.name} value={o.name}>
+                  {o.name} ({o.type || "UNKNOWN"}) {o.file ? `\u2014 ${o.file}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button className="tb-btn primary" onClick={analyzeImpact} disabled={!objects.length || loading}>Analyze</button>
+          <button className="tb-btn outline" onClick={downloadPDF} disabled={!selected || loading}>Export PDF</button>
+          <div className="tb-spacer"></div>
+          <button className="tb-btn outline" onClick={toggleFiltered}>{showFiltered ? 'Show All' : 'Impact Only'}</button>
+          <div className="tb-status">{status}</div>
+          <div className="tb-stats">
+            <span>{graphStats.nodes} nodes</span>
+            <span>{graphStats.edges} edges</span>
+          </div>
         </div>
-        <div className="tb-select">
-          <select id="object-select" value={selected} onChange={(e) => setSelected(e.target.value)}>
-            <option value="">Select an object...</option>
-            {objects.map((o) => (
-              <option key={o.name} value={o.name}>
-                {o.name} ({o.type || "UNKNOWN"})
-              </option>
-            ))}
-          </select>
-        </div>
-        <button className="tb-btn primary" onClick={analyzeImpact} disabled={!objects.length || loading}>Analyze</button>
-        <button className="tb-btn outline" onClick={downloadPDF} disabled={!selected || loading}>Export PDF</button>
-        <div className="tb-spacer"></div>
-        <button className="tb-btn outline" id="btn-toggle" onClick={toggleFiltered}>{showFiltered ? 'Show All' : 'Impact Only'}</button>
-      </div>
 
-      <div className="dash-body">
-        <div className="panel-left">
-          <div className="pl-section">
-            <div className="pl-title">Controls</div>
-            <button className="pl-upload" onClick={loadDemo} disabled={loading}>Load Demo</button>
-            <label className="pl-upload" style={{ marginTop: '8px' }}>
-              Upload Files
-              <input type="file" multiple style={{ display: 'none' }} onChange={(e) => uploadFiles(e.target.files)} />
-            </label>
-            <div className="pl-field"><label>Nodes</label><div className="val">{graphStats.nodes}</div></div>
-            <div className="pl-field"><label>Edges</label><div className="val">{graphStats.edges}</div></div>
+        {toast && <div className="toast">{toast}</div>}
+
+        <div className="split-body">
+          {/* LEFT: Connectors + Chat */}
+          <div className="split-left">
+            <ConnectorTiles
+              onConnect={() => { loadDemo(); }}
+              onUpload={(files) => { uploadFiles(files); }}
+              onLoadDemo={() => { loadDemo(); }}
+              loading={loading}
+            />
+            <ChatPanel objectName={selected || null} onUpload={(files) => uploadFiles(files)} />
           </div>
 
-          <ul className="pl-nav">
-            {objects.slice(0, 40).map((o) => (
-              <li key={o.name} className={selected === o.name ? 'active' : ''} onClick={() => { setSelected(o.name); }}>
-                {o.name}
-                <span className="nav-arrow">›</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {/* RIGHT: Graph + Analysis */}
+          <div className="split-right">
+            <div className="right-graph">
+              <div className="pc-header">
+                <h3>Dependency Graph</h3>
+                <div className="g-toolbar">
+                  <button className="g-tool" onClick={resetGraph}>Reset</button>
+                  <button className="g-tool" onClick={() => setShowFiltered((p) => !p)}>{showFiltered ? 'All' : 'Impact'}</button>
+                </div>
+              </div>
+              <div id="graph-container" ref={graphContainerRef} style={{ width: '100%', flex: 1 }} />
+              <div ref={tooltipRef} className="graph-tooltip" />
+            </div>
 
-        <div className="panel-center">
-          <div className="pc-header">
-            <h3>Dependency Graph</h3>
-            <div className="g-toolbar">
-              <button className="g-tool" onClick={resetGraph}>Reset View</button>
-              <button className="g-tool" onClick={() => setShowFiltered((p) => !p)}>{showFiltered ? 'Show All' : 'Impact Only'}</button>
-              <button className="g-tool" onClick={() => loadDemo()}>Refresh Demo</button>
+            <div className="right-analysis">
+              {analysis ? (
+                <>
+                  <div className="ra-header">
+                    <div className="risk-badge">Risk: {analysis.severity} ({analysis.risk_score})</div>
+                    <div className="ra-stats">
+                      <span>Impacted: {analysis.all_impacted.length}</span>
+                      <span>Breaking: {analysis.direct_impact.length}</span>
+                    </div>
+                  </div>
+                  <div className="ra-content">
+                    <div className="pr-section">
+                      <h4>Root Cause</h4>
+                      <p>{analysis.ai_analysis.root_cause}</p>
+                    </div>
+                    <div className="pr-section">
+                      <h4>Recommendations</h4>
+                      <ol>{analysis.ai_analysis.recommendations.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                    </div>
+                    <div className="pr-section">
+                      <h4>Testing Checklist</h4>
+                      <ol>{analysis.ai_analysis.testing_checklist.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                    </div>
+                    <div className="pr-section">
+                      <h4>Rollback Plan</h4>
+                      <ol>{analysis.ai_analysis.rollback_plan.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="ra-empty">Select an object and click Analyze to see impact</div>
+              )}
             </div>
           </div>
-
-          <div id="graph-container" ref={graphContainerRef} style={{ width: '100%', height: '100%' }} />
-
-          <div className="pc-tabs">{/* Tab placeholder on UI */}</div>
-        </div>
-
-        <div className="panel-right">
-          <div id="impact-summary">
-            {analysis ? (
-              <>
-                <div className="risk-badge">Risk Score: {analysis.severity}</div>
-                <div className="pr-stat">Impacted Artifacts: {analysis.all_impacted.length}</div>
-                <div className="pr-stat">Breaking: {analysis.direct_impact.length}</div>
-                <div className="pr-divider"></div>
-                <div className="pr-section">
-                  <h4>Root cause</h4>
-                  <p>{analysis.ai_analysis.root_cause}</p>
-                </div>
-                <div className="pr-divider"></div>
-                <div className="pr-section">
-                  <h4>Recommendations</h4>
-                  <ol>{analysis.ai_analysis.recommendations.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
-                </div>
-              </>
-            ) : (
-              <p>Select an object and run analysis</p>
-            )}
-          </div>
         </div>
       </div>
-      </div>
-      <Footer />
     </AppProvider>
   );
 }

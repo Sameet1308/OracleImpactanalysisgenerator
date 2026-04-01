@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -234,6 +234,76 @@ async def refresh_token(request: TokenRequest):
 async def token_status():
     """Check current BlueVerse token status (valid/expiring/expired)."""
     return get_token_status()
+
+
+# ═══ CHAT ENDPOINT ═══
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    message: str
+    object_name: Optional[str] = None
+    history: List[ChatMessage] = []
+
+@app.post("/api/chat")
+async def chat(request: ChatRequest):
+    """Chat with Pythia AI — context-aware follow-up questions about impact analysis."""
+    from ai.blueverse import call_blueverse
+
+    # Build context
+    context_parts = []
+    context_parts.append("You are Oracle Pythia-26, an Oracle ERP impact analysis assistant built by LTIMindtree. "
+                         "You help users understand cross-artifact dependencies, blast radius, and provide "
+                         "Oracle-specific recommendations with ORA error codes. Be concise and specific.")
+
+    # Add impact context if object selected
+    if request.object_name and graph.has_object(request.object_name):
+        impact = graph.compute_impact(request.object_name)
+        context_parts.append(f"\n## Current Analysis Context\n"
+                             f"Object: {request.object_name}\n"
+                             f"Risk Score: {impact.get('risk_score', 'N/A')} ({impact.get('severity', 'N/A')})\n"
+                             f"Direct Impact: {', '.join(o['name'] for o in impact.get('direct_impact', []))}\n"
+                             f"Indirect Impact: {', '.join(o['name'] for o in impact.get('indirect_impact', []))}")
+
+    # Add RAG code context
+    if request.object_name:
+        impacted = graph.compute_impact(request.object_name).get('all_impacted', []) if graph.has_object(request.object_name) else []
+        code_chunks = knowledge_base.retrieve(request.object_name, impacted, top_k=3)
+        if code_chunks:
+            context_parts.append("\n## Relevant Source Code")
+            for chunk in code_chunks[:3]:
+                snippet = chunk.get("text", "")[:400]
+                context_parts.append(f"[{chunk.get('object_name', '?')} ({chunk.get('object_type', '?')})]:\n{snippet}")
+
+    # Add conversation history (last 6 turns, capped)
+    history_text = ""
+    recent_history = request.history[-6:] if len(request.history) > 6 else request.history
+    for msg in recent_history:
+        prefix = "User" if msg.role == "user" else "Assistant"
+        history_text += f"\n{prefix}: {msg.content[:500]}"
+
+    if history_text:
+        context_parts.append(f"\n## Conversation History{history_text}")
+
+    context_parts.append(f"\nUser: {request.message}\nAssistant:")
+
+    full_prompt = "\n".join(context_parts)
+
+    # Call BlueVerse
+    response_text = await call_blueverse(full_prompt)
+
+    if response_text:
+        return {"response": response_text, "mode": "blueverse"}
+
+    # Mock fallback
+    obj_name = request.object_name or "the selected object"
+    mock_response = (f"Based on the impact analysis of {obj_name}, I can help you understand the dependencies. "
+                     f"The object has cross-artifact dependencies that may affect downstream views, procedures, "
+                     f"and integrations. Please provide more specific questions about the root cause, "
+                     f"testing requirements, or rollback procedures, and I'll give you detailed guidance.")
+    return {"response": mock_response, "mode": "mock"}
 
 
 @app.get("/api/knowledge/status")

@@ -48,6 +48,10 @@ class DependencyGraph:
         self.graph = nx.DiGraph()
         self._objects: Dict[str, Dict] = {}
 
+    def has_object(self, name: str) -> bool:
+        """Check if an object exists in the graph."""
+        return name in self._objects
+
     def clear(self):
         """Reset the graph."""
         self.graph.clear()
