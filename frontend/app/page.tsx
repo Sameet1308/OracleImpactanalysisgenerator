@@ -90,9 +90,10 @@ export default function Home() {
   const [objects, setObjects] = useState<ObjectItem[]>([]);
   const [selected, setSelected] = useState("");
   const [analysis, setAnalysis] = useState<ImpactResult | null>(null);
-  const [status, setStatus] = useState("Ready");
+  const [status, setStatus] = useState("No data loaded");
   const [toast, setToast] = useState<string | null>(null);
   const [showAnalysisModal, setShowAnalysisModal] = useState(false);
+  const [aiMode, setAiMode] = useState<string>("checking...");
   const [targetNode, setTargetNode] = useState<string | null>(null);
   const [showFiltered, setShowFiltered] = useState(false);
   const [impactedNodes, setImpactedNodes] = useState<Set<string>>(new Set());
@@ -597,6 +598,10 @@ export default function Home() {
   useEffect(() => {
     fetchGraph();
     fetchObjects();
+    // Check AI agent status
+    apiGet("/").then((data: any) => {
+      setAiMode(data.ai_mode === "blueverse" && data.token_status?.status === "valid" ? "AI Live" : data.ai_mode === "blueverse" && data.token_status?.status === "expired" ? "AI Offline (token expired)" : "Mock Mode");
+    }).catch(() => setAiMode("Backend offline"));
   }, []);
 
   // rerender graph on resize for responsiveness
@@ -670,6 +675,10 @@ export default function Home() {
           <div className="tb-spacer"></div>
           <button className="tb-btn outline" onClick={toggleFiltered}>{showFiltered ? 'Show All' : 'Impact Only'}</button>
           <div className="tb-status">{status}</div>
+          <div className={`tb-ai ${aiMode.includes("Live") ? "tb-ai--live" : aiMode.includes("Offline") ? "tb-ai--offline" : "tb-ai--mock"}`}>
+            <span className="tb-ai-dot" />
+            {aiMode}
+          </div>
           <div className="tb-stats">
             <span>{graphStats.nodes} nodes</span>
             <span>{graphStats.edges} edges</span>

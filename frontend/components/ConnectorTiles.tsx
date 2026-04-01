@@ -154,7 +154,7 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
 
       {/* Token input */}
       <div className="ct-token-row">
-        <input className="ct-token-input" placeholder="Paste BlueVerse JWT token..." value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} />
+        <input className="ct-token-input" placeholder="Paste AI agent token..." value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} />
         <button className="ct-token-btn" onClick={saveToken} disabled={tokenSaving || !tokenInput.trim()}>
           {tokenSaving ? "..." : "Save"}
         </button>

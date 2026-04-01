@@ -173,6 +173,11 @@ h1,h2,h3,h4,h5 { font-family: var(--font-geist-sans), Inter, system-ui, sans-ser
 
 /* Status in toolbar */
 .tb-status { font-size:10px; color:var(--muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb-ai { display:flex; align-items:center; gap:5px; font-size:10px; font-weight:600; padding:3px 10px; border-radius:12px; }
+.tb-ai-dot { width:6px; height:6px; border-radius:50%; }
+.tb-ai--live { background:#f0fdf4; color:#16a34a; }.tb-ai--live .tb-ai-dot { background:#16a34a; }
+.tb-ai--offline { background:#fef2f2; color:#dc2626; }.tb-ai--offline .tb-ai-dot { background:#dc2626; }
+.tb-ai--mock { background:#fefce8; color:#d97706; }.tb-ai--mock .tb-ai-dot { background:#d97706; }
 
 /* ── Oracle DB Connection Modal ── */
 .db-modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:flex; align-items:center; justify-content:center; }
