@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oracle Artifact Glossary — AI_Elite_Ora1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:#0d1117;color:#e6edf3}
+.hero{padding:48px 40px;text-align:center;border-bottom:2px solid #C74634}
+.hero h1{font-size:32px;color:#C74634;margin-bottom:6px}
+.hero p{font-size:14px;color:#8b949e;max-width:650px;margin:0 auto}
+nav.toc{max-width:1100px;margin:24px auto;padding:0 20px;display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+nav.toc a{padding:6px 14px;border-radius:8px;font-size:11px;font-weight:600;text-decoration:none;border:1px solid #30363d;color:#8b949e;transition:all .15s}
+nav.toc a:hover,nav.toc a.active{background:#C74634;color:#fff;border-color:#C74634}
+.content{max-width:1100px;margin:0 auto;padding:20px}
+
+/* Artifact cards */
+.artifact{margin-bottom:40px;border:1px solid #30363d;border-radius:14px;overflow:hidden;background:#161b22}
+.artifact-header{padding:20px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid #21262d;cursor:pointer}
+.artifact-header:hover{background:#1c2130}
+.artifact-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.artifact-meta h2{font-size:18px;margin-bottom:2px}
+.artifact-meta .subtitle{font-size:12px;color:#8b949e}
+.artifact-body{padding:24px}
+.artifact-body.collapsed{display:none}
+
+/* Section styles */
+.sect{margin-bottom:20px}
+.sect h3{font-size:13px;color:#C74634;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #21262d}
+.sect p,.sect li{font-size:13px;color:#8b949e;line-height:1.7}
+.sect ul,.sect ol{padding-left:20px}
+.sect ul li{margin-bottom:4px}
+
+/* Code block */
+.code{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:16px;margin:12px 0;font-family:'Cascadia Code',Consolas,monospace;font-size:11.5px;line-height:1.7;color:#c9d1d9;overflow-x:auto;white-space:pre;tab-size:4}
+.code .kw{color:#ff7b72;font-weight:600}
+.code .fn{color:#d2a8ff}
+.code .str{color:#a5d6ff}
+.code .cm{color:#484f58;font-style:italic}
+.code .typ{color:#79c0ff}
+.code .num{color:#f0883e}
+.code .tbl{color:#ffa657;font-weight:600}
+
+/* Dependency hierarchy */
+.dep-tree{margin:16px 0;padding:0;list-style:none}
+.dep-tree li{position:relative;padding:6px 0 6px 28px;font-size:12px;color:#c9d1d9}
+.dep-tree li:before{content:"";position:absolute;left:8px;top:0;bottom:0;width:1px;background:#30363d}
+.dep-tree li:after{content:"";position:absolute;left:8px;top:14px;width:12px;height:1px;background:#30363d}
+.dep-tree li:last-child:before{height:14px}
+.dep-tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-right:4px}
+.dep-arrow{color:#C74634;margin:0 4px}
+
+/* Tags */
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;margin:2px}
+.t-table{background:#1565C0;color:#fff}.t-view{background:#0097A7;color:#fff}
+.t-proc{background:#2E7D32;color:#fff}.t-func{background:#F57F17;color:#000}
+.t-pkg{background:#7B1FA2;color:#fff}.t-trigger{background:#EA580C;color:#fff}
+.t-seq{background:#6B7280;color:#fff}.t-oic{background:#D84315;color:#fff}
+.t-bip{background:#C2185B;color:#fff}.t-groovy{background:#00695C;color:#fff}
+.t-conn{background:#BF360C;color:#fff}
+
+/* Hierarchy diagram */
+.hierarchy{background:#0d1117;border:1px solid #30363d;border-radius:12px;padding:24px;margin:20px 0;overflow-x:auto}
+.h-row{display:flex;align-items:center;justify-content:center;gap:12px;margin:8px 0;flex-wrap:wrap}
+.h-box{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;border:1.5px solid;text-align:center;min-width:100px}
+.h-arrow{color:#484f58;font-size:16px}
+.h-label{font-size:9px;color:#6e7681;text-align:center;margin-top:2px}
+.h-group{display:flex;flex-direction:column;align-items:center;gap:4px}
+
+/* Impact matrix */
+table.matrix{width:100%;border-collapse:collapse;margin:16px 0;font-size:11px}
+table.matrix th,table.matrix td{padding:8px;border:1px solid #21262d;text-align:center}
+table.matrix th{background:#161b22;color:#8b949e;font-weight:600;text-transform:uppercase;font-size:9px}
+table.matrix td{color:#c9d1d9}
+table.matrix .yes{color:#3fb950;font-weight:700}
+table.matrix .no{color:#30363d}
+
+footer{text-align:center;padding:40px;color:#484f58;font-size:11px;border-top:1px solid #21262d;margin-top:40px}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Oracle Artifact Glossary</h1>
+  <p>Complete reference for every Oracle ERP artifact type, their dependencies, hierarchy, and real code examples</p>
+</div>
+
+<nav class="toc">
+  <a href="#table">Table</a>
+  <a href="#view">View</a>
+  <a href="#procedure">Procedure</a>
+  <a href="#function">Function</a>
+  <a href="#package">Package</a>
+  <a href="#trigger">Trigger</a>
+  <a href="#sequence">Sequence</a>
+  <a href="#oic">OIC Flow</a>
+  <a href="#bip">BIP Report</a>
+  <a href="#groovy">Groovy Script</a>
+  <a href="#hierarchy">Dependency Hierarchy</a>
+  <a href="#matrix">Impact Matrix</a>
+</nav>
+
+<div class="content">
+
+<!-- ===== DEPENDENCY HIERARCHY OVERVIEW ===== -->
+<div id="hierarchy" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#C74634">&#x2B73;</div>
+    <div class="artifact-meta">
+      <h2>Oracle ERP Dependency Hierarchy</h2>
+      <div class="subtitle">How artifacts depend on each other — from foundational tables to external integrations</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>Dependency Flow (Top = Foundation, Bottom = Consumer)</h3>
+      <div class="hierarchy">
+        <div class="h-row">
+          <div class="h-group">
+            <div class="h-box" style="border-color:#6B7280;color:#6B7280">SEQUENCE</div>
+            <div class="h-label">ID generation</div>
+          </div>
+          <div class="h-arrow">&rarr;</div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#1565C0;color:#58a6ff;border-width:3px">TABLE</div>
+            <div class="h-label">Foundation layer</div>
+          </div>
+          <div class="h-arrow">&larr;</div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#EA580C;color:#EA580C">TRIGGER</div>
+            <div class="h-label">Event hooks</div>
+          </div>
+        </div>
+        <div class="h-row"><div class="h-arrow" style="transform:rotate(90deg);margin:4px 0">&darr;</div></div>
+        <div class="h-row">
+          <div class="h-group">
+            <div class="h-box" style="border-color:#0097A7;color:#0097A7">VIEW</div>
+            <div class="h-label">Reads tables</div>
+          </div>
+          <div style="width:20px"></div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#2E7D32;color:#3fb950">PROCEDURE</div>
+            <div class="h-label">DML on tables</div>
+          </div>
+          <div style="width:20px"></div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#F57F17;color:#F57F17">FUNCTION</div>
+            <div class="h-label">Computes from tables</div>
+          </div>
+        </div>
+        <div class="h-row"><div class="h-arrow" style="transform:rotate(90deg);margin:4px 0">&darr;</div></div>
+        <div class="h-row">
+          <div class="h-group">
+            <div class="h-box" style="border-color:#7B1FA2;color:#a371f7;border-width:2px">PACKAGE</div>
+            <div class="h-label">Groups procs + funcs</div>
+          </div>
+        </div>
+        <div class="h-row"><div class="h-arrow" style="transform:rotate(90deg);margin:4px 0">&darr;</div></div>
+        <div class="h-row">
+          <div class="h-group">
+            <div class="h-box" style="border-color:#D84315;color:#D84315">OIC FLOW</div>
+            <div class="h-label">Calls procs, reads views</div>
+          </div>
+          <div style="width:20px"></div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#C2185B;color:#C2185B">BIP REPORT</div>
+            <div class="h-label">Queries views/tables</div>
+          </div>
+          <div style="width:20px"></div>
+          <div class="h-group">
+            <div class="h-box" style="border-color:#00695C;color:#3fb950">GROOVY SCRIPT</div>
+            <div class="h-label">Calls funcs via API</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:12px;color:#8b949e;margin-top:12px"><strong>Key insight:</strong> A change to a TABLE at the top cascades through EVERY layer below. Standard Oracle DBA_DEPENDENCIES only sees the first 3 rows (database objects). OIC flows, BIP reports, and Groovy scripts are <strong>invisible</strong> to Oracle's built-in dependency tracking — that's exactly what AI_Elite_Ora1 solves.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TABLE ===== -->
+<div id="table" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#1565C0">T</div>
+    <div class="artifact-meta">
+      <h2>TABLE <span class="tag t-table">Foundation</span></h2>
+      <div class="subtitle">Stores persistent data — the foundation of every Oracle ERP system</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A TABLE is a structured collection of rows and columns that stores business data. In Oracle ERP, tables hold master data (employees, departments, jobs), transactional data (payroll, invoices), and audit logs. Tables are the <strong>most critical</strong> artifacts because everything else depends on them.</p>
+    </div>
+    <div class="sect">
+      <h3>Who depends on a TABLE?</h3>
+      <ul>
+        <li><span class="tag t-view">VIEW</span> reads from it (SELECT ... FROM table)</li>
+        <li><span class="tag t-proc">PROCEDURE</span> writes to it (INSERT/UPDATE/DELETE)</li>
+        <li><span class="tag t-func">FUNCTION</span> reads from it (SELECT ... INTO ...)</li>
+        <li><span class="tag t-trigger">TRIGGER</span> fires on it (BEFORE/AFTER INSERT/UPDATE/DELETE)</li>
+        <li><span class="tag t-seq">SEQUENCE</span> generates IDs for it (EMP_ID_SEQ.NEXTVAL)</li>
+        <li><span class="tag t-oic">OIC FLOW</span> reads/writes via SQL or procedure calls</li>
+        <li><span class="tag t-bip">BIP REPORT</span> queries it in dataset SQL</li>
+        <li><span class="tag t-groovy">GROOVY</span> accesses it via executeQuery/executeProcedure</li>
+      </ul>
+    </div>
+    <div class="sect">
+      <h3>Risk when modified</h3>
+      <p><strong>Criticality: 10/10</strong> — Changing a table's columns, constraints, or structure can break every artifact that references it. A single column rename can cause ORA-00904 (invalid identifier) in views, ORA-06508 in packages, and silent data loss in OIC flows.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: EMPLOYEES table</h3>
+      <div class="code"><span class="kw">CREATE TABLE</span> <span class="tbl">EMPLOYEES</span> (
+    employee_id   <span class="typ">NUMBER</span>(<span class="num">10</span>)    <span class="kw">PRIMARY KEY</span>,
+    first_name    <span class="typ">VARCHAR2</span>(<span class="num">50</span>)  <span class="kw">NOT NULL</span>,
+    last_name     <span class="typ">VARCHAR2</span>(<span class="num">50</span>)  <span class="kw">NOT NULL</span>,
+    email         <span class="typ">VARCHAR2</span>(<span class="num">100</span>) <span class="kw">UNIQUE</span>,
+    hire_date     <span class="typ">DATE</span>          <span class="kw">DEFAULT SYSDATE</span>,
+    salary        <span class="typ">NUMBER</span>(<span class="num">12</span>,<span class="num">2</span>),
+    commission_pct <span class="typ">NUMBER</span>(<span class="num">4</span>,<span class="num">2</span>),
+    department_id <span class="typ">NUMBER</span>(<span class="num">10</span>)    <span class="kw">REFERENCES</span> <span class="tbl">DEPARTMENTS</span>(department_id),
+    job_id        <span class="typ">NUMBER</span>(<span class="num">10</span>)    <span class="kw">REFERENCES</span> <span class="tbl">JOBS</span>(job_id)
+);</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIEW ===== -->
+<div id="view" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#0097A7">V</div>
+    <div class="artifact-meta">
+      <h2>VIEW <span class="tag t-view">Read Layer</span></h2>
+      <div class="subtitle">Virtual table defined by a SELECT query — reads from one or more tables</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A VIEW is a stored SQL query that acts like a virtual table. It doesn't store data itself — it reads from underlying tables every time it's queried. Views simplify complex joins, enforce security (expose only certain columns), and provide a stable interface even when underlying tables change.</p>
+    </div>
+    <div class="sect">
+      <h3>Dependencies</h3>
+      <ul>
+        <li><strong>Depends on:</strong> <span class="tag t-table">TABLE</span> — the source tables in FROM/JOIN clauses</li>
+        <li><strong>Depended on by:</strong> <span class="tag t-oic">OIC FLOW</span>, <span class="tag t-bip">BIP REPORT</span>, <span class="tag t-proc">PROCEDURE</span> — anything that queries the view</li>
+      </ul>
+    </div>
+    <div class="sect">
+      <h3>Risk when source table changes</h3>
+      <p><strong>Criticality: 7/10</strong> — If a source table column is renamed or dropped, the view becomes invalid (ORA-04063: view has errors). All downstream consumers (OIC, BIP, procedures) that query this view will also fail.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: HR_EMPLOYEE_SUMMARY view</h3>
+      <div class="code"><span class="kw">CREATE OR REPLACE VIEW</span> <span class="tbl">HR_EMPLOYEE_SUMMARY</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span>
+    e.employee_id,
+    e.first_name || <span class="str">' '</span> || e.last_name <span class="kw">AS</span> full_name,
+    e.email,
+    e.hire_date,
+    e.salary,
+    d.department_name,
+    j.job_title
+<span class="kw">FROM</span> <span class="tbl">EMPLOYEES</span> e
+<span class="kw">JOIN</span> <span class="tbl">DEPARTMENTS</span> d <span class="kw">ON</span> e.department_id = d.department_id
+<span class="kw">JOIN</span> <span class="tbl">JOBS</span> j <span class="kw">ON</span> e.job_id = j.job_id
+<span class="kw">WHERE</span> e.hire_date >= <span class="fn">ADD_MONTHS</span>(<span class="fn">SYSDATE</span>, -<span class="num">24</span>);</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROCEDURE ===== -->
+<div id="procedure" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#2E7D32">P</div>
+    <div class="artifact-meta">
+      <h2>PROCEDURE <span class="tag t-proc">Action</span></h2>
+      <div class="subtitle">Named PL/SQL block that performs actions — INSERT, UPDATE, DELETE on tables</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A PROCEDURE is a reusable PL/SQL program stored in the database. Unlike functions, procedures don't return a value — they perform actions like inserting records, updating salaries, or calling other procedures. They're the "workhorses" of Oracle ERP business logic.</p>
+    </div>
+    <div class="sect">
+      <h3>Dependencies</h3>
+      <ul>
+        <li><strong>Depends on:</strong> <span class="tag t-table">TABLE</span> (reads/writes), <span class="tag t-func">FUNCTION</span> (calls), <span class="tag t-view">VIEW</span> (queries)</li>
+        <li><strong>Depended on by:</strong> <span class="tag t-oic">OIC FLOW</span> (invoked as step), <span class="tag t-groovy">GROOVY</span> (executeProcedure), <span class="tag t-pkg">PACKAGE</span> (grouped inside)</li>
+      </ul>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: GET_EMPLOYEE_SALARY</h3>
+      <div class="code"><span class="kw">CREATE OR REPLACE PROCEDURE</span> <span class="fn">GET_EMPLOYEE_SALARY</span> (
+    p_employee_id <span class="kw">IN</span>  <span class="typ">NUMBER</span>,
+    p_salary      <span class="kw">OUT</span> <span class="typ">NUMBER</span>,
+    p_bonus       <span class="kw">OUT</span> <span class="typ">NUMBER</span>
+) <span class="kw">AS</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> salary, salary * <span class="fn">NVL</span>(commission_pct, <span class="num">0</span>)
+    <span class="kw">INTO</span> p_salary, p_bonus
+    <span class="kw">FROM</span> <span class="tbl">EMPLOYEES</span>
+    <span class="kw">WHERE</span> employee_id = p_employee_id;
+<span class="kw">EXCEPTION</span>
+    <span class="kw">WHEN</span> NO_DATA_FOUND <span class="kw">THEN</span>
+        p_salary := <span class="num">0</span>;
+        p_bonus  := <span class="num">0</span>;
+<span class="kw">END</span> GET_EMPLOYEE_SALARY;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FUNCTION ===== -->
+<div id="function" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#F57F17">f</div>
+    <div class="artifact-meta">
+      <h2>FUNCTION <span class="tag t-func">Compute</span></h2>
+      <div class="subtitle">PL/SQL block that computes and RETURNS a value — used in SQL and other PL/SQL</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A FUNCTION is like a procedure but it RETURNS a value. Functions can be called inside SQL queries (SELECT my_func() FROM dual), making them essential for computed columns, validation logic, and business rules. In Oracle ERP, functions calculate bonuses, tax rates, eligibility, etc.</p>
+    </div>
+    <div class="sect">
+      <h3>Dependencies</h3>
+      <ul>
+        <li><strong>Depends on:</strong> <span class="tag t-table">TABLE</span> (reads data for computation)</li>
+        <li><strong>Depended on by:</strong> <span class="tag t-groovy">GROOVY</span> (executeFunction), <span class="tag t-view">VIEW</span> (in SELECT), <span class="tag t-proc">PROCEDURE</span> (called from)</li>
+      </ul>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: CALC_ANNUAL_BONUS</h3>
+      <div class="code"><span class="kw">CREATE OR REPLACE FUNCTION</span> <span class="fn">CALC_ANNUAL_BONUS</span> (
+    p_employee_id <span class="kw">IN</span> <span class="typ">NUMBER</span>
+) <span class="kw">RETURN NUMBER AS</span>
+    v_salary     <span class="typ">NUMBER</span>;
+    v_commission <span class="typ">NUMBER</span>;
+    v_bonus      <span class="typ">NUMBER</span>;
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> salary, <span class="fn">NVL</span>(commission_pct, <span class="num">0</span>)
+    <span class="kw">INTO</span> v_salary, v_commission
+    <span class="kw">FROM</span> <span class="tbl">EMPLOYEES</span>
+    <span class="kw">WHERE</span> employee_id = p_employee_id;
+
+    v_bonus := v_salary * (<span class="num">0.1</span> + v_commission);
+    <span class="kw">RETURN</span> <span class="fn">ROUND</span>(v_bonus, <span class="num">2</span>);
+<span class="kw">END</span> CALC_ANNUAL_BONUS;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PACKAGE ===== -->
+<div id="package" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#7B1FA2">Pk</div>
+    <div class="artifact-meta">
+      <h2>PACKAGE <span class="tag t-pkg">Container</span></h2>
+      <div class="subtitle">Groups related procedures and functions — the Oracle equivalent of a class/module</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A PACKAGE is two objects: a SPEC (public interface declaring procedure/function signatures) and a BODY (private implementation). Packages group related logic — e.g., HR_PACKAGE contains GET_HEADCOUNT and SYNC_EMPLOYEE. They're critical because many external systems reference PACKAGE.FUNCTION notation.</p>
+    </div>
+    <div class="sect">
+      <h3>Dependencies</h3>
+      <ul>
+        <li><strong>Depends on:</strong> <span class="tag t-table">TABLE</span>, <span class="tag t-view">VIEW</span>, <span class="tag t-func">FUNCTION</span>, <span class="tag t-proc">PROCEDURE</span></li>
+        <li><strong>Depended on by:</strong> <span class="tag t-oic">OIC FLOW</span>, <span class="tag t-groovy">GROOVY</span>, <span class="tag t-bip">BIP</span> — all call PKG.FUNC()</li>
+      </ul>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: HR_PACKAGE</h3>
+      <div class="code"><span class="cm">-- Package Specification (public interface)</span>
+<span class="kw">CREATE OR REPLACE PACKAGE</span> <span class="fn">HR_PACKAGE</span> <span class="kw">AS</span>
+    <span class="kw">FUNCTION</span>  <span class="fn">GET_HEADCOUNT</span>(p_dept_id <span class="typ">NUMBER</span>) <span class="kw">RETURN NUMBER</span>;
+    <span class="kw">PROCEDURE</span> <span class="fn">SYNC_EMPLOYEE</span>(p_emp_id <span class="typ">NUMBER</span>, p_data <span class="typ">VARCHAR2</span>);
+<span class="kw">END</span> HR_PACKAGE;
+/
+
+<span class="cm">-- Package Body (implementation)</span>
+<span class="kw">CREATE OR REPLACE PACKAGE BODY</span> <span class="fn">HR_PACKAGE</span> <span class="kw">AS</span>
+    <span class="kw">FUNCTION</span> <span class="fn">GET_HEADCOUNT</span>(p_dept_id <span class="typ">NUMBER</span>) <span class="kw">RETURN NUMBER AS</span>
+        v_count <span class="typ">NUMBER</span>;
+    <span class="kw">BEGIN</span>
+        <span class="kw">SELECT COUNT</span>(*) <span class="kw">INTO</span> v_count
+        <span class="kw">FROM</span> <span class="tbl">EMPLOYEES</span> <span class="kw">WHERE</span> department_id = p_dept_id;
+        <span class="kw">RETURN</span> v_count;
+    <span class="kw">END</span>;
+
+    <span class="kw">PROCEDURE</span> <span class="fn">SYNC_EMPLOYEE</span>(p_emp_id <span class="typ">NUMBER</span>, p_data <span class="typ">VARCHAR2</span>) <span class="kw">AS</span>
+    <span class="kw">BEGIN</span>
+        <span class="kw">UPDATE</span> <span class="tbl">EMPLOYEES</span> <span class="kw">SET</span> last_name = p_data
+        <span class="kw">WHERE</span> employee_id = p_emp_id;
+        <span class="kw">COMMIT</span>;
+    <span class="kw">END</span>;
+<span class="kw">END</span> HR_PACKAGE;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TRIGGER ===== -->
+<div id="trigger" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#EA580C">Tr</div>
+    <div class="artifact-meta">
+      <h2>TRIGGER <span class="tag t-trigger">Event Hook</span></h2>
+      <div class="subtitle">Automatically fires before/after INSERT, UPDATE, DELETE on a table</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A TRIGGER is PL/SQL code that runs automatically when a DML event occurs on a table. Used for audit logging, data validation, cascading updates. Triggers are "invisible" — they run without being explicitly called, making them dangerous if broken.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: PAYROLL_TRIGGER</h3>
+      <div class="code"><span class="kw">CREATE OR REPLACE TRIGGER</span> <span class="fn">PAYROLL_TRIGGER</span>
+<span class="kw">AFTER UPDATE OF</span> salary <span class="kw">ON</span> <span class="tbl">EMPLOYEES</span>
+<span class="kw">FOR EACH ROW</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">INSERT INTO</span> <span class="tbl">SALARY_AUDIT_LOG</span> (
+        employee_id, old_salary, new_salary, changed_date, changed_by
+    ) <span class="kw">VALUES</span> (
+        :NEW.employee_id, :OLD.salary, :NEW.salary, <span class="fn">SYSDATE</span>, <span class="fn">USER</span>
+    );
+<span class="kw">END</span> PAYROLL_TRIGGER;</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEQUENCE ===== -->
+<div id="sequence" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#6B7280">#</div>
+    <div class="artifact-meta">
+      <h2>SEQUENCE <span class="tag t-seq">ID Generator</span></h2>
+      <div class="subtitle">Auto-incrementing number generator for primary keys</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A SEQUENCE generates unique sequential numbers, typically used for primary key columns. In Oracle ERP, sequences like EMP_ID_SEQ generate employee IDs. They're low-risk individually but essential for INSERT operations.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code</h3>
+      <div class="code"><span class="kw">CREATE SEQUENCE</span> <span class="fn">EMP_ID_SEQ</span>
+    <span class="kw">START WITH</span> <span class="num">1000</span>
+    <span class="kw">INCREMENT BY</span> <span class="num">1</span>
+    <span class="kw">NOCACHE NOCYCLE</span>;
+
+<span class="cm">-- Usage in INSERT:</span>
+<span class="kw">INSERT INTO</span> <span class="tbl">EMPLOYEES</span> (employee_id, ...) <span class="kw">VALUES</span> (<span class="fn">EMP_ID_SEQ.NEXTVAL</span>, ...);</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== OIC FLOW ===== -->
+<div id="oic" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#D84315">OIC</div>
+    <div class="artifact-meta">
+      <h2>OIC Integration Flow <span class="tag t-oic">External</span></h2>
+      <div class="subtitle">Oracle Integration Cloud — orchestrates data movement between cloud and on-prem systems</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>An OIC flow is an integration defined in Oracle Integration Cloud. It connects Oracle ERP to other systems — syncing employees from HCM Cloud to a database, triggering workflows, transforming data. OIC flows call database procedures, query views, and write to tables via connections.</p>
+      <p style="margin-top:8px"><strong>Critical:</strong> OIC flows are completely INVISIBLE to Oracle DBA_DEPENDENCIES. A change to EMPLOYEES table can break an OIC flow and nobody in the database team would know.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: HR_EMPLOYEE_SYNC</h3>
+      <div class="code"><span class="kw">&lt;integration</span> <span class="typ">name</span>=<span class="str">"HR_EMPLOYEE_SYNC"</span> <span class="typ">type</span>=<span class="str">"scheduled_orchestration"</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;schedule&gt;</span>0 2 * * *<span class="kw">&lt;/schedule&gt;</span>  <span class="cm">&lt;!-- Daily at 2 AM --&gt;</span>
+
+  <span class="kw">&lt;connection</span> <span class="typ">name</span>=<span class="str">"HCM_ADAPTER"</span> <span class="typ">type</span>=<span class="str">"oracle_hcm_cloud"</span> /&gt;
+  <span class="kw">&lt;connection</span> <span class="typ">name</span>=<span class="str">"HR_DB_CONN"</span> <span class="typ">type</span>=<span class="str">"oracle_db"</span> /&gt;
+
+  <span class="kw">&lt;steps&gt;</span>
+    <span class="kw">&lt;step</span> <span class="typ">name</span>=<span class="str">"FETCH_EMPLOYEES"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;query&gt;</span><span class="kw">SELECT</span> * <span class="kw">FROM</span> <span class="tbl">HR_EMPLOYEE_SUMMARY</span>
+             <span class="kw">WHERE</span> hire_date >= <span class="fn">SYSDATE</span> - <span class="num">30</span><span class="kw">&lt;/query&gt;</span>
+    <span class="kw">&lt;/step&gt;</span>
+    <span class="kw">&lt;step</span> <span class="typ">name</span>=<span class="str">"CALC_SALARY"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;procedure&gt;</span><span class="fn">GET_EMPLOYEE_SALARY</span><span class="kw">&lt;/procedure&gt;</span>
+    <span class="kw">&lt;/step&gt;</span>
+    <span class="kw">&lt;step</span> <span class="typ">name</span>=<span class="str">"UPSERT_EMPLOYEES"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;target&gt;</span><span class="tbl">EMPLOYEES</span><span class="kw">&lt;/target&gt;</span>
+    <span class="kw">&lt;/step&gt;</span>
+  <span class="kw">&lt;/steps&gt;</span>
+<span class="kw">&lt;/integration&gt;</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BIP REPORT ===== -->
+<div id="bip" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#C2185B">BIP</div>
+    <div class="artifact-meta">
+      <h2>BI Publisher Report <span class="tag t-bip">Reporting</span></h2>
+      <div class="subtitle">Oracle BI Publisher — generates PDF, Excel, HTML reports from database queries</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>A BIP report defines data models (SQL queries) and layout templates that produce formatted reports. The data model contains embedded SQL that queries tables and views directly. If a source table changes, the report's SQL fails silently — no compilation error, just wrong or missing data.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: MONTHLY_PAYROLL_REPORT</h3>
+      <div class="code"><span class="kw">&lt;report</span> <span class="typ">name</span>=<span class="str">"MONTHLY_PAYROLL_REPORT"</span><span class="kw">&gt;</span>
+  <span class="kw">&lt;dataModel&gt;</span>
+    <span class="kw">&lt;dataset</span> <span class="typ">name</span>=<span class="str">"PayrollByDept"</span><span class="kw">&gt;</span>
+      <span class="kw">&lt;sql&gt;</span>
+        <span class="kw">SELECT</span> d.department_name,
+               <span class="fn">COUNT</span>(e.employee_id) <span class="kw">AS</span> headcount,
+               <span class="fn">SUM</span>(e.salary)        <span class="kw">AS</span> total_salary,
+               <span class="fn">ROUND</span>(<span class="fn">AVG</span>(e.salary), <span class="num">2</span>) <span class="kw">AS</span> avg_salary
+        <span class="kw">FROM</span> <span class="tbl">PAYROLL_VIEW</span> e
+        <span class="kw">JOIN</span> <span class="tbl">DEPARTMENTS</span> d <span class="kw">ON</span> e.department_id = d.department_id
+        <span class="kw">GROUP BY</span> d.department_name
+        <span class="kw">ORDER BY</span> total_salary <span class="kw">DESC</span>
+      <span class="kw">&lt;/sql&gt;</span>
+    <span class="kw">&lt;/dataset&gt;</span>
+  <span class="kw">&lt;/dataModel&gt;</span>
+  <span class="kw">&lt;output</span> <span class="typ">formats</span>=<span class="str">"pdf,xlsx,html"</span> /&gt;
+<span class="kw">&lt;/report&gt;</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GROOVY ===== -->
+<div id="groovy" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#00695C">G</div>
+    <div class="artifact-meta">
+      <h2>Groovy Script <span class="tag t-groovy">HCM/ERP Cloud</span></h2>
+      <div class="subtitle">Oracle Fusion HCM/ERP Cloud — Groovy-based business rules, fast formulas, personalizations</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>What is it?</h3>
+      <p>Groovy scripts run inside Oracle Fusion Cloud (HCM, ERP, SCM) for custom business logic. They call database functions/procedures via executeFunction() and executeQuery(). They're the hardest to track because they live in the cloud application, not the database.</p>
+    </div>
+    <div class="sect">
+      <h3>Sample Code: COMPENSATION script</h3>
+      <div class="code"><span class="cm">// Oracle Fusion HCM — Compensation Calculation Rule</span>
+<span class="cm">// Runs during annual compensation cycle</span>
+
+<span class="kw">def</span> employeeId = <span class="fn">getCurrentEmployeeId</span>()
+<span class="kw">def</span> departmentId = <span class="fn">getCurrentDepartmentId</span>()
+
+<span class="cm">// Call PL/SQL function to calculate annual bonus</span>
+<span class="kw">def</span> annualBonus = sql.<span class="fn">executeFunction</span>(
+    <span class="str">"CALC_ANNUAL_BONUS"</span>, [employeeId]
+)
+
+<span class="cm">// Get department headcount via package function</span>
+<span class="kw">def</span> headcount = sql.<span class="fn">executeFunction</span>(
+    <span class="str">"HR_PACKAGE.GET_HEADCOUNT"</span>, [departmentId]
+)
+
+<span class="cm">// Calculate per-capita department adjustment</span>
+<span class="kw">def</span> deptBudget = <span class="num">500000.00</span>
+<span class="kw">def</span> perCapitaAdj = (headcount > <span class="num">0</span>) ? deptBudget / headcount : <span class="num">0</span>
+<span class="kw">def</span> adjustedBonus = annualBonus + (perCapitaAdj * <span class="num">0.05</span>)
+
+<span class="kw">return</span> [
+    employee_id:    employeeId,
+    annual_bonus:   annualBonus,
+    dept_headcount: headcount,
+    adjustment:     <span class="fn">Math.round</span>(adjustedBonus * <span class="num">100</span>) / <span class="num">100</span>
+]</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IMPACT MATRIX ===== -->
+<div id="matrix" class="artifact">
+  <div class="artifact-header" onclick="toggle(this)">
+    <div class="artifact-icon" style="background:#C74634">&#x2A2F;</div>
+    <div class="artifact-meta">
+      <h2>Cross-Artifact Impact Matrix</h2>
+      <div class="subtitle">Which artifact types can impact which — the dependency truth table</div>
+    </div>
+  </div>
+  <div class="artifact-body">
+    <div class="sect">
+      <h3>If THIS changes (rows) &rarr; THESE break (columns)</h3>
+      <table class="matrix">
+        <tr>
+          <th>Changed &darr; / Breaks &rarr;</th>
+          <th>Table</th><th>View</th><th>Proc</th><th>Func</th><th>Pkg</th><th>Trigger</th><th>OIC</th><th>BIP</th><th>Groovy</th>
+        </tr>
+        <tr><td><strong>TABLE</strong></td>
+          <td class="yes">FK</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td>
+        </tr>
+        <tr><td><strong>VIEW</strong></td>
+          <td class="no">-</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td><td class="yes">YES</td><td class="no">-</td>
+        </tr>
+        <tr><td><strong>PROCEDURE</strong></td>
+          <td class="no">-</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td>
+        </tr>
+        <tr><td><strong>FUNCTION</strong></td>
+          <td class="no">-</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="yes">YES</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="yes">YES</td>
+        </tr>
+        <tr><td><strong>PACKAGE</strong></td>
+          <td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td>
+        </tr>
+        <tr><td><strong>SEQUENCE</strong></td>
+          <td class="yes">INS</td><td class="no">-</td><td class="yes">YES</td><td class="no">-</td><td class="yes">YES</td><td class="yes">YES</td><td class="no">-</td><td class="no">-</td><td class="no">-</td>
+        </tr>
+      </table>
+      <p style="font-size:11px;color:#6e7681;margin-top:8px"><strong>YES</strong> = direct breakage possible. <strong>FK</strong> = foreign key constraint violation. <strong>INS</strong> = INSERT operations fail.</p>
+      <p style="font-size:11px;color:#C74634;margin-top:8px"><strong>Key takeaway:</strong> TABLE changes affect ALL 9 artifact types. This is why EMPLOYEES scores 82 (CRITICAL) — it's the most connected node in the dependency graph.</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<footer>AI_Elite_Ora1 | Oracle Artifact Glossary | Team: Sameet (Lead), Pranali, Suraj | LTIMindtree</footer>
+
+<script>
+function toggle(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('collapsed');
+}
+// Smooth scroll for nav links
+document.querySelectorAll('nav.toc a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(a.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+</body>
+</html>
