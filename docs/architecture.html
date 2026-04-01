@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI_Elite_Ora1 — System Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;background:#0d1117;color:#e6edf3}
+header{background:#C74634;padding:14px 32px;display:flex;justify-content:space-between;align-items:center}
+header h1{font-size:17px;color:#fff;font-weight:800}
+header span{font-size:11px;color:rgba(255,255,255,.7)}
+
+.page{display:grid;grid-template-columns:1fr 300px;gap:20px;padding:20px}
+
+/* System boundary boxes */
+.boundary{border:2px solid;border-radius:16px;padding:16px;position:relative;margin-bottom:16px}
+.boundary-label{position:absolute;top:-10px;left:20px;padding:0 8px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:#0d1117}
+
+/* Component boxes inside boundaries */
+.comp{background:#161b22;border:1.5px solid #30363d;border-radius:10px;padding:10px 14px;cursor:pointer;transition:all .15s}
+.comp:hover{border-color:#58a6ff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+.comp-name{font-size:12px;font-weight:700;margin-bottom:3px}
+.comp-tech{font-size:9px;color:#6e7681;font-style:italic}
+.comp-desc{font-size:9px;color:#8b949e;margin-top:4px;line-height:1.5}
+.comp-expand{display:none;margin-top:8px;padding-top:8px;border-top:1px solid #21262d;font-size:9px;color:#8b949e;line-height:1.7}
+.comp-expand code{background:#0d1117;padding:1px 5px;border-radius:3px;font-family:Consolas,monospace;font-size:8px;color:#c9d1d9}
+.comp-expand h5{color:#c9d1d9;font-size:10px;margin:6px 0 2px}
+.comp.open .comp-expand{display:block}
+
+/* Flow arrows */
+.flow-down{display:flex;justify-content:center;padding:6px 0}
+.flow-down .arr{width:2px;height:20px;position:relative}
+.flow-down .arr:after{content:"";position:absolute;bottom:-4px;left:-4px;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid}
+.flow-right{display:flex;align-items:center;padding:0 6px}
+.flow-right .arr{height:2px;width:24px;position:relative}
+.flow-right .arr:after{content:"";position:absolute;right:-4px;top:-4px;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:6px solid}
+.flow-label{font-size:8px;font-weight:600;margin:0 4px;white-space:nowrap}
+
+/* Grid layouts inside boundaries */
+.row{display:flex;gap:12px;align-items:stretch}
+.row>.comp{flex:1}
+.col{display:flex;flex-direction:column;gap:8px}
+
+/* Interface bar (API) */
+.api-bar{background:#1a1a2e;border:2px solid #58a6ff;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:12px;margin:10px 0}
+.api-bar .api-title{font-size:11px;font-weight:700;color:#58a6ff;white-space:nowrap}
+.api-bar .api-endpoints{display:flex;gap:6px;flex-wrap:wrap}
+.api-bar .ep{padding:2px 8px;border-radius:4px;font-size:8px;font-family:Consolas,monospace;background:#0d1117;color:#8b949e;border:1px solid #21262d}
+.api-bar .ep b{color:#3fb950}
+
+/* Side panel */
+.side{display:flex;flex-direction:column;gap:14px}
+.side-card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:14px}
+.side-card h3{font-size:10px;font-weight:800;color:#c9d1d9;margin-bottom:8px;letter-spacing:.5px;text-transform:uppercase}
+.metric{display:inline-block;text-align:center;margin-right:14px}
+.metric .num{font-size:28px;font-weight:800;display:block}
+.metric .ml{font-size:8px;color:#8b949e}
+.tech-row{font-size:9px;margin:2px 0;color:#8b949e}
+.tech-row b{color:#c9d1d9}
+.weakness{font-size:9px;color:#f85149;margin:2px 0}
+.weakness:before{content:"⚠ "}
+.mitigation{font-size:9px;color:#3fb950;margin:2px 0 2px 14px}
+.mitigation:before{content:"→ "}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI_ELITE_ORA1 — System Architecture</h1>
+  <span>Click any component for implementation details | All boundaries shown</span>
+</header>
+
+<div class="page">
+<div class="main-flow">
+
+<!-- ============ BOUNDARY: CLIENT (Browser) ============ -->
+<div class="boundary" style="border-color:#a371f7">
+  <div class="boundary-label" style="color:#a371f7">CLIENT — Browser (Next.js 15 + React 19)</div>
+
+  <div class="row">
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#58a6ff">Login Screen</div>
+      <div class="comp-tech">LoginScreen.tsx</div>
+      <div class="comp-desc">SSO-ready auth form. Mock auth for demo. Sets session state.</div>
+      <div class="comp-expand">
+        <h5>Auth flow:</h5>
+        Any credentials accepted (mock). Production: Oracle IDCS SSO via OAuth2.<br>
+        State: <code>loggedIn: boolean</code> — gates entire app render.
+      </div>
+    </div>
+
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#58a6ff">Connector Tiles</div>
+      <div class="comp-tech">ConnectorTiles.tsx</div>
+      <div class="comp-desc">Data source selector. Oracle DB form, Upload, Demo. Token management.</div>
+      <div class="comp-expand">
+        <h5>Active connectors:</h5>
+        Oracle DB (simulated), Upload (.sql/.xml/.groovy), Demo data<br>
+        <h5>Coming soon:</h5>
+        OIC REST API, BIP Catalog, HCM/ERP Cloud, Fusion Apps<br>
+        <h5>Token:</h5>
+        Polls <code>GET /api/token/status</code> every 60s. Paste + save via <code>POST /api/token</code>.
+      </div>
+    </div>
+
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#58a6ff">D3.js Dependency Graph</div>
+      <div class="comp-tech">page.tsx — renderGraph()</div>
+      <div class="comp-desc">Radial spoke layout. Card nodes. Edge labels. Zoom/pan. Click to analyze.</div>
+      <div class="comp-expand">
+        <h5>Data source:</h5>
+        <code>GET /api/graph</code> → {nodes[], edges[], node_count, edge_count}<br>
+        <h5>Rendering:</h5>
+        D3.js force simulation: link distance=160, charge=-500, collision by card width.<br>
+        Target node pinned at center. Direct impacts on inner ring. Indirect on outer ring.
+      </div>
+    </div>
+
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#C74634">Ask Ora1 Chat</div>
+      <div class="comp-tech">ChatPanel.tsx</div>
+      <div class="comp-desc">Conversational AI. File attach. Quick prompts. Context-aware.</div>
+      <div class="comp-expand">
+        <h5>API:</h5>
+        <code>POST /api/chat</code> with {message, object_name, history[]}<br>
+        <h5>Context:</h5>
+        Sends full conversation history (last 6 turns). Backend reconstructs into single prompt for BlueVerse (stateless API).
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- API INTERFACE BAR -->
+<div class="api-bar">
+  <div class="api-title">REST API (FastAPI :8000)</div>
+  <div class="api-endpoints">
+    <div class="ep"><b>POST</b> /api/upload</div>
+    <div class="ep"><b>POST</b> /api/demo</div>
+    <div class="ep"><b>POST</b> /api/analyze</div>
+    <div class="ep"><b>POST</b> /api/chat</div>
+    <div class="ep"><b>GET</b> /api/graph</div>
+    <div class="ep"><b>GET</b> /api/objects</div>
+    <div class="ep"><b>GET</b> /api/report/:name</div>
+    <div class="ep"><b>GET</b> /api/token/status</div>
+  </div>
+</div>
+
+<!-- ============ BOUNDARY: SERVER (FastAPI Backend) ============ -->
+<div class="boundary" style="border-color:#3fb950">
+  <div class="boundary-label" style="color:#3fb950">SERVER — FastAPI + Python 3.13 (localhost:8000)</div>
+
+  <!-- Row 1: Parsers -->
+  <div style="font-size:9px;color:#6e7681;font-weight:700;letter-spacing:1px;margin-bottom:6px">INGESTION LAYER</div>
+  <div class="row">
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#d29922">SQL Parser</div>
+      <div class="comp-tech">parsers/sql_parser.py — sqlparse + regex</div>
+      <div class="comp-desc">CREATE TABLE/VIEW/PROC/FUNC/PKG/TRIGGER/SEQ. FK detection (multi-line). FROM/JOIN refs. Function calls.</div>
+      <div class="comp-expand">
+        <h5>Input:</h5> raw .sql file content<br>
+        <h5>Output:</h5> <code>objects[]</code> + <code>dependencies[]</code><br>
+        <h5>Patterns:</h5>
+        CREATE_PATTERN, FK_PATTERN (position-based for multi-line), TABLE_REF_PATTERN, CALL_PATTERN, SEQ_PATTERN, TRIGGER_ON_PATTERN<br>
+        <h5>Tested on:</h5> Oracle official HR schema (559 lines) → 11 objects, 12 FK deps, 100% accuracy on standard DDL.
+      </div>
+    </div>
+
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#d29922">OIC/BIP Parser</div>
+      <div class="comp-tech">parsers/oic_parser.py — xml.etree</div>
+      <div class="comp-desc">Auto-detects &lt;integration&gt; vs &lt;report&gt;. Extracts steps, connections, embedded SQL, datasets.</div>
+      <div class="comp-expand">
+        <h5>OIC flow:</h5> flow name, connections (OIC_CONNECTION), procedure calls, query table refs, target writes<br>
+        <h5>BIP report:</h5> report name, dataset SQL parsing, function calls<br>
+        <h5>SQL keyword filtering:</h5> excludes SELECT, WHERE, COUNT, SUM etc. to avoid false positives
+      </div>
+    </div>
+
+    <div class="comp" onclick="this.classList.toggle('open')">
+      <div class="comp-name" style="color:#d29922">Groovy Parser</div>
+      <div class="comp-tech">parsers/groovy_parser.py — regex</div>
+      <div class="comp-desc">executeQuery, executeFunction, executeProcedure. Embedded SQL table refs.</div>
+      <div class="comp-expand">
+        <h5>Patterns:</h5> EXEC_QUERY, EXEC_FUNC, EXEC_PROC, SQL_TABLE in string literals<br>
+        <h5>Key insight:</h5> Groovy never touches tables directly — only calls PL/SQL. Creates indirect dependencies invisible to DBA_DEPENDENCIES.
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-down"><div class="arr" style="background:#d29922;border-top-color:#d29922"></div></div>
+  <div style="text-align:center;font-size:8px;color:#d29922;font-weight:600;margin:-4px 0 6px">objects[] + dependencies[] + source code</div>
+
+  <!-- Row 2: Graph + RAG (parallel) -->
+  <div style="font-size:9px;color:#6e7681;font-weight:700;letter-spacing:1px;margin-bottom:6px">ANALYSIS LAYER (parallel processing)</div>
+  <div class="row">
+    <div class="col" style="flex:1">
+      <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#a371f7">
+        <div class="comp-name" style="color:#a371f7">Dependency Graph</div>
+        <div class="comp-tech">graph/engine.py — NetworkX DiGraph</div>
+        <div class="comp-desc">Directed graph. Nodes=objects, Edges=deps. BFS blast radius. Risk score 0-100.</div>
+        <div class="comp-expand">
+          <h5>Score formula:</h5>
+          <code>52% × min(direct×13, 100) + 18% × min(indirect×22, 100) + 30% × type_weight×10</code><br>
+          <h5>Type weights:</h5>
+          TABLE:10, PKG:9, PROC:8, OIC:8, VIEW:7, BIP:7, FUNC:8, GROOVY:6<br>
+          <h5>Severity:</h5>
+          CRITICAL ≥80 | HIGH ≥60 | MEDIUM ≥40 | LOW &lt;40<br>
+          <h5>EMPLOYEES:</h5> 8 direct, 5 indirect, TABLE=10 → <b>score 89 CRITICAL</b>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:8px;color:#a371f7;font-weight:600">↓ impact_data {score, severity, direct[], indirect[]}</div>
+    </div>
+
+    <div style="display:flex;align-items:center;padding:0 8px">
+      <div style="width:1px;height:80%;border-left:2px dashed #30363d"></div>
+    </div>
+
+    <div class="col" style="flex:1">
+      <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#f0883e">
+        <div class="comp-name" style="color:#f0883e">RAG Knowledge Base</div>
+        <div class="comp-tech">knowledge/rag.py — sentence-transformers + ChromaDB</div>
+        <div class="comp-desc">Embeds source code (384-dim, local). 2-stage retrieval: exact match + semantic search. Top-k=5.</div>
+        <div class="comp-expand">
+          <h5>Embedding model:</h5>
+          <code>all-MiniLM-L6-v2</code> — runs locally, no API calls, zero cost<br>
+          <h5>Vector store:</h5>
+          ChromaDB (in-memory, ephemeral). Cosine similarity.<br>
+          <h5>Chunking:</h5>
+          SQL: by CREATE block (2000 chars). XML: full file + steps. Groovy: full file + functions.<br>
+          <h5>Retrieval:</h5>
+          Stage 1: metadata filter (object_name == target) → score 1.0<br>
+          Stage 2: semantic search on "{target} {impacted_objects}" → cosine score<br>
+          Merge, deduplicate, return top 5 by relevance.
+        </div>
+      </div>
+      <div style="text-align:center;font-size:8px;color:#f0883e;font-weight:600">↓ code_context [{text, source_file, score}]</div>
+    </div>
+  </div>
+
+  <div class="flow-down"><div class="arr" style="background:#C74634"></div></div>
+  <div style="text-align:center;font-size:8px;color:#C74634;font-weight:700;margin:-4px 0 6px">MERGE: impact_data + code_context + user_question → single prompt</div>
+
+  <!-- Row 3: Prompt Builder + AI -->
+  <div style="font-size:9px;color:#6e7681;font-weight:700;letter-spacing:1px;margin-bottom:6px">AI LAYER</div>
+  <div class="row">
+    <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#C74634;flex:2">
+      <div class="comp-name" style="color:#C74634">Prompt Builder</div>
+      <div class="comp-tech">ai/oci_genai.py — _build_prompt()</div>
+      <div class="comp-desc">Constructs one prompt string from: system context + impact stats + code snippets (5 × 500 chars) + user question. No chains, no agents.</div>
+      <div class="comp-expand">
+        <h5>Prompt structure:</h5>
+        1. System: "You are Oracle Pythia-26, an Oracle ERP impact analysis assistant..."<br>
+        2. Impact: "TARGET: EMPLOYEES (TABLE), SCORE: 89, SEVERITY: CRITICAL, DIRECT: [8 names], INDIRECT: [5 names]"<br>
+        3. Code: "## RELEVANT SOURCE CODE\n[EMPLOYEES (TABLE)]: CREATE TABLE EMPLOYEES (employee_id NUMBER..."<br>
+        4. Question: "Provide analysis in 4 sections: ROOT CAUSE, FIX RECOMMENDATIONS, TESTING CHECKLIST, ROLLBACK PLAN"<br>
+        <h5>Response parsing:</h5>
+        Splits by section headers → extracts numbered lists → structured JSON output.
+      </div>
+    </div>
+    <div class="flow-right"><div class="arr" style="background:#C74634"></div></div>
+    <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#C74634;background:#1a1017;flex:1">
+      <div class="comp-name" style="color:#f0883e">→ BlueVerse Foundry</div>
+      <div class="comp-tech">ai/blueverse.py — call_blueverse()</div>
+      <div class="comp-desc">One HTTP POST. 30s timeout. Returns text response. Parsed into 4 sections.</div>
+      <div class="comp-expand">
+        <h5>Endpoint:</h5>
+        <code>POST blueverse-foundry.ltimindtree.com/chatservice/chat</code><br>
+        <h5>Payload:</h5>
+        <code>{space_name: "AI_Elite_ora1_45e8873c", flowId: "69ba...", question: full_prompt}</code><br>
+        <h5>Auth:</h5> JWT Bearer token. Expires ~20min. Runtime refresh via <code>POST /api/token</code>.<br>
+        <h5>Fallback:</h5> If token expired → returns None immediately (no 30s wait) → mock engine generates deterministic response with real ORA error codes.
+      </div>
+    </div>
+  </div>
+
+  <div class="flow-down"><div class="arr" style="background:#3fb950"></div></div>
+
+  <!-- Row 4: Output -->
+  <div style="font-size:9px;color:#6e7681;font-weight:700;letter-spacing:1px;margin-bottom:6px">OUTPUT</div>
+  <div class="row">
+    <div class="comp" style="border-color:#f85149;cursor:default">
+      <div class="comp-name" style="color:#f85149">Root Cause Analysis</div>
+      <div class="comp-desc">Why this change breaks downstream artifacts</div>
+    </div>
+    <div class="comp" style="border-color:#3fb950;cursor:default">
+      <div class="comp-name" style="color:#3fb950">Fix Recommendations</div>
+      <div class="comp-desc">ORA error codes + remediation steps</div>
+    </div>
+    <div class="comp" style="border-color:#58a6ff;cursor:default">
+      <div class="comp-name" style="color:#58a6ff">Testing Checklist</div>
+      <div class="comp-desc">Regression test plan for impacted objects</div>
+    </div>
+    <div class="comp" style="border-color:#d29922;cursor:default">
+      <div class="comp-name" style="color:#d29922">Rollback Plan</div>
+      <div class="comp-desc">Safe reversal steps if deployment fails</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ BOUNDARY: EXTERNAL (BlueVerse) ============ -->
+<div class="boundary" style="border-color:#f0883e;border-style:dashed">
+  <div class="boundary-label" style="color:#f0883e">EXTERNAL — BlueVerse Foundry (LTIMindtree Cloud)</div>
+  <div class="row">
+    <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#f0883e">
+      <div class="comp-name" style="color:#f0883e">AI_Elite_Ora1 Agent</div>
+      <div class="comp-tech">Pre-trained Oracle ERP agent on BlueVerse Marketplace</div>
+      <div class="comp-desc">Receives single prompt. Returns Oracle-specific analysis with ORA error codes. Stateless — no conversation memory on server side.</div>
+      <div class="comp-expand">
+        <h5>Why BlueVerse over direct LLM:</h5>
+        Pre-trained on Oracle ERP domain. Knows ORA error codes, DBMS_METADATA patterns, ALTER COMPILE syntax, Oracle best practices.<br>
+        <h5>Limitation:</h5>
+        Stateless API — no conversation history. We reconstruct full context in every prompt (client-side history management).
+      </div>
+    </div>
+    <div class="comp" onclick="this.classList.toggle('open')" style="border-color:#30363d">
+      <div class="comp-name" style="color:#6e7681">Mock Fallback</div>
+      <div class="comp-tech">ai/oci_genai.py — _mock_analysis()</div>
+      <div class="comp-desc">Deterministic rule-based output when BlueVerse unavailable. References real object names + ORA codes. Demo always works.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Data model -->
+<div class="boundary" style="border-color:#21262d">
+  <div class="boundary-label" style="color:#6e7681">DATA MODEL (all in-memory, no persistence)</div>
+  <div class="row">
+    <div class="comp" style="cursor:default;flex:1">
+      <div class="comp-name" style="color:#8b949e">Object</div>
+      <div class="comp-desc" style="font-family:Consolas,monospace;font-size:8px;color:#6e7681">{name: "EMPLOYEES",<br>type: "TABLE",<br>source_file: "hr_create.sql"}</div>
+    </div>
+    <div class="comp" style="cursor:default;flex:1">
+      <div class="comp-name" style="color:#8b949e">Dependency</div>
+      <div class="comp-desc" style="font-family:Consolas,monospace;font-size:8px;color:#6e7681">{source: "HR_VIEW",<br>target: "EMPLOYEES",<br>relationship: "REFERENCES"}</div>
+    </div>
+    <div class="comp" style="cursor:default;flex:1">
+      <div class="comp-name" style="color:#8b949e">Impact Result</div>
+      <div class="comp-desc" style="font-family:Consolas,monospace;font-size:8px;color:#6e7681">{risk_score: 89,<br>severity: "CRITICAL",<br>direct_impact: [...],<br>ai_analysis: {...}}</div>
+    </div>
+    <div class="comp" style="cursor:default;flex:1">
+      <div class="comp-name" style="color:#8b949e">RAG Chunk</div>
+      <div class="comp-desc" style="font-family:Consolas,monospace;font-size:8px;color:#6e7681">{text: "CREATE TABLE...",<br>source_file: "hr.sql",<br>object_name: "EMPLOYEES",<br>score: 0.94}</div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- SIDE PANEL -->
+<div class="side">
+  <div class="side-card">
+    <h3>Verified Metrics</h3>
+    <div class="metric"><span class="num" style="color:#f85149">89</span><span class="ml">Risk Score<br><b style="color:#f85149">CRITICAL</b></span></div>
+    <div class="metric"><span class="num" style="color:#a371f7">30</span><span class="ml">Objects</span></div>
+    <div class="metric"><span class="num" style="color:#3fb950">53</span><span class="ml">Deps</span></div>
+  </div>
+
+  <div class="side-card">
+    <h3>System Boundaries</h3>
+    <div class="tech-row"><span style="color:#a371f7">■</span> <b>Client:</b> Browser (Next.js SSR + CSR)</div>
+    <div class="tech-row"><span style="color:#3fb950">■</span> <b>Server:</b> FastAPI Python process</div>
+    <div class="tech-row"><span style="color:#f0883e">■</span> <b>External:</b> BlueVerse Foundry API</div>
+    <div class="tech-row"><span style="color:#6e7681">■</span> <b>Data:</b> All in-memory (no DB)</div>
+  </div>
+
+  <div class="side-card">
+    <h3>Communication</h3>
+    <div class="tech-row">Client → Server: <b>REST/JSON over HTTP</b></div>
+    <div class="tech-row">Server → BlueVerse: <b>HTTPS POST + JWT</b></div>
+    <div class="tech-row">CORS: open (all origins)</div>
+    <div class="tech-row">Auth: mock (demo) / IDCS (prod)</div>
+  </div>
+
+  <div class="side-card" style="border-color:#C74634">
+    <h3 style="color:#C74634">Key Differentiator</h3>
+    <div style="font-size:9px;color:#c9d1d9;line-height:1.7">
+      Oracle <b>DBA_DEPENDENCIES</b> only tracks database objects.<br><br>
+      <b style="color:#f0883e">AI_Elite_Ora1 crosses the boundary:</b><br>
+      <span style="color:#3fb950">OIC flows + BIP reports + Groovy scripts</span><br>
+      = dependencies invisible to Oracle's own tools.
+    </div>
+  </div>
+
+  <div class="side-card">
+    <h3>Known Limitations</h3>
+    <div class="weakness">sqlparse + regex can't handle dynamic SQL</div>
+    <div class="mitigation">Production: add DBMS_METADATA as complementary source</div>
+    <div class="weakness">In-memory only, no persistence</div>
+    <div class="mitigation">Roadmap: Oracle 23ai vector search</div>
+    <div class="weakness">BlueVerse token expires every 20min</div>
+    <div class="mitigation">Runtime refresh via UI + mock fallback</div>
+    <div class="weakness">Oracle DB connector is simulated</div>
+    <div class="mitigation">Needs cx_Oracle driver + real credentials</div>
+  </div>
+
+  <div class="side-card">
+    <h3>Tech Stack</h3>
+    <div class="tech-row"><b style="color:#a371f7">Backend:</b> FastAPI + Python 3.13</div>
+    <div class="tech-row"><b style="color:#a371f7">Graph:</b> NetworkX DiGraph</div>
+    <div class="tech-row"><b style="color:#f0883e">Embed:</b> sentence-transformers</div>
+    <div class="tech-row"><b style="color:#d29922">Vector:</b> ChromaDB (ephemeral)</div>
+    <div class="tech-row"><b style="color:#f0883e">AI:</b> BlueVerse Foundry</div>
+    <div class="tech-row"><b style="color:#58a6ff">Frontend:</b> Next.js + D3.js</div>
+    <div class="tech-row"><b style="color:#d29922">Parsers:</b> sqlparse + xml.etree</div>
+    <div class="tech-row"><b style="color:#8b949e">PDF:</b> ReportLab</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('.comp[onclick]').forEach(c => {
+  c.style.cursor = 'pointer';
+});
+</script>
+
+</body>
+</html>

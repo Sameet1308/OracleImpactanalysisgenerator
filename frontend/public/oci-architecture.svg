@@ -1,228 +1,168 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 780" font-family="Inter, system-ui, -apple-system, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" font-family="Inter, system-ui, -apple-system, sans-serif">
   <defs>
-    <filter id="sh" x="-4%" y="-4%" width="108%" height="112%">
-      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.18"/>
-    </filter>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
-      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.94  0 0 0 0 0.53  0 0 0 0 0.24  0 0 0 0.25 0"/>
-      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <marker id="aW" viewBox="0 -6 12 12" refX="10" refY="0" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,-5L10,0L0,5" fill="#fff" opacity="0.6"/></marker>
-    <marker id="aO" viewBox="0 -6 12 12" refX="10" refY="0" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,-5L10,0L0,5" fill="#f0883e"/></marker>
-    <linearGradient id="topBar" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#C74634"/><stop offset="100%" stop-color="#E85D4A"/>
-    </linearGradient>
-    <linearGradient id="cardGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1c2130"/><stop offset="100%" stop-color="#141922"/>
-    </linearGradient>
+    <filter id="s"><feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/></filter>
+    <marker id="a" viewBox="0 -6 14 12" refX="12" refY="0" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,-5L12,0L0,5" fill="#C74634"/></marker>
   </defs>
 
-  <!-- Background -->
-  <rect width="1400" height="780" fill="#0a0e17" rx="0"/>
-  <!-- Subtle grid pattern -->
-  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-    <rect width="40" height="40" fill="none"/>
-    <line x1="40" y1="0" x2="40" y2="40" stroke="#ffffff" stroke-width="0.3" opacity="0.03"/>
-    <line x1="0" y1="40" x2="40" y2="40" stroke="#ffffff" stroke-width="0.3" opacity="0.03"/>
-  </pattern>
-  <rect width="1400" height="780" fill="url(#grid)"/>
+  <rect width="1200" height="700" fill="#0d1117"/>
 
-  <!-- Title bar -->
-  <rect x="0" y="0" width="1400" height="56" fill="url(#topBar)"/>
-  <text x="32" y="36" fill="#fff" font-size="18" font-weight="800" letter-spacing="0.8">ORACLE PYTHIA-26</text>
-  <text x="250" y="36" fill="rgba(255,255,255,0.6)" font-size="14" font-weight="400">Solution Architecture</text>
-  <text x="1080" y="30" fill="rgba(255,255,255,0.5)" font-size="10">Impact Analysis Generator</text>
-  <text x="1080" y="46" fill="rgba(255,255,255,0.4)" font-size="10">LTIMindtree  |  Pythia-26 Hackathon</text>
+  <!-- Title -->
+  <rect x="0" y="0" width="1200" height="44" fill="#C74634"/>
+  <text x="20" y="29" fill="#fff" font-size="15" font-weight="800">AI_ELITE_ORA1  —  How It Works</text>
+  <text x="980" y="29" fill="rgba(255,255,255,0.7)" font-size="10">Oracle Impact Analysis</text>
 
-  <!-- ========== LEFT: INPUT SOURCES ========== -->
-  <text x="60" y="96" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">INPUT</text>
+  <!-- ====== STEP 1: USER ====== -->
+  <rect x="30" y="70" width="160" height="190" rx="12" fill="#161b22" stroke="#58a6ff" stroke-width="2" filter="url(#s)"/>
+  <text x="110" y="98" fill="#58a6ff" font-size="10" font-weight="700" text-anchor="middle">STEP 1</text>
+  <text x="110" y="120" fill="#e6edf3" font-size="14" font-weight="800" text-anchor="middle">User</text>
+  <line x1="50" y1="130" x2="170" y2="130" stroke="#21262d"/>
+  <text x="50" y="150" fill="#c9d1d9" font-size="9" font-weight="600">Option A:</text>
+  <text x="50" y="164" fill="#8b949e" font-size="9">Upload .sql .xml .groovy</text>
+  <text x="50" y="184" fill="#c9d1d9" font-size="9" font-weight="600">Option B:</text>
+  <text x="50" y="198" fill="#8b949e" font-size="9">Connect to Oracle DB</text>
+  <text x="50" y="218" fill="#c9d1d9" font-size="9" font-weight="600">Option C:</text>
+  <text x="50" y="232" fill="#8b949e" font-size="9">Load demo artifacts</text>
 
-  <!-- Oracle Artifacts card -->
-  <rect x="32" y="112" width="200" height="200" rx="12" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" filter="url(#sh)"/>
-  <!-- icon area -->
-  <circle cx="82" cy="158" r="24" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="1"/>
-  <text x="82" y="164" fill="#58a6ff" font-size="20" text-anchor="middle" font-weight="300">&#x2191;</text>
-  <text x="130" y="152" fill="#e6edf3" font-size="13" font-weight="700">Upload</text>
-  <text x="130" y="168" fill="#e6edf3" font-size="13" font-weight="700">Artifacts</text>
-  <line x1="52" y1="188" x2="212" y2="188" stroke="#1f2937" stroke-width="1"/>
-  <text x="52" y="210" fill="#58a6ff" font-size="10" font-weight="600">SQL / PL-SQL</text>
-  <text x="52" y="228" fill="#a371f7" font-size="10" font-weight="600">OIC Integrations (XML)</text>
-  <text x="52" y="246" fill="#3fb950" font-size="10" font-weight="600">BIP Reports (XML)</text>
-  <text x="52" y="264" fill="#d29922" font-size="10" font-weight="600">Groovy Scripts</text>
-  <text x="52" y="288" fill="#484f58" font-size="9">Drag &amp; drop or REST API</text>
+  <!-- Arrow 1→2 -->
+  <line x1="190" y1="165" x2="230" y2="165" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="210" y="155" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">raw files</text>
 
-  <!-- Big flow arrow -->
-  <line x1="232" y1="212" x2="290" y2="212" stroke="#ffffff" stroke-width="2" opacity="0.2" marker-end="url(#aW)"/>
+  <!-- ====== STEP 2: PARSE ====== -->
+  <rect x="240" y="70" width="180" height="190" rx="12" fill="#161b22" stroke="#d29922" stroke-width="2" filter="url(#s)"/>
+  <text x="330" y="98" fill="#d29922" font-size="10" font-weight="700" text-anchor="middle">STEP 2</text>
+  <text x="330" y="120" fill="#e6edf3" font-size="14" font-weight="800" text-anchor="middle">Parse Artifacts</text>
+  <line x1="260" y1="130" x2="400" y2="130" stroke="#21262d"/>
+  <text x="260" y="150" fill="#d29922" font-size="9" font-weight="600">sqlparse + regex</text>
+  <text x="260" y="166" fill="#8b949e" font-size="9">→ CREATE TABLE, VIEW, PROC</text>
+  <text x="260" y="182" fill="#8b949e" font-size="9">→ FOREIGN KEY references</text>
+  <text x="260" y="198" fill="#8b949e" font-size="9">→ FROM/JOIN table refs</text>
+  <text x="260" y="214" fill="#d29922" font-size="9" font-weight="600">xml.etree</text>
+  <text x="260" y="230" fill="#8b949e" font-size="9">→ OIC steps, BIP datasets</text>
+  <text x="260" y="246" fill="#d29922" font-size="9" font-weight="600">regex for Groovy</text>
 
-  <!-- ========== CENTER-LEFT: PROCESSING ENGINE ========== -->
-  <text x="310" y="96" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">PROCESSING ENGINE</text>
+  <!-- Arrow 2→3 (splits into two) -->
+  <line x1="420" y1="140" x2="468" y2="140" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="444" y="132" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">objects</text>
+  <text x="444" y="143" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">+ deps</text>
 
-  <!-- Parser -->
-  <rect x="300" y="112" width="220" height="90" rx="12" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" filter="url(#sh)"/>
-  <rect x="308" y="120" width="4" height="74" rx="2" fill="#d29922"/>
-  <text x="324" y="142" fill="#e6edf3" font-size="13" font-weight="700">Smart Parsers</text>
-  <text x="324" y="162" fill="#8b949e" font-size="10">sqlparse + regex | xml.etree</text>
-  <text x="324" y="180" fill="#8b949e" font-size="10">Auto-detect artifact type</text>
+  <line x1="420" y1="210" x2="468" y2="210" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="444" y="200" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">source</text>
+  <text x="444" y="211" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">code</text>
 
-  <!-- Graph Engine -->
-  <rect x="300" y="220" width="220" height="90" rx="12" fill="url(#cardGrad)" stroke="#a371f7" stroke-width="1.5" filter="url(#sh)"/>
-  <rect x="308" y="228" width="4" height="74" rx="2" fill="#a371f7"/>
-  <text x="324" y="250" fill="#e6edf3" font-size="13" font-weight="700">Graph Engine</text>
-  <text x="324" y="270" fill="#a371f7" font-size="10" font-weight="600">NetworkX DiGraph</text>
-  <text x="324" y="288" fill="#8b949e" font-size="10">Blast radius + risk scoring (0-100)</text>
+  <!-- ====== STEP 3A: GRAPH ====== -->
+  <rect x="478" y="70" width="180" height="110" rx="12" fill="#161b22" stroke="#a371f7" stroke-width="2" filter="url(#s)"/>
+  <text x="568" y="98" fill="#a371f7" font-size="10" font-weight="700" text-anchor="middle">STEP 3A</text>
+  <text x="568" y="118" fill="#e6edf3" font-size="13" font-weight="800" text-anchor="middle">Build Graph</text>
+  <line x1="498" y1="126" x2="638" y2="126" stroke="#21262d"/>
+  <text x="498" y="146" fill="#a371f7" font-size="9" font-weight="600">NetworkX DiGraph</text>
+  <text x="498" y="162" fill="#8b949e" font-size="9">Nodes = objects, Edges = deps</text>
 
-  <!-- Arrow down from parser to graph -->
-  <line x1="410" y1="202" x2="410" y2="220" stroke="#d29922" stroke-width="1.5" opacity="0.4"/>
+  <!-- ====== STEP 3B: EMBED ====== -->
+  <rect x="478" y="192" width="180" height="110" rx="12" fill="#161b22" stroke="#f0883e" stroke-width="2" filter="url(#s)"/>
+  <text x="568" y="220" fill="#f0883e" font-size="10" font-weight="700" text-anchor="middle">STEP 3B</text>
+  <text x="568" y="240" fill="#e6edf3" font-size="13" font-weight="800" text-anchor="middle">Embed in RAG</text>
+  <line x1="498" y1="248" x2="638" y2="248" stroke="#21262d"/>
+  <text x="498" y="266" fill="#f0883e" font-size="9" font-weight="600">all-MiniLM-L6-v2 → ChromaDB</text>
+  <text x="498" y="282" fill="#8b949e" font-size="9">384-dim vectors, local, zero cost</text>
 
-  <!-- Arrow right from parser to RAG -->
-  <line x1="520" y1="157" x2="580" y2="157" stroke="#ffffff" stroke-width="2" opacity="0.2" marker-end="url(#aW)"/>
-  <!-- Arrow right from graph to AI -->
-  <line x1="520" y1="265" x2="580" y2="440" stroke="#ffffff" stroke-width="1.5" opacity="0.15"/>
+  <!-- Arrow 3A→4 -->
+  <line x1="658" y1="130" x2="710" y2="200" stroke="#C74634" stroke-width="2" marker-end="url(#a)"/>
+  <text x="694" y="156" fill="#a371f7" font-size="7" font-weight="600">impact</text>
 
-  <!-- ========== CENTER: RAG PIPELINE ========== -->
-  <text x="600" y="96" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">RAG PIPELINE</text>
+  <!-- Arrow 3B→4 -->
+  <line x1="658" y1="250" x2="710" y2="220" stroke="#C74634" stroke-width="2" marker-end="url(#a)"/>
+  <text x="694" y="246" fill="#f0883e" font-size="7" font-weight="600">code context</text>
 
-  <!-- RAG pipeline big card -->
-  <rect x="588" y="112" width="380" height="200" rx="14" fill="url(#cardGrad)" stroke="#f0883e" stroke-width="1.5" filter="url(#sh)"/>
-  <!-- Glow accent on top -->
-  <rect x="588" y="112" width="380" height="3" rx="1.5" fill="#f0883e" opacity="0.6"/>
+  <!-- ====== STEP 4: USER SELECTS + ANALYZE ====== -->
+  <rect x="720" y="150" width="200" height="140" rx="12" fill="#161b22" stroke="#C74634" stroke-width="2" filter="url(#s)"/>
+  <text x="820" y="178" fill="#C74634" font-size="10" font-weight="700" text-anchor="middle">STEP 4</text>
+  <text x="820" y="200" fill="#e6edf3" font-size="13" font-weight="800" text-anchor="middle">Analyze Impact</text>
+  <line x1="740" y1="208" x2="900" y2="208" stroke="#21262d"/>
+  <text x="740" y="228" fill="#c9d1d9" font-size="9">User selects: EMPLOYEES</text>
+  <text x="740" y="244" fill="#8b949e" font-size="9">→ BFS finds 8 direct dependents</text>
+  <text x="740" y="260" fill="#8b949e" font-size="9">→ Score: 89 CRITICAL</text>
+  <text x="740" y="276" fill="#8b949e" font-size="9">→ RAG retrieves 5 code snippets</text>
 
-  <!-- Embedding -->
-  <rect x="608" y="136" width="160" height="60" rx="8" fill="rgba(240,136,62,0.06)" stroke="#f0883e" stroke-width="0.8"/>
-  <text x="620" y="158" fill="#f0883e" font-size="11" font-weight="700">Local Embeddings</text>
-  <text x="620" y="176" fill="#e6edf3" font-size="10">all-MiniLM-L6-v2</text>
-  <text x="620" y="190" fill="#8b949e" font-size="9">384-dim | Zero latency</text>
+  <!-- Arrow 4→5 -->
+  <line x1="920" y1="220" x2="960" y2="220" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="940" y="210" fill="#C74634" font-size="7" text-anchor="middle" font-weight="600">prompt</text>
 
-  <!-- Arrow -->
-  <line x1="768" y1="166" x2="790" y2="166" stroke="#f0883e" stroke-width="1.5" marker-end="url(#aO)"/>
+  <!-- ====== STEP 5: AI ====== -->
+  <rect x="970" y="70" width="200" height="130" rx="12" fill="#161b22" stroke="#f0883e" stroke-width="2" filter="url(#s)"/>
+  <text x="1070" y="98" fill="#f0883e" font-size="10" font-weight="700" text-anchor="middle">STEP 5</text>
+  <text x="1070" y="118" fill="#e6edf3" font-size="13" font-weight="800" text-anchor="middle">BlueVerse AI</text>
+  <line x1="990" y1="126" x2="1150" y2="126" stroke="#21262d"/>
+  <text x="990" y="146" fill="#f0883e" font-size="9" font-weight="600">AI_Elite_Ora1 agent</text>
+  <text x="990" y="162" fill="#8b949e" font-size="9">Receives: impact + code + question</text>
+  <text x="990" y="178" fill="#8b949e" font-size="9">Returns: structured analysis</text>
+  <text x="990" y="194" fill="#f0883e" font-size="8">One API call. No chains. No agents.</text>
 
-  <!-- ChromaDB -->
-  <rect x="798" y="136" width="150" height="60" rx="8" fill="rgba(210,153,34,0.06)" stroke="#d29922" stroke-width="0.8"/>
-  <text x="810" y="158" fill="#d29922" font-size="11" font-weight="700">ChromaDB</text>
-  <text x="810" y="176" fill="#e6edf3" font-size="10">Vector Store</text>
-  <text x="810" y="190" fill="#8b949e" font-size="9">Cosine similarity</text>
+  <!-- Arrow 5→6 -->
+  <line x1="1070" y1="200" x2="1070" y2="310" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
+  <text x="1084" y="260" fill="#C74634" font-size="7" font-weight="600">response</text>
 
-  <!-- Knowledge sources -->
-  <line x1="608" y1="212" x2="948" y2="212" stroke="#1f2937" stroke-width="0.8"/>
-  <text x="608" y="234" fill="#8b949e" font-size="10" font-weight="600">Knowledge Sources:</text>
-  <circle cx="618" cy="254" r="4" fill="#3fb950"/>
-  <text x="630" y="258" fill="#e6edf3" font-size="10">Oracle Documentation + ORA Error Codes</text>
-  <circle cx="618" cy="276" r="4" fill="#58a6ff"/>
-  <text x="630" y="280" fill="#e6edf3" font-size="10">Uploaded Artifacts (SQL, OIC, BIP, Groovy)</text>
+  <!-- ====== STEP 6: OUTPUT ====== -->
+  <rect x="30" y="330" width="1140" height="100" rx="12" fill="#161b22" stroke="#3fb950" stroke-width="2" filter="url(#s)"/>
+  <text x="600" y="358" fill="#3fb950" font-size="10" font-weight="700" text-anchor="middle">STEP 6 — AI OUTPUT (4 deliverables)</text>
+  <line x1="50" y1="366" x2="1150" y2="366" stroke="#21262d"/>
 
-  <!-- 2-stage retrieval label -->
-  <text x="608" y="302" fill="#58a6ff" font-size="9" font-weight="600">2-Stage Retrieval: Exact match + Semantic search (top-k=5)</text>
+  <rect x="50" y="378" width="250" height="36" rx="6" fill="#0d1117" stroke="#f85149" stroke-width="1"/>
+  <rect x="54" y="382" width="4" height="28" rx="2" fill="#f85149"/>
+  <text x="68" y="401" fill="#c9d1d9" font-size="11" font-weight="700">Root Cause Analysis</text>
 
-  <!-- Big arrow down to AI -->
-  <line x1="778" y1="312" x2="778" y2="370" stroke="#f0883e" stroke-width="2.5" opacity="0.5" marker-end="url(#aO)"/>
-  <text x="790" y="348" fill="#f0883e" font-size="9" font-weight="600" opacity="0.7">code_context</text>
+  <rect x="320" y="378" width="250" height="36" rx="6" fill="#0d1117" stroke="#3fb950" stroke-width="1"/>
+  <rect x="324" y="382" width="4" height="28" rx="2" fill="#3fb950"/>
+  <text x="338" y="401" fill="#c9d1d9" font-size="11" font-weight="700">Fix Recommendations + ORA codes</text>
 
-  <!-- ========== CENTER-BOTTOM: AI LAYER ========== -->
-  <text x="600" y="388" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">AI ANALYSIS</text>
+  <rect x="590" y="378" width="250" height="36" rx="6" fill="#0d1117" stroke="#58a6ff" stroke-width="1"/>
+  <rect x="594" y="382" width="4" height="28" rx="2" fill="#58a6ff"/>
+  <text x="608" y="401" fill="#c9d1d9" font-size="11" font-weight="700">Testing Checklist</text>
 
-  <!-- BlueVerse Foundry — the star -->
-  <rect x="588" y="400" width="380" height="140" rx="14" fill="url(#cardGrad)" stroke="#f0883e" stroke-width="2" filter="url(#glow)"/>
-  <rect x="588" y="400" width="380" height="3" rx="1.5" fill="#f0883e"/>
+  <rect x="860" y="378" width="250" height="36" rx="6" fill="#0d1117" stroke="#d29922" stroke-width="1"/>
+  <rect x="864" y="382" width="4" height="28" rx="2" fill="#d29922"/>
+  <text x="878" y="401" fill="#c9d1d9" font-size="11" font-weight="700">Rollback Plan</text>
 
-  <!-- BlueVerse logo area -->
-  <circle cx="640" cy="452" r="28" fill="rgba(240,136,62,0.1)" stroke="#f0883e" stroke-width="1.5"/>
-  <text x="640" y="445" fill="#f0883e" font-size="14" text-anchor="middle" font-weight="800">BV</text>
-  <text x="640" y="462" fill="#f0883e" font-size="7" text-anchor="middle" font-weight="600">FOUNDRY</text>
+  <!-- Arrow 6→7 -->
+  <line x1="600" y1="430" x2="600" y2="470" stroke="#C74634" stroke-width="2.5" marker-end="url(#a)"/>
 
-  <text x="684" y="430" fill="#e6edf3" font-size="16" font-weight="800">BlueVerse Foundry</text>
-  <text x="684" y="452" fill="#f0883e" font-size="12" font-weight="600">LTIMindtree AI Marketplace</text>
-  <text x="684" y="474" fill="#8b949e" font-size="10">Pre-trained Oracle ERP Agent (AI_Elite_Ora1)</text>
-  <text x="684" y="494" fill="#8b949e" font-size="10">RAG-enhanced prompts with code context</text>
-  <text x="684" y="514" fill="#8b949e" font-size="10">Oracle-specific ORA error codes &amp; best practices</text>
+  <!-- ====== STEP 7: FRONTEND ====== -->
+  <rect x="30" y="480" width="1140" height="80" rx="12" fill="#161b22" stroke="#a371f7" stroke-width="2" filter="url(#s)"/>
+  <text x="600" y="506" fill="#a371f7" font-size="10" font-weight="700" text-anchor="middle">STEP 7 — USER SEES RESULTS</text>
+  <line x1="50" y1="514" x2="1150" y2="514" stroke="#21262d"/>
 
-  <!-- Arrow right to output -->
-  <line x1="968" y1="470" x2="1030" y2="470" stroke="#ffffff" stroke-width="2" opacity="0.2" marker-end="url(#aW)"/>
+  <text x="140" y="540" fill="#a371f7" font-size="11" font-weight="700" text-anchor="middle">D3.js Radial Graph</text>
+  <text x="380" y="540" fill="#C74634" font-size="11" font-weight="700" text-anchor="middle">Ask Ora1 Chat</text>
+  <text x="600" y="540" fill="#f85149" font-size="11" font-weight="700" text-anchor="middle">Risk Score Dashboard</text>
+  <text x="820" y="540" fill="#d29922" font-size="11" font-weight="700" text-anchor="middle">PDF Report Export</text>
+  <text x="1040" y="540" fill="#58a6ff" font-size="11" font-weight="700" text-anchor="middle">Connector Tiles</text>
 
-  <!-- ========== RIGHT: OUTPUT ========== -->
-  <text x="1060" y="96" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">AI OUTPUT</text>
+  <!-- ====== CHAT LOOP ARROW ====== -->
+  <path d="M380 560 L380 590 L820 590 L820 230 L920 220" stroke="#C74634" stroke-width="1.5" stroke-dasharray="6,4" fill="none" marker-end="url(#a)"/>
+  <text x="600" y="604" fill="#C74634" font-size="8" font-weight="600" text-anchor="middle">user asks follow-up question → goes back to Step 4+5</text>
 
-  <!-- 4 output cards -->
-  <rect x="1048" y="112" width="320" height="68" rx="10" fill="url(#cardGrad)" stroke="#f85149" stroke-width="1.2" filter="url(#sh)"/>
-  <rect x="1056" y="120" width="4" height="52" rx="2" fill="#f85149"/>
-  <text x="1072" y="140" fill="#e6edf3" font-size="13" font-weight="700">Root Cause Analysis</text>
-  <text x="1072" y="160" fill="#8b949e" font-size="10">Why this change breaks downstream artifacts</text>
+  <!-- ====== TECH LABELS AT BOTTOM ====== -->
+  <rect x="30" y="630" width="1140" height="50" rx="8" fill="#161b22" stroke="#21262d"/>
+  <text x="50" y="654" fill="#6e7681" font-size="9" font-weight="700">TECH:</text>
+  <text x="90" y="654" fill="#a371f7" font-size="9">FastAPI</text>
+  <text x="140" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="152" y="654" fill="#a371f7" font-size="9">NetworkX</text>
+  <text x="220" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="232" y="654" fill="#f0883e" font-size="9">sentence-transformers</text>
+  <text x="365" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="377" y="654" fill="#d29922" font-size="9">ChromaDB</text>
+  <text x="440" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="452" y="654" fill="#f0883e" font-size="9">BlueVerse Foundry</text>
+  <text x="570" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="582" y="654" fill="#58a6ff" font-size="9">Next.js + D3.js</text>
+  <text x="670" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="682" y="654" fill="#8b949e" font-size="9">ReportLab PDF</text>
+  <text x="770" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="782" y="654" fill="#d29922" font-size="9">sqlparse + regex</text>
+  <text x="880" y="654" fill="#6e7681" font-size="9">|</text>
+  <text x="892" y="654" fill="#8b949e" font-size="9">xml.etree</text>
 
-  <rect x="1048" y="196" width="320" height="68" rx="10" fill="url(#cardGrad)" stroke="#3fb950" stroke-width="1.2" filter="url(#sh)"/>
-  <rect x="1056" y="204" width="4" height="52" rx="2" fill="#3fb950"/>
-  <text x="1072" y="224" fill="#e6edf3" font-size="13" font-weight="700">Fix Recommendations</text>
-  <text x="1072" y="244" fill="#8b949e" font-size="10">Oracle ORA error codes + remediation steps</text>
-
-  <rect x="1048" y="280" width="320" height="68" rx="10" fill="url(#cardGrad)" stroke="#58a6ff" stroke-width="1.2" filter="url(#sh)"/>
-  <rect x="1056" y="288" width="4" height="52" rx="2" fill="#58a6ff"/>
-  <text x="1072" y="308" fill="#e6edf3" font-size="13" font-weight="700">Testing Checklist</text>
-  <text x="1072" y="328" fill="#8b949e" font-size="10">Regression test plan for impacted objects</text>
-
-  <rect x="1048" y="364" width="320" height="68" rx="10" fill="url(#cardGrad)" stroke="#d29922" stroke-width="1.2" filter="url(#sh)"/>
-  <rect x="1056" y="372" width="4" height="52" rx="2" fill="#d29922"/>
-  <text x="1072" y="392" fill="#e6edf3" font-size="13" font-weight="700">Rollback Plan</text>
-  <text x="1072" y="412" fill="#8b949e" font-size="10">Safe reversal steps if deployment fails</text>
-
-  <!-- ========== RIGHT-BOTTOM: FRONTEND ========== -->
-  <text x="1060" y="468" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">FRONTEND</text>
-
-  <rect x="1048" y="484" width="320" height="56" rx="10" fill="url(#cardGrad)" stroke="#a371f7" stroke-width="1" filter="url(#sh)"/>
-  <rect x="1056" y="492" width="4" height="40" rx="2" fill="#a371f7"/>
-  <text x="1072" y="512" fill="#e6edf3" font-size="12" font-weight="700">Next.js + D3.js</text>
-  <text x="1200" y="512" fill="#8b949e" font-size="10">Interactive radial spoke graph</text>
-
-  <rect x="1048" y="556" width="155" height="48" rx="10" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" filter="url(#sh)"/>
-  <text x="1066" y="584" fill="#e6edf3" font-size="10" font-weight="600">Risk Dashboard</text>
-
-  <rect x="1213" y="556" width="155" height="48" rx="10" fill="url(#cardGrad)" stroke="#1f2937" stroke-width="1" filter="url(#sh)"/>
-  <text x="1231" y="584" fill="#e6edf3" font-size="10" font-weight="600">PDF Export</text>
-
-  <!-- ========== BOTTOM: TECH BADGES ========== -->
-  <rect x="0" y="640" width="1400" height="140" fill="rgba(22,27,34,0.6)"/>
-  <line x1="0" y1="640" x2="1400" y2="640" stroke="#1f2937" stroke-width="1"/>
-
-  <text x="60" y="672" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">TECHNOLOGY STACK</text>
-
-  <!-- Tech badges -->
-  <rect x="60" y="688" width="110" height="32" rx="6" fill="rgba(163,113,247,0.08)" stroke="#a371f7" stroke-width="0.8"/>
-  <text x="115" y="709" fill="#a371f7" font-size="10" text-anchor="middle" font-weight="600">FastAPI</text>
-
-  <rect x="182" y="688" width="110" height="32" rx="6" fill="rgba(163,113,247,0.08)" stroke="#a371f7" stroke-width="0.8"/>
-  <text x="237" y="709" fill="#a371f7" font-size="10" text-anchor="middle" font-weight="600">NetworkX</text>
-
-  <rect x="304" y="688" width="150" height="32" rx="6" fill="rgba(240,136,62,0.08)" stroke="#f0883e" stroke-width="0.8"/>
-  <text x="379" y="709" fill="#f0883e" font-size="10" text-anchor="middle" font-weight="600">sentence-transformers</text>
-
-  <rect x="466" y="688" width="110" height="32" rx="6" fill="rgba(210,153,34,0.08)" stroke="#d29922" stroke-width="0.8"/>
-  <text x="521" y="709" fill="#d29922" font-size="10" text-anchor="middle" font-weight="600">ChromaDB</text>
-
-  <rect x="588" y="688" width="140" height="32" rx="6" fill="rgba(240,136,62,0.08)" stroke="#f0883e" stroke-width="0.8"/>
-  <text x="658" y="709" fill="#f0883e" font-size="10" text-anchor="middle" font-weight="600">BlueVerse Foundry</text>
-
-  <rect x="740" y="688" width="90" height="32" rx="6" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="785" y="709" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">Next.js</text>
-
-  <rect x="842" y="688" width="80" height="32" rx="6" fill="rgba(88,166,255,0.08)" stroke="#58a6ff" stroke-width="0.8"/>
-  <text x="882" y="709" fill="#58a6ff" font-size="10" text-anchor="middle" font-weight="600">D3.js</text>
-
-  <rect x="934" y="688" width="100" height="32" rx="6" fill="rgba(139,148,158,0.08)" stroke="#8b949e" stroke-width="0.8"/>
-  <text x="984" y="709" fill="#8b949e" font-size="10" text-anchor="middle" font-weight="600">ReportLab</text>
-
-  <!-- Key metrics -->
-  <text x="1100" y="672" fill="#6e7681" font-size="10" font-weight="700" letter-spacing="2">KEY METRICS</text>
-
-  <text x="1100" y="698" fill="#f85149" font-size="28" font-weight="800">82</text>
-  <text x="1140" y="692" fill="#8b949e" font-size="9">Risk Score</text>
-  <text x="1140" y="706" fill="#f85149" font-size="9" font-weight="700">CRITICAL</text>
-
-  <text x="1210" y="698" fill="#a371f7" font-size="28" font-weight="800">25</text>
-  <text x="1250" y="692" fill="#8b949e" font-size="9">Objects</text>
-  <text x="1250" y="706" fill="#8b949e" font-size="9">Parsed</text>
-
-  <text x="1310" y="698" fill="#3fb950" font-size="28" font-weight="800">9</text>
-  <text x="1332" y="692" fill="#8b949e" font-size="9">Impacted</text>
-  <text x="1332" y="706" fill="#8b949e" font-size="9">Artifacts</text>
+  <text x="50" y="672" fill="#484f58" font-size="8">No LangChain. No LangGraph. No guardrails. No agent framework. Just a clean pipeline: parse → graph → embed → analyze → show.</text>
 
   <!-- Bottom credit -->
-  <text x="60" y="756" fill="#30363d" font-size="9">Team: Sameet (Lead), Pranali, Suraj  |  LTIMindtree  |  Oracle Pythia-26 Hackathon</text>
+  <text x="1020" y="672" fill="#30363d" font-size="8">Team: Sameet, Pranali, Suraj</text>
 </svg>
