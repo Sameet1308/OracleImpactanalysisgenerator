@@ -82,7 +82,7 @@ export default function ChatPanel({ objectName, onUpload }: Props) {
   return (
     <div className="chat-inline">
       <div className="chat-inline-header">
-        <span className="chat-inline-title">Ask Pythia</span>
+        <span className="chat-inline-title">Ask Ora1</span>
         {objectName && <span className="chat-inline-ctx">{objectName}</span>}
       </div>
 

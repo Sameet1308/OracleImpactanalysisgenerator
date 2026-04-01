@@ -92,6 +92,7 @@ export default function Home() {
   const [analysis, setAnalysis] = useState<ImpactResult | null>(null);
   const [status, setStatus] = useState("Ready");
   const [toast, setToast] = useState<string | null>(null);
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false);
   const [targetNode, setTargetNode] = useState<string | null>(null);
   const [showFiltered, setShowFiltered] = useState(false);
   const [impactedNodes, setImpactedNodes] = useState<Set<string>>(new Set());
@@ -697,46 +698,64 @@ export default function Home() {
                 <div className="g-toolbar">
                   <button className="g-tool" onClick={resetGraph}>Reset</button>
                   <button className="g-tool" onClick={() => setShowFiltered((p) => !p)}>{showFiltered ? 'All' : 'Impact'}</button>
+                  {analysis && (
+                    <button className="g-tool g-tool--accent" onClick={() => setShowAnalysisModal(true)}>
+                      Risk: {analysis.severity} ({analysis.risk_score}) — View Report
+                    </button>
+                  )}
                 </div>
               </div>
-              <div id="graph-container" ref={graphContainerRef} style={{ width: '100%', flex: 1 }} />
+              <div id="graph-container" ref={graphContainerRef} style={{ width: '100%', flex: 1, minHeight: 0 }} />
               <div ref={tooltipRef} className="graph-tooltip" />
             </div>
-
-            <div className="right-analysis">
-              {analysis ? (
-                <>
-                  <div className="ra-header">
-                    <div className="risk-badge">Risk: {analysis.severity} ({analysis.risk_score})</div>
-                    <div className="ra-stats">
-                      <span>Impacted: {analysis.all_impacted.length}</span>
-                      <span>Breaking: {analysis.direct_impact.length}</span>
-                    </div>
-                  </div>
-                  <div className="ra-content">
-                    <div className="pr-section">
-                      <h4>Root Cause</h4>
-                      <p>{analysis.ai_analysis.root_cause}</p>
-                    </div>
-                    <div className="pr-section">
-                      <h4>Recommendations</h4>
-                      <ol>{analysis.ai_analysis.recommendations.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
-                    </div>
-                    <div className="pr-section">
-                      <h4>Testing Checklist</h4>
-                      <ol>{analysis.ai_analysis.testing_checklist.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
-                    </div>
-                    <div className="pr-section">
-                      <h4>Rollback Plan</h4>
-                      <ol>{analysis.ai_analysis.rollback_plan.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="ra-empty">Select an object and click Analyze to see impact</div>
-              )}
-            </div>
           </div>
+
+          {/* Analysis Modal Popup */}
+          {showAnalysisModal && analysis && (
+            <div className="analysis-modal-backdrop" onClick={() => setShowAnalysisModal(false)}>
+              <div className="analysis-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="am-header">
+                  <div>
+                    <h2>Impact Analysis Report</h2>
+                    <span className="am-object">{analysis.object_name}</span>
+                  </div>
+                  <div className="am-actions">
+                    <button className="am-btn" onClick={downloadPDF}>Export PDF</button>
+                    <button className="am-close" onClick={() => setShowAnalysisModal(false)}>&times;</button>
+                  </div>
+                </div>
+
+                <div className="am-summary">
+                  <div className="am-score" style={{ borderColor: analysis.severity === "CRITICAL" ? "#dc2626" : analysis.severity === "HIGH" ? "#ea580c" : analysis.severity === "MEDIUM" ? "#d97706" : "#16a34a" }}>
+                    <div className="am-score-num">{analysis.risk_score}</div>
+                    <div className="am-score-label">{analysis.severity}</div>
+                  </div>
+                  <div className="am-stat"><strong>{analysis.all_impacted.length}</strong> Impacted</div>
+                  <div className="am-stat"><strong>{analysis.direct_impact.length}</strong> Breaking</div>
+                  <div className="am-stat"><strong>{analysis.indirect_impact.length}</strong> Indirect</div>
+                </div>
+
+                <div className="am-body">
+                  <div className="pr-section">
+                    <h4>Root Cause</h4>
+                    <p>{analysis.ai_analysis.root_cause}</p>
+                  </div>
+                  <div className="pr-section">
+                    <h4>Recommendations</h4>
+                    <ol>{analysis.ai_analysis.recommendations.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                  </div>
+                  <div className="pr-section">
+                    <h4>Testing Checklist</h4>
+                    <ol>{analysis.ai_analysis.testing_checklist.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                  </div>
+                  <div className="pr-section">
+                    <h4>Rollback Plan</h4>
+                    <ol>{analysis.ai_analysis.rollback_plan.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AppProvider>
