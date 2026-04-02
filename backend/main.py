@@ -236,6 +236,15 @@ async def token_status():
     return get_token_status()
 
 
+# ═══ TOKEN USAGE & QUALITY METRICS ═══
+
+@app.get("/api/usage")
+async def usage_stats():
+    """Return AI token usage metrics, cost tracking, and hallucination flags."""
+    from ai.blueverse import get_usage_stats
+    return get_usage_stats()
+
+
 # ═══ CHAT ENDPOINT ═══
 
 class ChatMessage(BaseModel):

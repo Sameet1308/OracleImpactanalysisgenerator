@@ -58,8 +58,24 @@ async def generate_analysis(impact_result: Dict[str, Any], code_context: list = 
     return _mock_analysis(impact_result)
 
 
+import re as _re
+
+def _strip_pii(text: str) -> str:
+    """Remove credentials, connection strings, and tokens from code context before sending to AI."""
+    # Remove password patterns
+    text = _re.sub(r'(?i)(password|passwd|pwd)\s*[:=]\s*["\']?[^\s"\']+', r'\1=***REDACTED***', text)
+    # Remove connection strings
+    text = _re.sub(r'(?i)(jdbc:|Data Source=|Server=|Host=)[^\s;]+', r'\1***REDACTED***', text)
+    # Remove tokens/keys
+    text = _re.sub(r'(?i)(token|api_key|secret|bearer)\s*[:=]\s*["\']?[A-Za-z0-9_\-\.]{20,}', r'\1=***REDACTED***', text)
+    # Remove email addresses
+    text = _re.sub(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', '***EMAIL***', text)
+    return text
+
+
 def _build_prompt(impact_result: Dict[str, Any], code_context: list = None) -> str:
-    """Build the structured analysis prompt from impact data and optional source code."""
+    """Build the structured analysis prompt from impact data and optional source code.
+    Includes PII filtering on code context to prevent credential leakage to AI."""
     target = impact_result["object_name"]
     obj_type = impact_result.get("object_type", "UNKNOWN")
     severity = impact_result["severity"]
@@ -86,7 +102,7 @@ INDIRECTLY IMPACTED OBJECTS ({len(indirect)}): {indirect_names}"""
         for i, chunk in enumerate(code_context[:5], 1):
             obj_name = chunk.get("object_name", "UNKNOWN")
             src_file = chunk.get("source_file", "")
-            text = chunk.get("text", "")[:500]  # Cap at 500 chars per chunk
+            text = _strip_pii(chunk.get("text", "")[:500])  # Cap at 500 chars + PII filter
             prompt += f"### Snippet {i}: {obj_name} ({src_file})\n```\n{text}\n```\n\n"
 
     prompt += f"""
