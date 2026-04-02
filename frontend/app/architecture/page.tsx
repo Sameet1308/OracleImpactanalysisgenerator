@@ -102,7 +102,7 @@ const BOXES: Box[] = [
       { name: "Rollback Plan", detail: "Step-by-step reversal with DBMS_METADATA, ALTER COMPILE" },
       { name: "PDF Report", detail: "Full report via ReportLab. All sections + dependency list" },
     ],
-    x: 1120, y: 350, w: 200, h: 240,
+    x: 1120, y: 380, w: 200, h: 210,
   },
 
   // Row 3: Frontend (bottom)
@@ -144,7 +144,7 @@ export default function ArchitecturePage() {
   const selectedBox = BOXES.find(b => b.id === selected);
 
   const svgW = 1380;
-  const svgH = 560;
+  const svgH = 610;
 
   return (
     <div style={{ background: "#0d1117", minHeight: "100vh", fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
