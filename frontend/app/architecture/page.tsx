@@ -30,117 +30,103 @@ type Arrow = {
   dashed?: boolean;
 };
 
+// Layout: 3 rows. Row 1 = linear flow (User→API→Parser). Row 2 = parallel (Graph ‖ RAG) → AI. Row 3 = Output → Frontend
+// Wider gaps between columns for clean arrows
+
 const BOXES: Box[] = [
-  // Row 1: User → API Gateway → Parser Engine
-  {
-    id: "user", label: "USER INPUT", subtitle: "Data Sources",
-    color: "#2563EB", bg: "#eff6ff",
+  // Row 1
+  { id: "user", label: "USER INPUT", subtitle: "Data Sources", color: "#2563EB", bg: "#eff6ff",
     items: [
       { name: "Oracle Database", detail: "Connect to DBA_OBJECTS + DBA_SOURCE for live artifact discovery from any Oracle schema" },
       { name: "Upload Artifacts", detail: "Drag & drop .sql, .xml, .groovy files. Parser auto-detects type by extension" },
       { name: "OIC REST API", detail: "Auto-discover integration flows, connections, and lookups via Oracle Integration Cloud REST endpoints" },
       { name: "Demo Artifacts", detail: "Pre-built sample: Official Oracle HR schema + OIC flows + BIP reports + Groovy scripts" },
     ],
-    x: 20, y: 20, w: 200, h: 240,
+    x: 20, y: 20, w: 180, h: 210,
   },
-  {
-    id: "api", label: "API GATEWAY", subtitle: "FastAPI :8000",
-    color: "#4f46e5", bg: "#eef2ff",
+  { id: "api", label: "API GATEWAY", subtitle: "FastAPI :8000", color: "#4f46e5", bg: "#eef2ff",
     items: [
       { name: "8 REST Endpoints", detail: "POST /upload, /demo, /analyze, /chat — GET /graph, /objects, /report/:name, /token/status" },
       { name: "Input Validation", detail: "File type whitelist (.sql/.xml/.groovy), size limits, XML well-formedness check" },
-      { name: "CORS + Rate Limiting", detail: "Configurable origins, per-IP throttle, request logging" },
+      { name: "CORS + Rate Limit", detail: "Configurable origins, per-IP throttle, request logging" },
       { name: "Auth Middleware", detail: "Oracle IDCS SSO integration. JWT session validation on every request" },
     ],
-    x: 270, y: 20, w: 200, h: 240,
+    x: 280, y: 20, w: 180, h: 210,
   },
-  {
-    id: "parser", label: "PARSER ENGINE", subtitle: "Auto-Detect & Extract",
-    color: "#b45309", bg: "#fffbeb",
+  { id: "parser", label: "PARSER ENGINE", subtitle: "Auto-Detect & Extract", color: "#b45309", bg: "#fffbeb",
     items: [
       { name: "SQL Parser", detail: "sqlparse + custom regex. Extracts CREATE TABLE/VIEW/PROC/FUNC/PKG/TRIGGER/SEQ, FK constraints (multi-line), FROM/JOIN refs, function calls" },
       { name: "OIC/BIP Parser", detail: "xml.etree. Extracts integration steps, connections, procedure calls, embedded SQL from BIP datasets" },
       { name: "Groovy Parser", detail: "Regex patterns for executeFunction, executeProcedure, executeQuery. Detects indirect DB dependencies" },
-      { name: "Extensible Dispatch", detail: "PARSER_MAP pattern: register new parser per file extension. Add EBS, JDE, EPM, APEX parsers without touching existing code" },
+      { name: "Extensible", detail: "PARSER_MAP pattern: register new parser per file extension. Add EBS, JDE, EPM, APEX parsers without touching existing code" },
     ],
-    x: 520, y: 20, w: 200, h: 240,
+    x: 540, y: 20, w: 180, h: 210,
   },
 
-  // Row 2: Graph Engine | RAG Engine (parallel)
-  {
-    id: "graph", label: "GRAPH ENGINE", subtitle: "Dependency Analysis",
-    color: "#7c3aed", bg: "#f5f3ff",
+  // Row 2 left: Graph + RAG (stacked)
+  { id: "graph", label: "GRAPH ENGINE", subtitle: "Dependency Analysis", color: "#7c3aed", bg: "#f5f3ff",
     items: [
-      { name: "NetworkX DiGraph", detail: "Directed graph. Nodes = parsed objects (with type, file metadata). Edges = dependencies (with relationship type)" },
-      { name: "BFS Blast Radius", detail: "Breadth-first search from target node. Finds all direct predecessors, then transitive indirect dependents" },
-      { name: "Risk Score 0-100", detail: "Formula: 52% × min(direct×13, 100) + 18% × min(indirect×22, 100) + 30% × type_criticality×10" },
-      { name: "Impact Cache", detail: "Caches computed blast radius to avoid redundant BFS traversals on repeated queries for same object" },
+      { name: "NetworkX DiGraph", detail: "Directed graph. Nodes = parsed objects. Edges = dependencies with relationship type" },
+      { name: "BFS Blast Radius", detail: "Breadth-first search. Finds direct predecessors + transitive indirect dependents" },
+      { name: "Risk Score 0-100", detail: "52% direct + 18% indirect + 30% type criticality. CRITICAL ≥80" },
     ],
-    x: 770, y: 20, w: 220, h: 180,
+    x: 820, y: 20, w: 200, h: 145,
   },
-  {
-    id: "rag", label: "RAG ENGINE", subtitle: "Embeddings + Retrieval",
-    color: "#ea580c", bg: "#fff7ed",
+  { id: "rag", label: "RAG ENGINE", subtitle: "Embeddings + Retrieval", color: "#ea580c", bg: "#fff7ed",
     items: [
-      { name: "Local Embeddings", detail: "sentence-transformers all-MiniLM-L6-v2. 384-dim vectors. Runs entirely locally — zero API cost, zero latency" },
-      { name: "ChromaDB Vector Store", detail: "In-memory vector database. Cosine similarity search. Metadata filtering by object_name and type" },
-      { name: "2-Stage Retrieval", detail: "Stage 1: Exact metadata match (object_name == target, score 1.0). Stage 2: Semantic search on impacted object names. Top-k=5" },
+      { name: "Local Embeddings", detail: "sentence-transformers all-MiniLM-L6-v2. 384-dim. Local, zero API cost" },
+      { name: "ChromaDB Vectors", detail: "In-memory vector DB. Cosine similarity. Metadata filtering" },
+      { name: "2-Stage Retrieval", detail: "Stage 1: Exact metadata match. Stage 2: Semantic search. Top-k=5" },
     ],
-    x: 770, y: 220, w: 220, h: 160,
+    x: 820, y: 185, w: 200, h: 145,
   },
 
-  // AI Service (tall, right side)
-  {
-    id: "ai", label: "AI SERVICE", subtitle: "BlueVerse + Guardrails",
-    color: "#dc2626", bg: "#fef2f2",
+  // Row 2 right: AI Service
+  { id: "ai", label: "AI SERVICE", subtitle: "BlueVerse + Guardrails", color: "#dc2626", bg: "#fef2f2",
     items: [
-      { name: "Prompt Builder", detail: "Merges impact data (~200 tokens) + 5 code snippets from RAG (500 chars each) + user question into single optimized prompt (~3000 tokens)" },
-      { name: "Token Manager", detail: "JWT validation before every call. Auto-detects expiry (skips 30s timeout). Runtime refresh via UI. Usage count per session" },
-      { name: "Guardrails", detail: "Prompt size capped at 3000 tokens. PII/credential filtering from code context. Conversation history limited to 6 turns. Output structure validation" },
-      { name: "BlueVerse Foundry", detail: "AI_Elite_Ora1: pre-trained Oracle ERP agent on LTIMindtree Marketplace. Single POST API call. Returns structured 4-section analysis" },
-      { name: "Response Validator", detail: "Parses AI response into 4 mandatory sections (Root Cause, Fix Recs, Testing, Rollback). Re-parses with fallback extraction if malformed" },
+      { name: "Prompt Builder", detail: "Merges impact data + code snippets + question into single ~3000 token prompt" },
+      { name: "Token Manager", detail: "JWT auto-refresh, expiry detection, usage tracking per session" },
+      { name: "Guardrails", detail: "Prompt size cap, PII filter, conversation limit (6 turns), output validation" },
+      { name: "BlueVerse Foundry", detail: "AI_Elite_Ora1: pre-trained Oracle ERP agent. Single API call. Structured response" },
+      { name: "Response Validator", detail: "Parses into 4 sections. Re-parses with fallback if malformed" },
     ],
-    x: 1040, y: 20, w: 220, h: 360,
+    x: 1120, y: 20, w: 200, h: 310,
   },
 
-  // Output (bottom right)
-  {
-    id: "output", label: "AI OUTPUT", subtitle: "4 Deliverables + Report",
-    color: "#16a34a", bg: "#f0fdf4",
+  // Row 3: Output
+  { id: "output", label: "AI OUTPUT", subtitle: "4 Deliverables + Report", color: "#16a34a", bg: "#f0fdf4",
     items: [
-      { name: "Root Cause Analysis", detail: "Explains WHY the change breaks downstream artifacts. References specific object names and dependency chains" },
-      { name: "Fix Recommendations", detail: "ORA error codes (ORA-04063, ORA-06508, ORA-00904) with DBMS_METADATA, ALTER COMPILE remediation steps" },
-      { name: "Testing Checklist", detail: "Regression test plan for each directly and indirectly impacted artifact" },
-      { name: "Rollback Plan", detail: "Step-by-step safe reversal with version control strategy and deployment rollback procedures" },
-      { name: "PDF Report", detail: "Full impact analysis report via ReportLab. Downloadable with all 4 sections + dependency list + risk summary" },
+      { name: "Root Cause Analysis", detail: "WHY the change breaks downstream. Specific object references" },
+      { name: "Fix + ORA Codes", detail: "ORA-04063, ORA-06508, ORA-00904 with remediation commands" },
+      { name: "Testing Checklist", detail: "Regression test plan per impacted artifact" },
+      { name: "Rollback Plan", detail: "Step-by-step reversal with DBMS_METADATA, ALTER COMPILE" },
+      { name: "PDF Report", detail: "Full report via ReportLab. All sections + dependency list" },
     ],
-    x: 1300, y: 20, w: 200, h: 360,
+    x: 1120, y: 350, w: 200, h: 240,
   },
 
-  // Frontend (bottom, full width)
-  {
-    id: "frontend", label: "FRONTEND", subtitle: "Next.js + D3.js + Chat",
-    color: "#8b5cf6", bg: "#f5f3ff",
+  // Row 3: Frontend (bottom)
+  { id: "frontend", label: "FRONTEND", subtitle: "Next.js + D3.js + Chat", color: "#8b5cf6", bg: "#f5f3ff",
     items: [
-      { name: "D3.js Radial Graph", detail: "Interactive dependency visualization. Radial spoke layout with card nodes, edge labels, zoom/pan, drag-to-pin" },
-      { name: "Ask Ora1 Chat", detail: "Conversational AI follow-up with file attach (Claude-style). Quick prompt suggestions. Context-aware (selected object)" },
-      { name: "Risk Dashboard", detail: "Score 0-100 with CRITICAL/HIGH/MEDIUM/LOW severity badge. Impact count. Analysis modal with all 4 sections" },
-      { name: "Connector Tiles", detail: "Oracle ecosystem connectors: DB, OIC, BIP, HCM/ERP, Fusion. Upload files. Token management" },
+      { name: "D3.js Radial Graph", detail: "Interactive radial spoke with card nodes, edge labels, zoom/pan" },
+      { name: "Ask Ora1 Chat", detail: "AI follow-up with file attach. Quick prompts. Context-aware" },
+      { name: "Risk Dashboard", detail: "Score 0-100, severity badge, analysis modal" },
+      { name: "Connector Tiles", detail: "Oracle DB, OIC, BIP, HCM/ERP, Fusion. Upload. Token mgmt" },
     ],
-    x: 20, y: 420, w: 1480, h: 130,
+    x: 20, y: 350, w: 700, h: 160,
   },
 ];
 
 const ARROWS: Arrow[] = [
-  { from: "user", to: "api", label: "HTTPS", color: "#2563EB" },
-  { from: "api", to: "parser", label: "Validated Files", color: "#4f46e5" },
-  { from: "parser", to: "graph", label: "Objects + Deps", color: "#b45309" },
-  { from: "parser", to: "rag", label: "Source Code Chunks", color: "#ea580c", fromSide: "right", toSide: "left" },
-  { from: "graph", to: "ai", label: "Impact Data", color: "#7c3aed" },
-  { from: "rag", to: "ai", label: "Code Context", color: "#ea580c" },
-  { from: "ai", to: "output", label: "4 Deliverables", color: "#dc2626", fromSide: "bottom", toSide: "top" },
-  { from: "output", to: "frontend", label: "JSON Response", color: "#16a34a", fromSide: "bottom", toSide: "right" },
-  { from: "frontend", to: "ai", label: "Chat Follow-up", color: "#dc2626", dashed: true, fromSide: "right", toSide: "bottom" },
+  { from: "user", to: "api", label: "HTTPS", color: "#3b82f6" },
+  { from: "api", to: "parser", label: "Files", color: "#6366f1" },
+  { from: "parser", to: "graph", label: "Objs+Deps", color: "#b45309" },
+  { from: "parser", to: "rag", label: "Code", color: "#ea580c", fromSide: "right", toSide: "left" },
+  { from: "graph", to: "ai", label: "Impact", color: "#7c3aed" },
+  { from: "rag", to: "ai", label: "Context", color: "#ea580c" },
+  { from: "ai", to: "output", label: "Analysis", color: "#dc2626", fromSide: "bottom", toSide: "top" },
+  { from: "output", to: "frontend", label: "Response", color: "#16a34a", fromSide: "left", toSide: "right" },
+  { from: "frontend", to: "ai", label: "Follow-up", color: "#dc2626", dashed: true, fromSide: "right", toSide: "bottom" },
 ];
 
 function getBoxCenter(box: Box, side: "left" | "right" | "top" | "bottom" = "right") {
@@ -157,8 +143,8 @@ export default function ArchitecturePage() {
   const [hovered, setHovered] = useState<string | null>(null);
   const selectedBox = BOXES.find(b => b.id === selected);
 
-  const svgW = 1520;
-  const svgH = 780;
+  const svgW = 1380;
+  const svgH = 560;
 
   return (
     <div style={{ background: "#0d1117", minHeight: "100vh", fontFamily: "Inter, system-ui, -apple-system, sans-serif" }}>
@@ -230,9 +216,9 @@ export default function ArchitecturePage() {
                     markerEnd={`url(#ah-${i})`}
                     opacity={0.7}
                   />
-                  {/* Label on arrow — positioned above the midpoint to avoid overlapping boxes */}
-                  <rect x={midX - 45} y={midY - 20} width={90} height={18} rx={5} fill="#0d1117" stroke={a.color} strokeWidth={1} opacity={0.95} />
-                  <text x={midX} y={midY - 8} textAnchor="middle" fontSize={9} fontWeight={700} fill={a.color} fontFamily="Inter, system-ui">
+                  {/* Label — small pill on the arrow line */}
+                  <rect x={midX - 30} y={midY - 16} width={60} height={14} rx={7} fill="#0d1117" stroke={a.color} strokeWidth={0.8} />
+                  <text x={midX} y={midY - 7} textAnchor="middle" fontSize={7} fontWeight={700} fill={a.color} fontFamily="Inter, system-ui">
                     {a.label}
                   </text>
                 </g>
@@ -293,22 +279,22 @@ export default function ArchitecturePage() {
             })}
 
             {/* Parallel split indicator */}
-            <text x={755} y={210} fontSize={9} fontWeight={700} fill="#64748b" fontFamily="Inter, system-ui" textAnchor="middle" transform="rotate(-90, 755, 210)">
+            <text x={805} y={178} fontSize={8} fontWeight={700} fill="#484f58" fontFamily="Inter, system-ui" textAnchor="middle" transform="rotate(-90, 805, 178)">
               PARALLEL
             </text>
-            <line x1={760} y1={110} x2={760} y2={390} stroke="#30363d" strokeWidth={1.5} strokeDasharray="6,4" />
+            <line x1={810} y1={100} x2={810} y2={340} stroke="#30363d" strokeWidth={1} strokeDasharray="5,4" />
           </svg>
 
-          {/* Bottom indicators */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 8, flexWrap: "wrap" }}>
-            <div style={{ background: "#1e1b4b", border: "1px solid #7c3aed", borderRadius: 6, padding: "5px 14px", fontSize: 9, color: "#a78bfa", fontWeight: 700 }}>
-              Graph + RAG run in parallel after parsing
+          {/* Bottom legend */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
+            <div style={{ background: "#161b22", border: "1px solid #7c3aed", borderRadius: 6, padding: "4px 10px", fontSize: 8, color: "#a78bfa", fontWeight: 600 }}>
+              Graph ‖ RAG = parallel processing
             </div>
-            <div style={{ background: "#1c1917", border: "1px solid #dc2626", borderRadius: 6, padding: "5px 14px", fontSize: 9, color: "#f87171", fontWeight: 700 }}>
-              Both merge into AI Service: impact data + code context → single optimized prompt
+            <div style={{ background: "#161b22", border: "1px solid #dc2626", borderRadius: 6, padding: "4px 10px", fontSize: 8, color: "#f87171", fontWeight: 600 }}>
+              Impact + Code merge → single AI prompt
             </div>
-            <div style={{ background: "#1c1917", border: "2px dashed #dc2626", borderRadius: 6, padding: "5px 14px", fontSize: 9, color: "#f87171", fontWeight: 700 }}>
-              ↩ Chat follow-up loops back through RAG + Prompt Builder + BlueVerse
+            <div style={{ background: "#161b22", border: "1px dashed #dc2626", borderRadius: 6, padding: "4px 10px", fontSize: 8, color: "#f87171", fontWeight: 600 }}>
+              ↩ Chat loops back to AI
             </div>
           </div>
         </div>
