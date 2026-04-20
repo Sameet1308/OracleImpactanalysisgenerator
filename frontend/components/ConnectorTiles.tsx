@@ -72,6 +72,7 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
     detail?: string;
   }>(null);
   const [showDbModal, setShowDbModal] = useState(false);
+  const [showTokenModal, setShowTokenModal] = useState(false);
   const [dbForm, setDbForm] = useState({ host: "", port: "1521", sid: "", user: "", pass: "" });
   const [dbStatus, setDbStatus] = useState<"idle" | "testing" | "connected">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -191,10 +192,27 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
     <div className="ct-section">
       <div className="ct-header">
         <span className="ct-title">Data Sources</span>
-        <span className="ct-token-badge" style={{ color: tokenColor }}>
+        <button
+          className="ct-token-badge"
+          onClick={() => setShowTokenModal(true)}
+          style={{
+            color: tokenColor,
+            background: "transparent",
+            border: `1px solid ${tokenColor}33`,
+            padding: "3px 8px",
+            borderRadius: 12,
+            cursor: "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            fontSize: 12,
+            fontWeight: 500,
+          }}
+          title="Manage BlueVerse token — paste fresh JWT + test agent"
+        >
           <span className="ct-dot" style={{ background: tokenColor }} />
           AI: {tokenLabel}
-        </span>
+        </button>
       </div>
 
       <div className="ct-grid">
@@ -218,87 +236,133 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
         ))}
       </div>
 
-      {/* Token input — multi-line for long JWTs, Save+Test in one click */}
-      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
-        <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}>
-          BlueVerse JWT — 25 min lifetime. Paste the full token, click Save &amp; Test.
-        </div>
-        <textarea
-          value={tokenInput}
-          onChange={(e) => setTokenInput(e.target.value)}
-          placeholder="eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6..."
-          rows={4}
-          spellCheck={false}
-          style={{
-            width: "100%",
-            padding: "8px 10px",
-            fontSize: 11,
-            fontFamily: "ui-monospace, Menlo, Consolas, monospace",
-            border: "1px solid #d1d5db",
-            borderRadius: 6,
-            background: "#f9fafb",
-            resize: "vertical",
-            color: "#374151",
-            wordBreak: "break-all",
-          }}
-        />
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <button
-            className="ct-token-btn"
-            onClick={saveAndTest}
-            disabled={tokenSaving || !tokenInput.trim()}
-            style={{ flex: 1, fontWeight: 600 }}
-          >
-            {tokenSaving ? "Saving & Testing..." : "Save & Test BlueVerse"}
-          </button>
-          <button
-            className="ct-token-btn"
-            onClick={testOnly}
-            disabled={testing}
-            title="Ping the agent using the currently-saved token"
-            style={{ background: "#f3f4f6", color: "#374151" }}
-          >
-            {testing ? "..." : "Re-test"}
-          </button>
-          {tokenInput && (
-            <span style={{ fontSize: 11, color: "#6b7280" }}>{tokenInput.length} chars</span>
-          )}
-        </div>
-      </div>
+      <input ref={fileRef} type="file" multiple accept=".sql,.xml,.groovy,.pls,.pkb,.pks" style={{ display: "none" }} onChange={(e) => e.target.files && onUpload(e.target.files)} />
 
-      {testResult && (
-        <div style={{
-          marginTop: 8,
-          padding: "10px 12px",
-          borderRadius: 6,
-          background: testResult.ok ? "#ecfdf5" : "#fef2f2",
-          border: `1px solid ${testResult.ok ? "#a7f3d0" : "#fecaca"}`,
-          fontSize: 12,
-          lineHeight: 1.4,
-          color: testResult.ok ? "#065f46" : "#991b1b",
-        }}>
-          <div style={{ fontWeight: 600 }}>{testResult.text}</div>
-          {testResult.detail && (
-            <div style={{
-              marginTop: 6,
-              padding: "6px 8px",
-              background: testResult.ok ? "#d1fae5" : "#fee2e2",
-              borderRadius: 4,
-              fontWeight: 400,
-              fontSize: 11,
-              fontFamily: "ui-monospace, Menlo, Consolas, monospace",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              maxHeight: 120,
-              overflowY: "auto",
-            }}>
-              {testResult.detail}
+      {/* BlueVerse Token Modal */}
+      {showTokenModal && (
+        <div
+          className="db-modal-backdrop"
+          onClick={() => !tokenSaving && setShowTokenModal(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(17, 24, 39, 0.5)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1000, padding: 16,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "white", borderRadius: 12, width: "min(560px, 94vw)",
+              maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
+              padding: 24,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 600, color: "#111827" }}>
+                  BlueVerse Agent Token
+                </h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: 12, color: "#6b7280" }}>
+                  Paste a fresh JWT (25-min lifetime) and click Save &amp; Test.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowTokenModal(false)}
+                style={{
+                  background: "transparent", border: "none", fontSize: 24,
+                  cursor: "pointer", color: "#6b7280", padding: 0, lineHeight: 1,
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
             </div>
-          )}
+
+            <div style={{
+              marginTop: 12, padding: "8px 12px", background: "#f9fafb",
+              borderRadius: 6, fontSize: 12, color: "#374151",
+              display: "flex", alignItems: "center", gap: 8,
+            }}>
+              <span style={{
+                display: "inline-block", width: 8, height: 8, borderRadius: "50%",
+                background: tokenColor,
+              }} />
+              <span style={{ color: tokenColor, fontWeight: 600 }}>Current: {tokenLabel}</span>
+            </div>
+
+            <textarea
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+              placeholder="eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6..."
+              rows={5}
+              spellCheck={false}
+              style={{
+                width: "100%", marginTop: 12, padding: "10px 12px",
+                fontSize: 11, fontFamily: "ui-monospace, Menlo, Consolas, monospace",
+                border: "1px solid #d1d5db", borderRadius: 6, background: "#f9fafb",
+                resize: "vertical", color: "#374151", wordBreak: "break-all",
+                boxSizing: "border-box",
+              }}
+            />
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10 }}>
+              <button
+                onClick={saveAndTest}
+                disabled={tokenSaving || !tokenInput.trim()}
+                style={{
+                  flex: 1, padding: "10px 14px",
+                  background: tokenSaving || !tokenInput.trim() ? "#9ca3af" : "#2563eb",
+                  color: "white", border: "none", borderRadius: 6,
+                  fontWeight: 600, fontSize: 13, cursor: "pointer",
+                }}
+              >
+                {tokenSaving ? "Saving & Testing..." : "Save & Test BlueVerse"}
+              </button>
+              <button
+                onClick={testOnly}
+                disabled={testing}
+                style={{
+                  padding: "10px 14px", background: "#f3f4f6", color: "#374151",
+                  border: "1px solid #d1d5db", borderRadius: 6, fontSize: 13,
+                  cursor: "pointer",
+                }}
+                title="Ping the agent using the currently-saved token"
+              >
+                {testing ? "..." : "Re-test"}
+              </button>
+            </div>
+            {tokenInput && (
+              <div style={{ marginTop: 6, fontSize: 11, color: "#6b7280", textAlign: "right" }}>
+                {tokenInput.length} chars
+              </div>
+            )}
+
+            {testResult && (
+              <div style={{
+                marginTop: 14, padding: "12px 14px", borderRadius: 6,
+                background: testResult.ok ? "#ecfdf5" : "#fef2f2",
+                border: `1px solid ${testResult.ok ? "#a7f3d0" : "#fecaca"}`,
+                fontSize: 13, lineHeight: 1.4,
+                color: testResult.ok ? "#065f46" : "#991b1b",
+              }}>
+                <div style={{ fontWeight: 600 }}>{testResult.text}</div>
+                {testResult.detail && (
+                  <div style={{
+                    marginTop: 8, padding: "8px 10px",
+                    background: testResult.ok ? "#d1fae5" : "#fee2e2",
+                    borderRadius: 4, fontWeight: 400, fontSize: 11,
+                    fontFamily: "ui-monospace, Menlo, Consolas, monospace",
+                    whiteSpace: "pre-wrap", wordBreak: "break-word",
+                    maxHeight: 180, overflowY: "auto",
+                  }}>
+                    {testResult.detail}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
-
-      <input ref={fileRef} type="file" multiple accept=".sql,.xml,.groovy,.pls,.pkb,.pks" style={{ display: "none" }} onChange={(e) => e.target.files && onUpload(e.target.files)} />
 
       {/* Oracle DB Connection Modal */}
       {showDbModal && (
