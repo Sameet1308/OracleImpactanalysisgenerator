@@ -85,6 +85,37 @@ Compute the blast radius and AI analysis for a single object.
 ```
 Errors: `400` if no artifacts loaded, `404` if object unknown (returns list of available names).
 
+### `POST /api/analyze-column`
+Column-level blast radius — which downstream objects reference a specific column of a table.
+**Body:** `{ "object_name": "EMPLOYEES", "column_name": "SALARY" }`
+```json
+{
+  "object_name": "EMPLOYEES",
+  "object_type": "TABLE",
+  "column_name": "SALARY",
+  "found": true,
+  "confirmed_impact": [
+    { "name": "PAYROLL_VIEW", "type": "VIEW", "relationship": "REFERENCES",
+      "columns_referenced": ["EMPLOYEE_ID", "SALARY", "COMMISSION_PCT"] }
+  ],
+  "possible_impact": [
+    { "name": "HR_EMPLOYEE_SYNC", "type": "OIC_FLOW", "columns_referenced": [] }
+  ],
+  "confirmed_count": 3,
+  "possible_count": 6,
+  "columns_on_table": ["EMPLOYEE_ID", "FIRST_NAME", "..."]
+}
+```
+`confirmed_impact` = dependents whose edge metadata explicitly references this column.
+`possible_impact` = dependents where column-level detail isn't parseable (typically OIC/BIP/Groovy) — treated as conservative fallback; verify manually.
+
+### `GET /api/columns/{object_name}`
+List all columns of a parsed TABLE.
+```json
+{ "object_name": "EMPLOYEES", "count": 11,
+  "columns": [ { "name": "EMPLOYEE_ID", "type": "NUMBER(6)" }, ... ] }
+```
+
 ### `GET /api/report/{object_name}`
 Download a formatted PDF impact report for the named object. Returns `application/pdf`.
 

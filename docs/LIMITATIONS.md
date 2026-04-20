@@ -21,18 +21,19 @@
 
 ## 2. Known Limitations
 
-1. **In-memory graph** — state lives in a single Python process. Restart clears everything. Not multi-user without externalising to a graph DB.
-2. **No persistence** — uploaded artifacts are parsed on the fly; original files are not stored.
-3. **Regex-based parsing** — pattern-driven rather than a full Oracle grammar. Dynamic SQL built at runtime and heavily templated PL/SQL with nested `EXECUTE IMMEDIATE` can be missed.
-4. **Single-dialect** — targeted at Oracle 12c+ SQL syntax. MySQL/Postgres/SQL-Server not supported.
-5. **LLM latency** — BlueVerse calls take 5–12 s. Mock mode is sub-100 ms but less specific.
-6. **BlueVerse JWT expiry** — tokens expire every ~20 min; UI Settings modal lets the user paste a fresh token without restart.
-7. **CORS fully open** — required because demo uses `file://` frontend. Must be tightened for production.
-8. **No authentication** — hackathon-grade demo. Enterprise version would need SSO / OAuth2 / per-tenant roles.
-9. **Frontend is a single `index.html`** — no component tree, no bundler. Intentional for zero build-step demo; future rewrite in React for richer interactivity.
-10. **RAG index is non-persistent** — rebuilt on every `POST /api/demo` or upload. Fine for demo; future: persistent ChromaDB volume.
-11. **ORA error-code validation list is a subset** — 25 common codes. The AI could legitimately cite a code we haven't whitelisted, resulting in a false-positive hallucination flag.
-12. **No GenAI streaming** — responses arrive as a single blob. UI shows a loading indicator.
+1. **Column-level support — partial** — the graph now tracks column-level dependencies for SQL tables and views (extracts `CREATE TABLE` columns, parses `CREATE VIEW AS SELECT …` projection lists, and captures qualified `TABLE.COLUMN` references inside procedure bodies). `POST /api/analyze-column` returns `confirmed_impact` (dependents where the column reference is identified) and `possible_impact` (conservative fallback for dependents without column metadata — typically OIC/BIP/Groovy). Column-level tracking inside OIC/BIP/Groovy payloads is a phase-3 feature requiring per-format XPath/regex patterns.
+2. **In-memory graph** — state lives in a single Python process. Restart clears everything. Not multi-user without externalising to a graph DB.
+3. **No persistence** — uploaded artifacts are parsed on the fly; original files are not stored.
+4. **Regex-based parsing** — pattern-driven rather than a full Oracle grammar. Dynamic SQL built at runtime and heavily templated PL/SQL with nested `EXECUTE IMMEDIATE` can be missed.
+5. **Single-dialect** — targeted at Oracle 12c+ SQL syntax. MySQL/Postgres/SQL-Server not supported.
+6. **LLM latency** — BlueVerse calls take 5–12 s. Mock mode is sub-100 ms but less specific.
+7. **BlueVerse JWT expiry** — tokens expire every ~20 min; UI Settings modal lets the user paste a fresh token without restart.
+8. **CORS fully open** — required because demo uses `file://` frontend. Must be tightened for production.
+9. **No authentication** — hackathon-grade demo. Enterprise version would need SSO / OAuth2 / per-tenant roles.
+10. **Frontend is a single `index.html`** — no component tree, no bundler. Intentional for zero build-step demo; future rewrite in React for richer interactivity.
+11. **RAG index is non-persistent** — rebuilt on every `POST /api/demo` or upload. Fine for demo; future: persistent ChromaDB volume.
+12. **ORA error-code validation list is a subset** — 25 common codes. The AI could legitimately cite a code we haven't whitelisted, resulting in a false-positive hallucination flag.
+13. **No GenAI streaming** — responses arrive as a single blob. UI shows a loading indicator.
 
 ## 3. Assumptions
 

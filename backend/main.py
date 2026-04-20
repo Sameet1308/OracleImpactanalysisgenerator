@@ -170,6 +170,40 @@ async def analyze_impact(request: AnalyzeRequest):
     }
 
 
+class AnalyzeColumnRequest(BaseModel):
+    object_name: str
+    column_name: str
+
+
+@app.post("/api/analyze-column")
+async def analyze_column_impact(request: AnalyzeColumnRequest):
+    """Column-level impact: which downstream objects reference this specific column."""
+    if graph.graph.number_of_nodes() == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No artifacts loaded. Upload files or load demo first.",
+        )
+
+    obj_name = request.object_name.upper().strip()
+    col_name = request.column_name.upper().strip()
+    result = graph.compute_column_impact(obj_name, col_name)
+    if not result.get("found"):
+        raise HTTPException(status_code=404, detail=result.get("error"))
+    return result
+
+
+@app.get("/api/columns/{object_name}")
+async def list_columns(object_name: str):
+    """List all columns of a table/view (if parsed)."""
+    obj_name = object_name.upper().strip()
+    cols = graph.get_columns(obj_name)
+    if not cols:
+        if not graph.has_object(obj_name):
+            raise HTTPException(status_code=404, detail=f"Object '{obj_name}' not found")
+        return {"object_name": obj_name, "columns": [], "note": "No column metadata — object is not a TABLE or columns were not parseable"}
+    return {"object_name": obj_name, "columns": cols, "count": len(cols)}
+
+
 @app.get("/api/report/{object_name}")
 async def download_report(object_name: str):
     """Generate and download a PDF impact analysis report for the given object."""

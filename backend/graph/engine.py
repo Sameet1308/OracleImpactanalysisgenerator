@@ -60,7 +60,7 @@ class DependencyGraph:
     def add_objects(self, parsed_objects: List[Dict]):
         """
         Add parsed objects as nodes and their dependencies as edges.
-        Each object dict: {name, type, source_file, dependencies?: [{name, relationship}]}
+        Each object dict: {name, type, source_file, columns?: [{name, type}], dependencies?: [...]}
         Also accepts flat object dicts without dependencies (edges added separately).
         """
         for obj in parsed_objects:
@@ -70,6 +70,7 @@ class DependencyGraph:
                 name,
                 type=obj.get("type", "UNKNOWN"),
                 source_file=obj.get("source_file", ""),
+                columns=obj.get("columns", []),
             )
             # If object carries its own dependency list, add edges
             for dep in obj.get("dependencies", []):
@@ -82,19 +83,94 @@ class DependencyGraph:
                     self.graph.add_edge(name, dep_name, relationship=dep_rel)
 
     def add_dependencies(self, dependencies: List[Dict]):
-        """Add dependencies as directed edges. Each: {source, target, relationship, source_file}."""
+        """Add dependencies as directed edges. Each: {source, target, relationship, source_file, columns?}.
+
+        If an edge already exists, column lists are merged.
+        """
         for dep in dependencies:
             source = dep["source"]
             target = dep["target"]
             if source not in self.graph:
-                self.graph.add_node(source, type="UNKNOWN", source_file="")
+                self.graph.add_node(source, type="UNKNOWN", source_file="", columns=[])
             if target not in self.graph:
-                self.graph.add_node(target, type="UNKNOWN", source_file="")
-            self.graph.add_edge(
-                source, target,
-                relationship=dep.get("relationship", "DEPENDS_ON"),
-                source_file=dep.get("source_file", ""),
-            )
+                self.graph.add_node(target, type="UNKNOWN", source_file="", columns=[])
+            columns = dep.get("columns", []) or []
+            if self.graph.has_edge(source, target):
+                existing = set(self.graph.edges[source, target].get("columns", []) or [])
+                existing.update(columns)
+                self.graph.edges[source, target]["columns"] = sorted(existing)
+            else:
+                self.graph.add_edge(
+                    source, target,
+                    relationship=dep.get("relationship", "DEPENDS_ON"),
+                    source_file=dep.get("source_file", ""),
+                    columns=sorted(set(columns)),
+                )
+
+    def compute_column_impact(self, object_name: str, column_name: str) -> Dict[str, Any]:
+        """
+        Compute column-level blast radius: which downstream objects reference
+        the specific column of the given table.
+
+        Walks predecessors of object_name, inspecting edge 'columns' metadata.
+        An object impacts when its edge to object_name mentions the column,
+        OR when it has no column metadata at all (conservative fallback).
+        """
+        if object_name not in self.graph:
+            return {
+                "object_name": object_name,
+                "column_name": column_name,
+                "error": f"Object '{object_name}' not found",
+                "found": False,
+            }
+
+        col = column_name.upper()
+        table_cols = [c["name"] for c in self.graph.nodes[object_name].get("columns", [])]
+        if table_cols and col not in table_cols:
+            return {
+                "object_name": object_name,
+                "column_name": col,
+                "error": f"Column '{col}' not found on {object_name}. Available: {table_cols}",
+                "found": False,
+            }
+
+        direct_specific: List[Dict] = []
+        direct_conservative: List[Dict] = []
+        for pred in self.graph.predecessors(object_name):
+            edge = self.graph.edges[pred, object_name]
+            cols = edge.get("columns", []) or []
+            pred_data = self.graph.nodes[pred]
+            info = {
+                "name": pred,
+                "type": pred_data.get("type", "UNKNOWN"),
+                "file": pred_data.get("source_file", ""),
+                "relationship": edge.get("relationship", "DEPENDS_ON"),
+                "columns_referenced": cols,
+            }
+            if col in [c.upper() for c in cols]:
+                direct_specific.append(info)
+            elif not cols:
+                # Conservative: no column metadata → may or may not use this column
+                direct_conservative.append(info)
+            # else: edge has columns but not this one → definitely does not impact
+
+        return {
+            "object_name": object_name,
+            "object_type": self.graph.nodes[object_name].get("type", "UNKNOWN"),
+            "column_name": col,
+            "found": True,
+            "confirmed_impact": direct_specific,
+            "possible_impact": direct_conservative,
+            "confirmed_count": len(direct_specific),
+            "possible_count": len(direct_conservative),
+            "columns_on_table": table_cols,
+            "note": (
+                "confirmed_impact = dependents whose edge metadata explicitly references "
+                "this column. possible_impact = dependents where we could not confirm "
+                "column-level detail (typically OIC/BIP/Groovy); treated as conservative "
+                "fallback — verify manually."
+            ),
+        }
 
     def get_objects(self) -> List[Dict]:
         """Return all objects in the graph."""
@@ -110,7 +186,7 @@ class DependencyGraph:
         return sorted(result, key=lambda x: x["name"])
 
     def get_graph_json(self) -> Dict[str, Any]:
-        """Return D3.js compatible graph JSON."""
+        """Return D3.js compatible graph JSON, including columns on table nodes."""
         nodes = []
         for node in self.graph.nodes:
             data = self.graph.nodes[node]
@@ -119,6 +195,7 @@ class DependencyGraph:
                 "name": node,
                 "type": data.get("type", "UNKNOWN"),
                 "file": data.get("source_file", ""),
+                "columns": data.get("columns", []),
             })
 
         edges = []
@@ -127,6 +204,7 @@ class DependencyGraph:
                 "source": source,
                 "target": target,
                 "relationship": data.get("relationship", "DEPENDS_ON"),
+                "columns": data.get("columns", []),
             })
 
         return {
@@ -135,6 +213,12 @@ class DependencyGraph:
             "node_count": len(nodes),
             "edge_count": len(edges),
         }
+
+    def get_columns(self, object_name: str) -> List[Dict[str, str]]:
+        """Return the column list for a given table/view, or [] if none known."""
+        if object_name not in self.graph:
+            return []
+        return self.graph.nodes[object_name].get("columns", [])
 
     def compute_impact(self, object_name: str) -> Dict[str, Any]:
         """

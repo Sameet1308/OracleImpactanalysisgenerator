@@ -25,8 +25,11 @@ All scenarios run against the built-in demo dataset loaded via `POST /api/demo`.
 | T10 | Generate PDF impact report | `GET /api/report/EMPLOYEES` | PDF downloads with 4-section AI analysis | ✅ Pass |
 | T11 | Multi-turn chat about object | `POST /api/chat` with history | Context retained across 3+ turns | ✅ Pass |
 | T12 | Token usage stats endpoint | `GET /api/usage` | Returns call count, latency, cost estimate | ✅ Pass |
+| T13 | List columns on a table | `GET /api/columns/EMPLOYEES` | 11 columns with names + types | ✅ Pass |
+| T14 | Column-level impact — SALARY | `POST /api/analyze-column {EMPLOYEES, SALARY}` | 3 confirmed view impacts + 6 possible | ✅ Pass |
+| T15 | Column-level impact — discrimination | `POST /api/analyze-column {EMPLOYEES, PHONE_NUMBER}` | 0 confirmed (no view projects PHONE_NUMBER) | ✅ Pass |
 
-**Total: 12 documented scenarios, all passing.**
+**Total: 15 documented scenarios, all passing.**
 
 ---
 

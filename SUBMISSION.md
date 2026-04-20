@@ -148,5 +148,8 @@ A: Today — Oracle Fusion SQL/PL/SQL, Oracle Integration Cloud (OIC), BI Publis
 **Q: Multi-turn chat — is context really retained?**
 A: Yes. Last 6 turns of `history[]` + current impact context + top-3 RAG code snippets are included in each prompt. Tested with 4-turn reference-by-pronoun flow. See [docs/TESTING.md §7](docs/TESTING.md).
 
+**Q: Do you have column-level impact analysis?**
+A: Yes — partial. The parser extracts columns from `CREATE TABLE` statements, identifies column references in `CREATE VIEW AS SELECT …` projection lists, and captures qualified `TABLE.COLUMN` references inside PL/SQL bodies. The new `POST /api/analyze-column` endpoint returns two lists: `confirmed_impact` (dependents where the specific column reference is proven) and `possible_impact` (conservative fallback for OIC/BIP/Groovy where column metadata can't be extracted). Example: `EMPLOYEES.SALARY` → 3 confirmed views (HR_EMPLOYEE_SUMMARY, PAYROLL_VIEW, EMP_DETAILS_VIEW) + 6 possible (procedures, OIC flows). `EMPLOYEES.PHONE_NUMBER` → 0 confirmed — the parser discriminates correctly. See [docs/API.md](docs/API.md) for the endpoint contract.
+
 **Q: What's the most impressive number in this submission?**
-A: **~300× faster impact analysis** (4–8 hours → < 60 seconds), at **$0.003 per call**, with **100 % cross-artifact coverage** vs. ~40 % for native Oracle tooling. See [docs/KPI.md](docs/KPI.md).
+A: **~300× faster impact analysis** (4–8 hours → < 60 seconds), at **$0.003 per call**, with **100 % cross-artifact coverage** vs. ~40 % for native Oracle tooling, and now with **column-level granularity** for SQL tables and views. See [docs/KPI.md](docs/KPI.md).

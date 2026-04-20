@@ -66,6 +66,8 @@ Click **"Load Demo"** to load sample artifacts and explore the dependency graph.
 | `POST` | `/api/upload` | Upload artifact files (multipart) |
 | `POST` | `/api/demo` | Load built-in sample artifacts |
 | `POST` | `/api/analyze` | Compute impact — body: `{"object_name": "EMPLOYEES"}` |
+| `POST` | `/api/analyze-column` | **Column-level impact** — body: `{"object_name": "EMPLOYEES", "column_name": "SALARY"}` |
+| `GET` | `/api/columns/{object_name}` | List columns on a parsed TABLE |
 | `GET` | `/api/objects` | List all parsed objects |
 | `GET` | `/api/graph` | Full dependency graph JSON |
 | `GET` | `/api/report/{name}` | Download PDF impact report |
