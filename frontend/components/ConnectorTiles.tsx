@@ -88,54 +88,79 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
     return () => clearInterval(interval);
   }, []);
 
-  async function saveToken() {
+  async function pingAgent(): Promise<{ ok: boolean; text: string; detail?: string }> {
+    try {
+      const res = await fetch(`${API_BASE}/api/test-blueverse`, { method: "POST" });
+      const data = await res.json();
+      if (data.result === "success") {
+        return {
+          ok: true,
+          text: `✓ BlueVerse agent replied in ${data.latency_ms}ms (token valid for ${Math.round(data.token_status?.expires_in_minutes || 0)} min)`,
+          detail: data.response_preview,
+        };
+      }
+      if (data.result === "error") {
+        return {
+          ok: false,
+          text: `✗ ${data.message}`,
+          detail: data.token_status?.expires_at ? `Token expiry: ${data.token_status.expires_at}` : undefined,
+        };
+      }
+      if (data.result === "exception") {
+        return { ok: false, text: `✗ ${data.error_type}: ${data.error}` };
+      }
+      return { ok: false, text: `Unexpected: ${JSON.stringify(data).slice(0, 200)}` };
+    } catch (err) {
+      return { ok: false, text: `✗ Network error: ${err}` };
+    }
+  }
+
+  async function saveAndTest() {
     if (!tokenInput.trim()) return;
     setTokenSaving(true);
-    setTestResult(null);
+    setTestResult({ ok: true, text: "Saving token..." });
     try {
       const saveRes = await fetch(`${API_BASE}/api/token`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: tokenInput.trim() }),
       });
       const saved = await saveRes.json();
-      setTokenInput("");
-      const res = await fetch(`${API_BASE}/api/token/status`);
-      setTokenStatus(await res.json());
-      if (saved.status === "valid") {
-        setTestResult({ ok: true, text: `Token saved — valid for ${Math.round(saved.expires_in_minutes || 0)} min. Click 'Test AI' to confirm the agent responds.` });
-      } else if (saved.status === "expired") {
-        setTestResult({ ok: false, text: "Token parsed but is already expired. Get a fresher JWT.", detail: `Expires: ${saved.expires_at}` });
-      } else {
-        setTestResult({ ok: false, text: "Token could not be parsed as a JWT. Paste the full token (no 'Bearer ' prefix needed)." });
+      const statusRes = await fetch(`${API_BASE}/api/token/status`);
+      setTokenStatus(await statusRes.json());
+
+      if (saved.status !== "valid") {
+        if (saved.status === "expired") {
+          setTestResult({
+            ok: false,
+            text: `✗ Token parsed but is already expired (expired ${Math.abs(Math.round(saved.expires_in_minutes || 0))} min ago).`,
+            detail: `Get a fresh JWT — they only live 25 minutes. Expires: ${saved.expires_at}`,
+          });
+        } else {
+          setTestResult({
+            ok: false,
+            text: "✗ Token could not be parsed as a JWT.",
+            detail: "Paste the full token (the part after 'Bearer ' if you copied that). Current length: " + (saved.token_length || 0),
+          });
+        }
+        setTokenSaving(false);
+        return;
       }
+
+      setTestResult({ ok: true, text: `Token saved (valid ${Math.round(saved.expires_in_minutes || 0)} min). Pinging BlueVerse...` });
+      const ping = await pingAgent();
+      setTestResult(ping);
+      if (ping.ok) setTokenInput("");
     } catch (err) {
       setTestResult({ ok: false, text: `Save failed: ${err}` });
     }
     setTokenSaving(false);
   }
 
-  async function testAgent() {
+  async function testOnly() {
     setTesting(true);
-    setTestResult(null);
-    try {
-      const res = await fetch(`${API_BASE}/api/test-blueverse`, { method: "POST" });
-      const data = await res.json();
-      if (data.result === "success") {
-        setTestResult({
-          ok: true,
-          text: `✓ BlueVerse agent responded in ${data.latency_ms}ms`,
-          detail: data.response_preview,
-        });
-      } else if (data.result === "error") {
-        setTestResult({ ok: false, text: `✗ ${data.message}`, detail: data.token_status?.expires_at ? `Expires: ${data.token_status.expires_at}` : undefined });
-      } else if (data.result === "exception") {
-        setTestResult({ ok: false, text: `✗ ${data.error_type}: ${data.error}` });
-      } else {
-        setTestResult({ ok: false, text: `Unexpected result: ${JSON.stringify(data).slice(0, 200)}` });
-      }
-    } catch (err) {
-      setTestResult({ ok: false, text: `✗ Network error: ${err}` });
-    }
+    setTestResult({ ok: true, text: "Pinging BlueVerse..." });
+    const ping = await pingAgent();
+    setTestResult(ping);
     setTesting(false);
   }
 
@@ -193,30 +218,83 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
         ))}
       </div>
 
-      {/* Token input */}
-      <div className="ct-token-row">
-        <input className="ct-token-input" placeholder="Paste AI agent token..." value={tokenInput} onChange={(e) => setTokenInput(e.target.value)} />
-        <button className="ct-token-btn" onClick={saveToken} disabled={tokenSaving || !tokenInput.trim()}>
-          {tokenSaving ? "..." : "Save"}
-        </button>
-        <button className="ct-token-btn" style={{ marginLeft: 4 }} onClick={testAgent} disabled={testing} title="Send a ping to BlueVerse and verify the agent responds">
-          {testing ? "..." : "Test AI"}
-        </button>
+      {/* Token input — multi-line for long JWTs, Save+Test in one click */}
+      <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 6 }}>
+        <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 500 }}>
+          BlueVerse JWT — 25 min lifetime. Paste the full token, click Save &amp; Test.
+        </div>
+        <textarea
+          value={tokenInput}
+          onChange={(e) => setTokenInput(e.target.value)}
+          placeholder="eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6..."
+          rows={4}
+          spellCheck={false}
+          style={{
+            width: "100%",
+            padding: "8px 10px",
+            fontSize: 11,
+            fontFamily: "ui-monospace, Menlo, Consolas, monospace",
+            border: "1px solid #d1d5db",
+            borderRadius: 6,
+            background: "#f9fafb",
+            resize: "vertical",
+            color: "#374151",
+            wordBreak: "break-all",
+          }}
+        />
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          <button
+            className="ct-token-btn"
+            onClick={saveAndTest}
+            disabled={tokenSaving || !tokenInput.trim()}
+            style={{ flex: 1, fontWeight: 600 }}
+          >
+            {tokenSaving ? "Saving & Testing..." : "Save & Test BlueVerse"}
+          </button>
+          <button
+            className="ct-token-btn"
+            onClick={testOnly}
+            disabled={testing}
+            title="Ping the agent using the currently-saved token"
+            style={{ background: "#f3f4f6", color: "#374151" }}
+          >
+            {testing ? "..." : "Re-test"}
+          </button>
+          {tokenInput && (
+            <span style={{ fontSize: 11, color: "#6b7280" }}>{tokenInput.length} chars</span>
+          )}
+        </div>
       </div>
 
       {testResult && (
         <div style={{
-          marginTop: 6,
-          padding: "8px 10px",
+          marginTop: 8,
+          padding: "10px 12px",
           borderRadius: 6,
           background: testResult.ok ? "#ecfdf5" : "#fef2f2",
           border: `1px solid ${testResult.ok ? "#a7f3d0" : "#fecaca"}`,
           fontSize: 12,
-          lineHeight: 1.35,
+          lineHeight: 1.4,
           color: testResult.ok ? "#065f46" : "#991b1b",
         }}>
           <div style={{ fontWeight: 600 }}>{testResult.text}</div>
-          {testResult.detail && <div style={{ marginTop: 4, fontWeight: 400, opacity: 0.8 }}>{testResult.detail}</div>}
+          {testResult.detail && (
+            <div style={{
+              marginTop: 6,
+              padding: "6px 8px",
+              background: testResult.ok ? "#d1fae5" : "#fee2e2",
+              borderRadius: 4,
+              fontWeight: 400,
+              fontSize: 11,
+              fontFamily: "ui-monospace, Menlo, Consolas, monospace",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              maxHeight: 120,
+              overflowY: "auto",
+            }}>
+              {testResult.detail}
+            </div>
+          )}
         </div>
       )}
 
