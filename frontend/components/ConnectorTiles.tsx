@@ -52,12 +52,33 @@ const icons: Record<string, JSX.Element> = {
   ),
 };
 
-const CONNECTORS = [
+type Connector = {
+  id: string;
+  name: string;
+  desc: string;
+  color: string;
+  active: boolean;
+  future?: string;
+};
+
+const CONNECTORS: Connector[] = [
   { id: "oracle-db", name: "Oracle Database", desc: "DBA_OBJECTS & DBA_SOURCE", color: "#C74634", active: true },
-  { id: "oic", name: "Integration Cloud", desc: "OIC flows & connections", color: "#D84315", active: false },
-  { id: "bip", name: "BI Publisher", desc: "Reports & data models", color: "#C2185B", active: false },
-  { id: "hcm", name: "HCM / ERP Cloud", desc: "Groovy & fast formulas", color: "#7B1FA2", active: false },
-  { id: "fusion", name: "Fusion Apps", desc: "OTBI & ESS jobs", color: "#1565C0", active: false },
+  {
+    id: "oic", name: "Integration Cloud", desc: "OIC flows & connections", color: "#D84315", active: false,
+    future: "Coming soon: direct REST pull from OIC. We'll fetch integration flows, connections, lookups, and schedules via OIC REST API, then parse them into the dependency graph automatically — no manual exports.",
+  },
+  {
+    id: "bip", name: "BI Publisher", desc: "Reports & data models", color: "#C2185B", active: false,
+    future: "Coming soon: BIP catalog crawler. We'll index your BI Publisher reports, data models, and SQL queries, then link them to the source tables in the graph to surface report-level blast radius.",
+  },
+  {
+    id: "hcm", name: "HCM / ERP Cloud", desc: "Groovy & fast formulas", color: "#7B1FA2", active: false,
+    future: "Coming soon: Fusion HCM / ERP Cloud integration. We'll pull Groovy scripts, fast formulas, flexfields, and BIP-HCM reports directly from your Fusion pod — with SSO / OAuth2 auth.",
+  },
+  {
+    id: "fusion", name: "Fusion Apps", desc: "OTBI & ESS jobs", color: "#1565C0", active: false,
+    future: "Coming soon: Fusion Apps metadata. OTBI subject-area dependencies, ESS scheduled jobs, REST services, and approval workflows — all linked in the graph.",
+  },
   { id: "upload", name: "Upload Files", desc: ".sql .xml .groovy", color: "#2E7D32", active: true },
 ];
 
@@ -73,6 +94,7 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
   }>(null);
   const [showDbModal, setShowDbModal] = useState(false);
   const [showTokenModal, setShowTokenModal] = useState(false);
+  const [hoverTile, setHoverTile] = useState<string | null>(null);
   const [dbForm, setDbForm] = useState({ host: "", port: "1521", sid: "", user: "", pass: "" });
   const [dbStatus, setDbStatus] = useState<"idle" | "testing" | "connected">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -217,22 +239,58 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
 
       <div className="ct-grid">
         {CONNECTORS.map((c) => (
-          <button
+          <div
             key={c.id}
-            className={`ct-card ${!c.active ? "ct-card--disabled" : ""}`}
-            onClick={() => c.active && handleTileClick(c.id)}
-            disabled={!c.active || loading}
+            style={{ position: "relative" }}
+            onMouseEnter={() => !c.active && c.future && setHoverTile(c.id)}
+            onMouseLeave={() => setHoverTile((prev) => (prev === c.id ? null : prev))}
           >
-            <div className="ct-card-icon" style={{ borderColor: c.active ? c.color : "#d1d5db" }}>
-              {icons[c.id]}
-            </div>
-            <div className="ct-card-info">
-              <div className="ct-card-name">{c.name}</div>
-              <div className="ct-card-desc">{c.desc}</div>
-            </div>
-            {!c.active && <span className="ct-card-badge">Soon</span>}
-            {c.active && <span className="ct-card-status" style={{ background: c.color }} />}
-          </button>
+            <button
+              className={`ct-card ${!c.active ? "ct-card--disabled" : ""}`}
+              onClick={() => c.active && handleTileClick(c.id)}
+              disabled={!c.active || loading}
+              style={{ width: "100%" }}
+            >
+              <div className="ct-card-icon" style={{ borderColor: c.active ? c.color : "#d1d5db" }}>
+                {icons[c.id]}
+              </div>
+              <div className="ct-card-info">
+                <div className="ct-card-name">{c.name}</div>
+                <div className="ct-card-desc">{c.desc}</div>
+              </div>
+              {!c.active && <span className="ct-card-badge">Soon</span>}
+              {c.active && <span className="ct-card-status" style={{ background: c.color }} />}
+            </button>
+
+            {hoverTile === c.id && c.future && (
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                marginTop: 6,
+                background: "#111827",
+                color: "#f9fafb",
+                padding: "10px 12px",
+                borderRadius: 8,
+                fontSize: 11,
+                lineHeight: 1.45,
+                boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                zIndex: 50,
+                pointerEvents: "none",
+              }}>
+                <div style={{
+                  position: "absolute", top: -5, left: 20,
+                  width: 10, height: 10, background: "#111827",
+                  transform: "rotate(45deg)",
+                }} />
+                <div style={{ fontWeight: 600, color: c.color, marginBottom: 4, fontSize: 11, textTransform: "uppercase", letterSpacing: 0.3 }}>
+                  Roadmap
+                </div>
+                {c.future}
+              </div>
+            )}
+          </div>
         ))}
       </div>
 

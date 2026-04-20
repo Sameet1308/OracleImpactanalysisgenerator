@@ -206,7 +206,9 @@ export default function Home() {
       await fetchObjects();
       const fileNames = Array.from(files).map(f => f.name).join(", ");
       setStatus(`${result.objects_found} objects from ${result.files_processed} files`);
-      showToast(`Uploaded ${fileNames} \u2192 ${result.objects_found} objects, ${result.dependencies_found} dependencies parsed`);
+      showToast(
+        `\u2705 Artifacts added successfully — ${result.files_processed} file${result.files_processed === 1 ? "" : "s"} (${fileNames}) \u2192 ${result.objects_found} objects, ${result.dependencies_found} dependencies`
+      );
     } catch (err) {
       console.error(err);
       setStatus(`Upload failed: ${err}`);
