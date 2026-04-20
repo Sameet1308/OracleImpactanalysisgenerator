@@ -8,7 +8,7 @@
 |---|---|---|
 | **Dev (local)** | Developer laptop | `http://localhost:8000` |
 | **Demo (Render)** | Hackathon judging, public demo | via [render.yaml](../render.yaml) |
-| **Client (future)** | Per-tenant OCI / customer Oracle Cloud | Oracle OCI Compute + OCI GenAI |
+| **Client (future)** | Per-tenant LTIMindtree-hosted deployment | BlueVerse Foundry endpoints |
 
 ## 2. Local Deployment
 
@@ -29,13 +29,11 @@ python main.py
 
 | Variable | Dev | Demo | Prod (client) |
 |---|---|---|---|
-| `BLUEVERSE_ENABLED` | `true` | `true` | `false` |
-| `OCI_GENAI_ENABLED` | `false` | `false` | `true` |
-| `BLUEVERSE_TOKEN` | local JWT | demo JWT | — |
-| `OCI_COMPARTMENT_ID` | — | — | customer OCID |
-| `OCI_REGION` | — | — | customer region |
-| `OCI_MODEL_ID` | — | — | `cohere.command-a-03-2025` |
+| `BLUEVERSE_ENABLED` | `true` | `true` | `true` |
+| `BLUEVERSE_TOKEN` | local JWT | demo JWT | client-tenant JWT |
 | `PORT` | 8000 | Render-assigned | 8000 |
+
+Per LTIMindtree policy, **no third-party LLM providers** (OpenAI, Anthropic, Google, OCI GenAI) are configured. BlueVerse is the sole approved LLM endpoint.
 
 All secrets live in `.env` (git-ignored). Template in [.env.example](../.env.example).
 

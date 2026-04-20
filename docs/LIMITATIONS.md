@@ -25,7 +25,7 @@
 2. **No persistence** — uploaded artifacts are parsed on the fly; original files are not stored.
 3. **Regex-based parsing** — pattern-driven rather than a full Oracle grammar. Dynamic SQL built at runtime and heavily templated PL/SQL with nested `EXECUTE IMMEDIATE` can be missed.
 4. **Single-dialect** — targeted at Oracle 12c+ SQL syntax. MySQL/Postgres/SQL-Server not supported.
-5. **LLM latency** — BlueVerse/OCI calls take 5–12 s. Mock mode is sub-100 ms but less specific.
+5. **LLM latency** — BlueVerse calls take 5–12 s. Mock mode is sub-100 ms but less specific.
 6. **BlueVerse JWT expiry** — tokens expire every ~20 min; UI Settings modal lets the user paste a fresh token without restart.
 7. **CORS fully open** — required because demo uses `file://` frontend. Must be tightened for production.
 8. **No authentication** — hackathon-grade demo. Enterprise version would need SSO / OAuth2 / per-tenant roles.
@@ -41,7 +41,7 @@
 3. Edge direction `A → B` means "A depends on B" (A reads, references, or is affected by B).
 4. Risk scoring formula weights (52 % direct + 18 % indirect + 30 % type-criticality) are tuned on the demo dataset — may need re-tuning per customer.
 5. The LLM prompt is English-only; non-English identifiers are passed through but the generated analysis is English.
-6. BlueVerse and OCI GenAI are trusted LLM endpoints — we do not re-validate PII stripping on the response, only on the prompt.
+6. BlueVerse is the sole trusted LLM endpoint (LTIMindtree BlueVerse-only policy) — we do not re-validate PII stripping on the response, only on the prompt.
 7. The user running the tool has authorisation to see the dependency metadata of all uploaded artifacts — no per-object ACL.
 
 ## 4. Data Sources
@@ -54,8 +54,8 @@
 | Demo Groovy | Hand-crafted, resembles Fusion HCM Fast Formula / compensation scripts | Own |
 | Oracle error codes | Public Oracle Database documentation (`ORA-*` codes) | Oracle docs — public |
 | Oracle artifact concepts | Oracle Fusion / OIC / BIP / HCM public documentation + LTIMindtree SME knowledge | Public + internal |
-| LLM — BlueVerse | LTIMindtree-internal `AI_Elite_ora1` agent on BlueVerse Marketplace | LTIMindtree internal |
-| LLM — OCI fallback | Oracle Cloud Infrastructure Generative AI, Cohere Command A | Oracle Cloud commercial |
+| LLM (sole provider) | LTIMindtree-internal `AI_Elite_Ora1` agent on BlueVerse Foundry | LTIMindtree internal |
+| Embedding model (RAG, local) | `sentence-transformers/all-MiniLM-L6-v2` | Apache 2.0 — runs in-process, no network |
 
 **No customer data, no PII, no production-copied artifacts** are included in this repo.
 

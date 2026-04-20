@@ -39,7 +39,7 @@ Baseline result to expect: analyze **`EMPLOYEES`** → **Risk 82, CRITICAL, 6+ d
 | Item | Evidence |
 |---|---|
 | BlueVerse API integration | [backend/ai/blueverse.py](backend/ai/blueverse.py) — full client, runtime token management, usage stats |
-| Fallback chain (BlueVerse → OCI → Mock) | [backend/ai/oci_genai.py:30-58](backend/ai/oci_genai.py) |
+| Fallback chain (BlueVerse → Mock, BlueVerse-only policy) | [backend/ai/oci_genai.py:30-50](backend/ai/oci_genai.py) |
 | Token usage logging | [backend/ai/blueverse.py:77-84](backend/ai/blueverse.py) — `_usage_stats` |
 | Cost tracking | [backend/ai/blueverse.py:112-120](backend/ai/blueverse.py) + [docs/TESTING.md §8](docs/TESTING.md) — **~$0.003/analyze** |
 | Prompt-engineering strategy | [backend/ai/oci_genai.py:76-123](backend/ai/oci_genai.py) — structured 4-section prompt + RAG context + PII filter |
@@ -130,7 +130,7 @@ A: `DBA_DEPENDENCIES` only tracks PL/SQL object references. It completely misses
 A: On 30 runs against demo data, 92–96 % of cited `ORA-XXXXX` codes are valid (verified against a whitelist of 25 common codes). All recommendations reference actual object names from the graph — they are grounded, not hallucinated. See [docs/TESTING.md §3](docs/TESTING.md).
 
 **Q: What if BlueVerse goes down?**
-A: 3-tier fallback: BlueVerse → OCI GenAI (Cohere Command A) → deterministic rule-based mock. The demo never fails. See [docs/TESTING.md §6](docs/TESTING.md).
+A: Fallback to a deterministic rule-based mock engine that produces a structured 4-section analysis from graph metadata alone. Per LTIMindtree data-governance policy, no third-party LLM (Claude / OpenAI / Gemini / OCI) is used as fallback — BlueVerse is the sole approved generation endpoint. The demo never fails. See [docs/TESTING.md §6](docs/TESTING.md).
 
 **Q: How does this scale to a real Oracle ERP with thousands of objects?**
 A: Parsing is O(n); the graph is in-memory today but the engine is backed by NetworkX which can export to Neo4j / Oracle Graph Studio for enterprise scale. RAG index is ChromaDB — swap to persistent volume or pgvector on OCI ADB. See [docs/DEPLOYMENT.md §5](docs/DEPLOYMENT.md).

@@ -23,13 +23,13 @@ Upload your Oracle artifacts and instantly see:
 | Backend | Python, FastAPI, NetworkX |
 | Frontend | Vanilla HTML/JS, D3.js (single file, no build step) |
 | Parsers | sqlparse + regex (SQL/PL/SQL), xml.etree (OIC/BIP XML), regex (Groovy) |
-| AI | OCI Generative AI (Cohere Command A) with mock fallback |
+| AI | BlueVerse Foundry (AI_Elite_Ora1) with deterministic mock fallback |
 | Reports | ReportLab (PDF generation) |
 
 ## Architecture
 
 ```
-frontend/index.html (D3.js) ──HTTP──> FastAPI :8000 ──> Parsers + NetworkX + OCI GenAI
+frontend/index.html (D3.js) ──HTTP──> FastAPI :8000 ──> Parsers + NetworkX + BlueVerse Agent
 ```
 
 **Parsers** extract objects and dependencies from 4 artifact types:
@@ -80,18 +80,21 @@ Using the built-in sample artifacts (5 files: SQL, OIC XML, BIP XML, Groovy):
 - **EMPLOYEES table** → Risk Score **82/100**, Severity **CRITICAL**, 8 direct impacts
 - AI generates root cause analysis, 5 fix recommendations, 5 test items, 5 rollback steps
 
-## OCI GenAI (Optional)
+## AI Provider — BlueVerse-Only Policy
 
-The app works fully in demo mode without any credentials. To enable live AI analysis with Oracle Cloud:
+Per LTIMindtree data-governance policy, **all LLM generation routes through BlueVerse-approved models only** — no third-party LLM providers (Claude / OpenAI / Gemini / OCI) are used.
+
+**Chain:** BlueVerse Foundry (`AI_Elite_Ora1`) → deterministic mock fallback.
+
+The mock path guarantees demo resilience if the BlueVerse JWT has expired or the service is unreachable — the UI shows a `mock` badge so the operator knows.
 
 ```bash
-export OCI_GENAI_ENABLED=true
-export OCI_COMPARTMENT_ID=ocid1.compartment.oc1..xxx
-export OCI_REGION=us-chicago-1
-export OCI_MODEL_ID=cohere.command-a-03-2025
+# .env
+BLUEVERSE_ENABLED=true
+BLUEVERSE_TOKEN=<your_jwt>
 ```
 
-Falls back to mock mode automatically if OCI is unreachable (30s timeout).
+Tokens expire ~every 20 min. Refresh without restart via the Settings modal or `POST /api/token`.
 
 ## Project Structure
 
@@ -107,7 +110,8 @@ Falls back to mock mode automatically if OCI is unreachable (30s timeout).
 │   ├── graph/
 │   │   └── engine.py           # NetworkX DiGraph + impact scoring
 │   ├── ai/
-│   │   └── oci_genai.py        # OCI GenAI client + mock fallback
+│   │   ├── blueverse.py        # BlueVerse Foundry client + JWT + usage metrics
+│   │   └── oci_genai.py        # AI dispatcher: BlueVerse → mock fallback
 │   ├── pdf_report.py           # PDF report generation (ReportLab)
 │   └── sample_artifacts/       # 5 built-in demo files
 │       ├── employees.sql

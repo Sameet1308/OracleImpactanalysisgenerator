@@ -15,7 +15,7 @@ Health check and service state.
 ```json
 {
   "status": "ok",
-  "ai_mode": "blueverse|live|mock",
+  "ai_mode": "blueverse|mock",
   "objects_loaded": 20,
   "token_status": { "status": "valid", "expires_in_minutes": 18.3 },
   "knowledge_base": { "chunks": 31, "files": 5, "objects": 21 },

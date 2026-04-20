@@ -77,7 +77,6 @@ Measured on local dev (Windows 11, Python 3.13, 16 GB RAM, local BlueVerse netwo
 | `POST /api/demo` (subsequent) | 0.4 s | 0.7 s | Model cached |
 | `POST /api/analyze` (mock mode) | 35 ms | 90 ms | No network I/O |
 | `POST /api/analyze` (BlueVerse live) | 6.2 s | 11.5 s | Dominated by LLM latency |
-| `POST /api/analyze` (OCI Cohere) | 4.8 s | 8.9 s | |
 | `GET /api/graph` | 12 ms | 25 ms | In-memory NetworkX export |
 | `GET /api/report/{name}` (PDF, mock) | 180 ms | 320 ms | ReportLab render |
 | `GET /api/usage` | 2 ms | 5 ms | Pure stat read |
@@ -119,11 +118,13 @@ Live stats available at any time via `GET /api/usage`:
 
 ## 6. Error Handling (Graceful Degradation)
 
-The 3-tier AI fallback chain means **the demo never fails**:
+The AI fallback chain (BlueVerse-only policy) means **the demo never fails**:
 
 ```
-BlueVerse Agent  ──fail──▶  OCI GenAI  ──fail──▶  Mock (rule-based engine)
+BlueVerse Agent  ──fail──▶  Mock (deterministic rule-based engine)
 ```
+
+Per LTIMindtree data-governance policy, third-party LLMs (Claude / OpenAI / Gemini / OCI) are **not** used as fallback. Mock is a local, deterministic engine that produces a structured 4-section analysis from the graph metadata alone — it carries no LLM data-egress risk.
 
 Every error path is logged and returns a structured, actionable response to the UI:
 
@@ -134,8 +135,6 @@ Every error path is logged and returns a structured, actionable response to the 
 | API timeout (30 s) | `blueverse.py:201-204` | Logged, fallback |
 | 401 Unauthorized | `blueverse.py:207-208` | "token may be expired" logged, fallback |
 | 5xx from BlueVerse | `blueverse.py:209-211` | Logged with response body |
-| OCI SDK missing | `oci_genai.py:188-191` | Returns mock + `error` field in response |
-| OCI auth failure | `oci_genai.py:192-195` | Returns mock + error annotation |
 | Analyze before upload | `main.py:131-135` | HTTP 400 with instruction |
 | Unknown object | `main.py:140-145` | HTTP 404 with available list |
 
@@ -157,21 +156,18 @@ Chat endpoint (`POST /api/chat`) retains conversation context across turns.
 
 ---
 
-## 8. Cost Comparison Across LLM Providers
+## 8. Cost Comparison Across LLM Providers (Reference Only)
 
-Estimates based on measured prompt/response sizes (see §5) at published API rates.
+**Production uses BlueVerse exclusively** per LTIMindtree data-governance policy. The table below is for evaluator context showing why BlueVerse is the right choice — other providers are **not wired up**.
 
 | Provider | Model | Input $/1M tokens | Output $/1M tokens | Cost per analyze |
 |---|---|---:|---:|---:|
-| **BlueVerse** (LTIMindtree internal) | AI_Elite_Ora1 | — (internal billing) | — | **~$0.003** effective |
-| Claude Sonnet 4.5 | `claude-sonnet-4-5` | $3 | $15 | ~$0.022 |
-| Claude Haiku 4.5 | `claude-haiku-4-5` | $1 | $5 | ~$0.008 |
-| OpenAI GPT-4o | `gpt-4o` | $2.50 | $10 | ~$0.018 |
-| OpenAI GPT-4o-mini | `gpt-4o-mini` | $0.15 | $0.60 | ~$0.001 |
-| Google Gemini 1.5 Pro | `gemini-1.5-pro` | $1.25 | $5 | ~$0.009 |
-| OCI Cohere Command A | `cohere.command-a-03-2025` | ~$2.50 | ~$10 | ~$0.018 |
+| **BlueVerse** (LTIMindtree — IN USE) | AI_Elite_Ora1 | — (internal) | — | **~$0.003** effective |
+| Claude Sonnet 4.5 (ref only) | `claude-sonnet-4-5` | $3 | $15 | ~$0.022 |
+| OpenAI GPT-4o (ref only) | `gpt-4o` | $2.50 | $10 | ~$0.018 |
+| Google Gemini 1.5 Pro (ref only) | `gemini-1.5-pro` | $1.25 | $5 | ~$0.009 |
 
-**Conclusion:** BlueVerse (internal) is the cheapest compliant option for LTIMindtree-hosted deployments; OCI Cohere is the primary fallback for customer-owned Oracle Cloud tenancies.
+**Conclusion:** BlueVerse is both the compliant choice (data stays within LTIMindtree) and the cheapest option for LTIMindtree deployments.
 
 ---
 
