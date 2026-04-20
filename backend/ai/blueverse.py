@@ -170,11 +170,12 @@ async def call_blueverse(question: str) -> str | None:
                         len(prompt), estimate_tokens(prompt), MAX_PROMPT_CHARS)
         prompt = prompt[:MAX_PROMPT_CHARS] + "\n\n[Truncated for token optimization]"
 
-    # BlueVerse Foundry expects snake_case field names (flow_id, not flowId)
+    # BlueVerse Foundry payload: snake_case `flow_id` and field name is `query`
+    # (API error "'query' field should not be empty in payload" confirms the shape)
     payload = {
         "space_name": BLUEVERSE_SPACE,
         "flow_id": BLUEVERSE_FLOW_ID,
-        "question": prompt,
+        "query": prompt,
     }
 
     headers = {"Authorization": f"Bearer {token}"}
