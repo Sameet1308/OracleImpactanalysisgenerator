@@ -122,6 +122,21 @@ Falls back to mock mode automatically if OCI is unreachable (30s timeout).
 └── render.yaml                 # Render deployment config
 ```
 
+## Submission Package (Pythia-26)
+
+All hackathon checklist items are mapped to evidence in [SUBMISSION.md](SUBMISSION.md).
+
+| Area | Document |
+|---|---|
+| Submission checklist → evidence | [SUBMISSION.md](SUBMISSION.md) |
+| Test scenarios, edge cases, accuracy, performance, cost comparison | [docs/TESTING.md](docs/TESTING.md) |
+| API reference | [docs/API.md](docs/API.md) |
+| Deployment, scalability, monitoring | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
+| Known limitations, assumptions, data sources | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) |
+| Use-case KPIs & ROI | [docs/KPI.md](docs/KPI.md) |
+| Demo guide | [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) |
+| Session/change log | [CHANGELOG.md](CHANGELOG.md) |
+
 ## Team
 
 | Name | Role | ID |
