@@ -164,5 +164,5 @@
   <text x="50" y="672" fill="#484f58" font-size="8">No LangChain. No LangGraph. No guardrails. No agent framework. Just a clean pipeline: parse → graph → embed → analyze → show.</text>
 
   <!-- Bottom credit -->
-  <text x="1020" y="672" fill="#30363d" font-size="8">Team: Sameet, Pranali, Suraj</text>
+  <text x="1020" y="672" fill="#30363d" font-size="8">Team: Sameet, Rahul, Suraj, Arpan</text>
 </svg>

@@ -1,6 +1,6 @@
 # Pythia-26 Submission Package
 
-**Team:** Sameet Dandawate (Lead) • Pranali (10842412) • Suraj (10842302)
+**Team:** Sameet Dandawate (Lead) • Rahul Chavan • Suraj Anil Chaudhari • Arpan Yeole
 **Project:** Impact Analysis Generator for Oracle ERP
 **Repo:** https://github.com/Sameet1308/OracleImpactanalysisgenerator
 **Date:** 2026-04-19
@@ -107,7 +107,7 @@ Baseline result to expect: analyze **`EMPLOYEES`** → **Risk 82, CRITICAL, 6+ d
 | Submission email | *To be sent with team name, use-case #, repo link* |
 | Demo slot | *Confirmed per team coordination* |
 | Team notified of demo time | *Yes* |
-| Backup contact | Sameet → Pranali → Suraj |
+| Backup contact | Sameet → Rahul → Suraj → Arpan |
 
 ---
 
@@ -116,8 +116,9 @@ Baseline result to expect: analyze **`EMPLOYEES`** → **Risk 82, CRITICAL, 6+ d
 | Member | Role | Contributions |
 |---|---|---|
 | **Sameet Dandawate** | Lead | Architecture, BlueVerse integration, RAG pipeline, API design, prompt engineering, token/cost optimisation, UI/UX, hackathon materials |
-| **Pranali** (10842412) | Developer | Parser implementation (SQL/OIC/BIP/Groovy), graph engine risk-scoring formula, test scenarios |
-| **Suraj** (10842302) | Developer | Frontend D3.js visualisation, dashboard layout, mockups, demo preparation, PDF report generation |
+| **Rahul Chavan** | Developer | Parser implementation (SQL/OIC/BIP/Groovy), graph engine risk-scoring formula, test scenarios |
+| **Suraj Anil Chaudhari** | Developer | Frontend D3.js visualisation, dashboard layout, mockups, demo preparation |
+| **Arpan Yeole** | Developer | PDF report generation, documentation, Oracle context curation, Q&A preparation |
 
 ---
 

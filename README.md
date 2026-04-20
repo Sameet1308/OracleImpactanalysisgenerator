@@ -143,8 +143,9 @@ All hackathon checklist items are mapped to evidence in [SUBMISSION.md](SUBMISSI
 
 ## Team
 
-| Name | Role | ID |
-|------|------|----|
-| Sameet | Lead | — |
-| Pranali | Developer | 10842412 |
-| Suraj | Developer | 10842302 |
+| Name | Role |
+|------|------|
+| Sameet Dandawate | Lead |
+| Rahul Chavan | Developer |
+| Suraj Anil Chaudhari | Developer |
+| Arpan Yeole | Developer |
