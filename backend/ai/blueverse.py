@@ -96,6 +96,14 @@ _usage_stats = {
     "hallucination_flags": 0,
 }
 
+# Last BlueVerse error — surfaced by /api/test-blueverse so the UI sees the real reason
+_last_error: dict = {}
+
+
+def get_last_error() -> dict:
+    """Return the most recent BlueVerse call error (empty if last call succeeded)."""
+    return dict(_last_error)
+
 # Known valid ORA error codes (subset for hallucination check)
 VALID_ORA_CODES = {
     "ORA-00001", "ORA-00904", "ORA-00942", "ORA-01400", "ORA-01422",
@@ -162,9 +170,10 @@ async def call_blueverse(question: str) -> str | None:
                         len(prompt), estimate_tokens(prompt), MAX_PROMPT_CHARS)
         prompt = prompt[:MAX_PROMPT_CHARS] + "\n\n[Truncated for token optimization]"
 
+    # BlueVerse Foundry expects snake_case field names (flow_id, not flowId)
     payload = {
         "space_name": BLUEVERSE_SPACE,
-        "flowId": BLUEVERSE_FLOW_ID,
+        "flow_id": BLUEVERSE_FLOW_ID,
         "question": prompt,
     }
 
@@ -172,6 +181,7 @@ async def call_blueverse(question: str) -> str | None:
 
     _usage_stats["total_calls"] += 1
     _usage_stats["total_prompt_chars"] += len(prompt)
+    _last_error.clear()
 
     try:
         start_ms = time.time() * 1000
@@ -213,16 +223,30 @@ async def call_blueverse(question: str) -> str | None:
 
     except httpx.TimeoutException:
         _usage_stats["failed_calls"] += 1
+        _last_error.update({"kind": "timeout", "timeout_seconds": BLUEVERSE_TIMEOUT,
+                            "message": f"Request timed out after {BLUEVERSE_TIMEOUT}s"})
         logger.warning("BlueVerse API timed out after %ds", BLUEVERSE_TIMEOUT)
         return None
     except httpx.HTTPStatusError as e:
         _usage_stats["failed_calls"] += 1
+        body_text = e.response.text[:500] if e.response is not None else ""
+        _last_error.update({
+            "kind": "http_error",
+            "status_code": e.response.status_code,
+            "body": body_text,
+            "message": (
+                "Token rejected (401) — likely expired or wrong issuer"
+                if e.response.status_code == 401
+                else f"HTTP {e.response.status_code}: {body_text[:200]}"
+            ),
+        })
         if e.response.status_code == 401:
             logger.warning("BlueVerse token rejected (401) — token may be expired")
         else:
-            logger.warning("BlueVerse API HTTP error %s: %s", e.response.status_code, e.response.text[:200])
+            logger.warning("BlueVerse API HTTP error %s: %s", e.response.status_code, body_text)
         return None
     except Exception as e:
         _usage_stats["failed_calls"] += 1
+        _last_error.update({"kind": "exception", "error_type": type(e).__name__, "message": str(e)})
         logger.warning("BlueVerse API call failed: %s", str(e))
         return None

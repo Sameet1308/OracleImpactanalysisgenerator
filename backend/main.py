@@ -277,7 +277,7 @@ async def test_blueverse():
     Use this if the chat/analyze looks stale — it surfaces token, network,
     HTTP, and response-shape issues in a single call.
     """
-    from ai.blueverse import _token_state, call_blueverse, BLUEVERSE_URL, BLUEVERSE_SPACE, BLUEVERSE_FLOW_ID
+    from ai.blueverse import _token_state, call_blueverse, get_last_error, BLUEVERSE_URL, BLUEVERSE_SPACE, BLUEVERSE_FLOW_ID
     import time as _time
 
     token = _token_state.get("token", "")
@@ -313,11 +313,17 @@ async def test_blueverse():
             report["response_preview"] = response[:500]
             report["response_length"] = len(response)
         else:
+            err = get_last_error()
             report["result"] = "error"
-            report["message"] = (
-                "BlueVerse call returned None. Check backend terminal for HTTP error "
-                "(401 = bad token, 403 = permission, 404 = wrong flow_id, 5xx = service issue)."
-            )
+            report["last_error"] = err
+            if err.get("kind") == "http_error":
+                report["message"] = f"BlueVerse returned HTTP {err.get('status_code')}: {err.get('message','')}"
+            elif err.get("kind") == "timeout":
+                report["message"] = err.get("message", "Request timed out")
+            elif err.get("kind") == "exception":
+                report["message"] = f"{err.get('error_type','Error')}: {err.get('message','')}"
+            else:
+                report["message"] = "BlueVerse call returned None — check backend logs."
     except Exception as e:
         report["result"] = "exception"
         report["error_type"] = type(e).__name__
