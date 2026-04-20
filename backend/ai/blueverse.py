@@ -42,15 +42,28 @@ def _decode_jwt_exp(token: str) -> int:
 
 
 def update_token(token: str) -> dict:
-    """Update the BlueVerse token at runtime. Returns token status."""
-    _token_state["token"] = token
-    exp = _decode_jwt_exp(token)
+    """Update the BlueVerse token at runtime. Returns token status.
+
+    Accepts raw JWT or a value prefixed with 'Bearer '. Whitespace and newlines
+    from paste are stripped.
+    """
+    if not token:
+        return {"status": "no_token", "expires_in_minutes": 0, "expires_at": "unknown"}
+    cleaned = token.strip()
+    if cleaned.lower().startswith("bearer "):
+        cleaned = cleaned[7:].strip()
+    # Some pastes leave surrounding quotes or newlines
+    cleaned = cleaned.strip('"').strip("'").replace("\n", "").replace("\r", "").strip()
+    _token_state["token"] = cleaned
+    exp = _decode_jwt_exp(cleaned)
     _token_state["expires_at"] = exp
     remaining = exp - time.time() if exp else 0
     return {
         "status": "valid" if remaining > 0 else "expired",
         "expires_in_minutes": round(remaining / 60, 1) if remaining > 0 else 0,
         "expires_at": time.ctime(exp) if exp else "unknown",
+        "token_length": len(cleaned),
+        "token_prefix": cleaned[:24] + "..." if len(cleaned) > 24 else cleaned,
     }
 
 

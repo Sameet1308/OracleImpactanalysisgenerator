@@ -59,13 +59,18 @@ const CONNECTORS = [
   { id: "hcm", name: "HCM / ERP Cloud", desc: "Groovy & fast formulas", color: "#7B1FA2", active: false },
   { id: "fusion", name: "Fusion Apps", desc: "OTBI & ESS jobs", color: "#1565C0", active: false },
   { id: "upload", name: "Upload Files", desc: ".sql .xml .groovy", color: "#2E7D32", active: true },
-  { id: "demo", name: "Load Demo", desc: "25 objects, 34 edges", color: "#F57F17", active: true },
 ];
 
 export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loading }: Props) {
   const [tokenStatus, setTokenStatus] = useState<TokenStatus>({ status: "unknown" });
   const [tokenInput, setTokenInput] = useState("");
   const [tokenSaving, setTokenSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testResult, setTestResult] = useState<null | {
+    ok: boolean;
+    text: string;
+    detail?: string;
+  }>(null);
   const [showDbModal, setShowDbModal] = useState(false);
   const [dbForm, setDbForm] = useState({ host: "", port: "1521", sid: "", user: "", pass: "" });
   const [dbStatus, setDbStatus] = useState<"idle" | "testing" | "connected">("idle");
@@ -86,16 +91,52 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
   async function saveToken() {
     if (!tokenInput.trim()) return;
     setTokenSaving(true);
+    setTestResult(null);
     try {
-      await fetch(`${API_BASE}/api/token`, {
+      const saveRes = await fetch(`${API_BASE}/api/token`, {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: tokenInput.trim() }),
       });
+      const saved = await saveRes.json();
       setTokenInput("");
       const res = await fetch(`${API_BASE}/api/token/status`);
       setTokenStatus(await res.json());
-    } catch { /* ignore */ }
+      if (saved.status === "valid") {
+        setTestResult({ ok: true, text: `Token saved — valid for ${Math.round(saved.expires_in_minutes || 0)} min. Click 'Test AI' to confirm the agent responds.` });
+      } else if (saved.status === "expired") {
+        setTestResult({ ok: false, text: "Token parsed but is already expired. Get a fresher JWT.", detail: `Expires: ${saved.expires_at}` });
+      } else {
+        setTestResult({ ok: false, text: "Token could not be parsed as a JWT. Paste the full token (no 'Bearer ' prefix needed)." });
+      }
+    } catch (err) {
+      setTestResult({ ok: false, text: `Save failed: ${err}` });
+    }
     setTokenSaving(false);
+  }
+
+  async function testAgent() {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/test-blueverse`, { method: "POST" });
+      const data = await res.json();
+      if (data.result === "success") {
+        setTestResult({
+          ok: true,
+          text: `✓ BlueVerse agent responded in ${data.latency_ms}ms`,
+          detail: data.response_preview,
+        });
+      } else if (data.result === "error") {
+        setTestResult({ ok: false, text: `✗ ${data.message}`, detail: data.token_status?.expires_at ? `Expires: ${data.token_status.expires_at}` : undefined });
+      } else if (data.result === "exception") {
+        setTestResult({ ok: false, text: `✗ ${data.error_type}: ${data.error}` });
+      } else {
+        setTestResult({ ok: false, text: `Unexpected result: ${JSON.stringify(data).slice(0, 200)}` });
+      }
+    } catch (err) {
+      setTestResult({ ok: false, text: `✗ Network error: ${err}` });
+    }
+    setTesting(false);
   }
 
   function handleTileClick(id: string) {
@@ -158,7 +199,26 @@ export default function ConnectorTiles({ onConnect, onUpload, onLoadDemo, loadin
         <button className="ct-token-btn" onClick={saveToken} disabled={tokenSaving || !tokenInput.trim()}>
           {tokenSaving ? "..." : "Save"}
         </button>
+        <button className="ct-token-btn" style={{ marginLeft: 4 }} onClick={testAgent} disabled={testing} title="Send a ping to BlueVerse and verify the agent responds">
+          {testing ? "..." : "Test AI"}
+        </button>
       </div>
+
+      {testResult && (
+        <div style={{
+          marginTop: 6,
+          padding: "8px 10px",
+          borderRadius: 6,
+          background: testResult.ok ? "#ecfdf5" : "#fef2f2",
+          border: `1px solid ${testResult.ok ? "#a7f3d0" : "#fecaca"}`,
+          fontSize: 12,
+          lineHeight: 1.35,
+          color: testResult.ok ? "#065f46" : "#991b1b",
+        }}>
+          <div style={{ fontWeight: 600 }}>{testResult.text}</div>
+          {testResult.detail && <div style={{ marginTop: 4, fontWeight: 400, opacity: 0.8 }}>{testResult.detail}</div>}
+        </div>
+      )}
 
       <input ref={fileRef} type="file" multiple accept=".sql,.xml,.groovy,.pls,.pkb,.pks" style={{ display: "none" }} onChange={(e) => e.target.files && onUpload(e.target.files)} />
 
