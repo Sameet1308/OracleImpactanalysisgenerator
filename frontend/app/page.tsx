@@ -25,6 +25,27 @@ type ImpactResult = {
   };
 };
 
+type ColumnInfo = { name: string; type: string };
+type ColumnImpactItem = {
+  name: string;
+  type: string;
+  file?: string;
+  relationship?: string;
+  columns_referenced?: string[];
+};
+type ColumnAnalysis = {
+  object_name: string;
+  object_type: string;
+  column_name: string;
+  found: boolean;
+  confirmed_impact: ColumnImpactItem[];
+  possible_impact: ColumnImpactItem[];
+  confirmed_count: number;
+  possible_count: number;
+  columns_on_table: string[];
+  note?: string;
+};
+
 type GraphJson = { nodes: DepNode[]; edges: DepEdge[]; node_count?: number; edge_count?: number };
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
@@ -101,6 +122,10 @@ export default function Home() {
   const [indirectNodes, setIndirectNodes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [graphStats, setGraphStats] = useState({ nodes: 0, edges: 0 });
+  const [columns, setColumns] = useState<ColumnInfo[]>([]);
+  const [selectedColumn, setSelectedColumn] = useState("");
+  const [columnAnalysis, setColumnAnalysis] = useState<ColumnAnalysis | null>(null);
+  const [showColumnModal, setShowColumnModal] = useState(false);
   const graphContainerRef = useRef<HTMLDivElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const d3Ref = useRef<{ node: any; link: any; edgeLabel: any; edges: DepEdge[] } | null>(null);
@@ -212,6 +237,45 @@ export default function Home() {
     } catch (err) {
       console.error(err);
       setStatus(`Analysis failed: ${err}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function fetchColumns(objectName: string) {
+    try {
+      const obj = objects.find((o) => o.name === objectName);
+      if (!obj || (obj.type || "").toUpperCase() !== "TABLE") {
+        setColumns([]);
+        setSelectedColumn("");
+        return;
+      }
+      const data = await apiGet(`/api/columns/${encodeURIComponent(objectName)}`);
+      setColumns(data.columns || []);
+      setSelectedColumn("");
+    } catch {
+      setColumns([]);
+      setSelectedColumn("");
+    }
+  }
+
+  async function analyzeColumn() {
+    if (!selected || !selectedColumn) {
+      setStatus("Select a table and column first.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res: ColumnAnalysis = await apiPost("/api/analyze-column", {
+        object_name: selected,
+        column_name: selectedColumn,
+      });
+      setColumnAnalysis(res);
+      setShowColumnModal(true);
+      setStatus(`Column impact: ${res.confirmed_count} confirmed + ${res.possible_count} possible for ${selected}.${selectedColumn}`);
+    } catch (err) {
+      console.error(err);
+      setStatus(`Column analysis failed: ${err}`);
     } finally {
       setLoading(false);
     }
@@ -617,6 +681,17 @@ export default function Home() {
     renderGraph();
   }, [graphData, targetNode, directNodes, indirectNodes, showFiltered]);
 
+  // When user picks a new object, fetch its columns (if it's a TABLE)
+  useEffect(() => {
+    if (selected) {
+      fetchColumns(selected);
+    } else {
+      setColumns([]);
+      setSelectedColumn("");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected, objects]);
+
   function renderAnalysisTabs() {
     if (!analysis) return null;
     return (
@@ -671,6 +746,33 @@ export default function Home() {
             </select>
           </div>
           <button className="tb-btn primary" onClick={analyzeImpact} disabled={!objects.length || loading}>Analyze</button>
+          {columns.length > 0 && (
+            <>
+              <div className="tb-select" style={{ marginLeft: 8 }}>
+                <select
+                  id="column-select"
+                  value={selectedColumn}
+                  onChange={(e) => setSelectedColumn(e.target.value)}
+                  title="Column-level impact — only available for TABLE objects"
+                >
+                  <option value="">Column (for column-level analysis)…</option>
+                  {columns.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name} ({c.type})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                className="tb-btn outline"
+                onClick={analyzeColumn}
+                disabled={!selectedColumn || loading}
+                title="Show which downstream objects reference this specific column"
+              >
+                Column Impact
+              </button>
+            </>
+          )}
           <button className="tb-btn outline" onClick={downloadPDF} disabled={!selected || loading}>Export PDF</button>
           <div className="tb-spacer"></div>
           <button className="tb-btn outline" onClick={toggleFiltered}>{showFiltered ? 'Show All' : 'Impact Only'}</button>
@@ -761,6 +863,122 @@ export default function Home() {
                     <h4>Rollback Plan</h4>
                     <ol>{analysis.ai_analysis.rollback_plan.map((item, idx) => <li key={idx}>{item}</li>)}</ol>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Column-Level Impact Modal */}
+          {showColumnModal && columnAnalysis && (
+            <div className="analysis-modal-backdrop" onClick={() => setShowColumnModal(false)}>
+              <div className="analysis-modal" onClick={(e) => e.stopPropagation()}>
+                <div className="am-header">
+                  <div>
+                    <h2>Column-Level Impact Analysis</h2>
+                    <span className="am-object">
+                      {columnAnalysis.object_name}.<strong>{columnAnalysis.column_name}</strong>
+                    </span>
+                  </div>
+                  <div className="am-actions">
+                    <button className="am-close" onClick={() => setShowColumnModal(false)}>&times;</button>
+                  </div>
+                </div>
+
+                <div className="am-summary">
+                  <div className="am-score" style={{ borderColor: "#dc2626" }}>
+                    <div className="am-score-num">{columnAnalysis.confirmed_count}</div>
+                    <div className="am-score-label">Confirmed</div>
+                  </div>
+                  <div className="am-stat"><strong>{columnAnalysis.possible_count}</strong> Possible</div>
+                  <div className="am-stat"><strong>{columnAnalysis.columns_on_table.length}</strong> Columns on table</div>
+                  <div className="am-stat"><strong>{columnAnalysis.object_type}</strong></div>
+                </div>
+
+                <div className="am-body">
+                  <div className="pr-section">
+                    <h4 style={{ color: "#dc2626" }}>
+                      ✓ Confirmed Impact ({columnAnalysis.confirmed_count})
+                    </h4>
+                    <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+                      Dependents whose SQL explicitly references <code>{columnAnalysis.column_name}</code>.
+                    </p>
+                    {columnAnalysis.confirmed_impact.length === 0 ? (
+                      <p style={{ color: "#16a34a", fontWeight: 500 }}>
+                        ✓ No downstream object directly projects this column — safe to change its internals.
+                      </p>
+                    ) : (
+                      <ul style={{ listStyle: "none", padding: 0 }}>
+                        {columnAnalysis.confirmed_impact.map((o, idx) => (
+                          <li key={idx} style={{
+                            border: "1px solid #fee2e2",
+                            background: "#fef2f2",
+                            borderRadius: 6,
+                            padding: "8px 12px",
+                            marginBottom: 6,
+                          }}>
+                            <div style={{ fontWeight: 600 }}>
+                              {o.name} <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 400 }}>({o.type})</span>
+                            </div>
+                            {o.relationship && (
+                              <div style={{ fontSize: 12, color: "#9ca3af" }}>via {o.relationship}</div>
+                            )}
+                            {o.columns_referenced && o.columns_referenced.length > 0 && (
+                              <div style={{ fontSize: 12, color: "#4b5563", marginTop: 4 }}>
+                                Columns used: {o.columns_referenced.map((c) => (
+                                  <span key={c} style={{
+                                    display: "inline-block",
+                                    background: c === columnAnalysis.column_name ? "#fca5a5" : "#e5e7eb",
+                                    color: c === columnAnalysis.column_name ? "#7f1d1d" : "#374151",
+                                    padding: "1px 6px",
+                                    borderRadius: 3,
+                                    marginRight: 4,
+                                    fontWeight: c === columnAnalysis.column_name ? 600 : 400,
+                                  }}>{c}</span>
+                                ))}
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div className="pr-section">
+                    <h4 style={{ color: "#d97706" }}>
+                      ? Possible Impact ({columnAnalysis.possible_count})
+                    </h4>
+                    <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 8 }}>
+                      Dependents without column-level metadata (typically OIC flows, BIP reports, Groovy scripts, procedure bodies without qualified refs). Verify manually.
+                    </p>
+                    {columnAnalysis.possible_impact.length === 0 ? (
+                      <p style={{ color: "#6b7280" }}>None.</p>
+                    ) : (
+                      <ul style={{ listStyle: "none", padding: 0 }}>
+                        {columnAnalysis.possible_impact.map((o, idx) => (
+                          <li key={idx} style={{
+                            border: "1px solid #fef3c7",
+                            background: "#fffbeb",
+                            borderRadius: 6,
+                            padding: "8px 12px",
+                            marginBottom: 6,
+                          }}>
+                            <div style={{ fontWeight: 600 }}>
+                              {o.name} <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 400 }}>({o.type})</span>
+                            </div>
+                            {o.relationship && (
+                              <div style={{ fontSize: 12, color: "#9ca3af" }}>via {o.relationship}</div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  {columnAnalysis.note && (
+                    <div className="pr-section" style={{ fontSize: 12, color: "#6b7280", fontStyle: "italic" }}>
+                      {columnAnalysis.note}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
