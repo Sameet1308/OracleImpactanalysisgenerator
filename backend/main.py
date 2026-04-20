@@ -340,13 +340,109 @@ async def chat(request: ChatRequest):
     if response_text:
         return {"response": response_text, "mode": "blueverse"}
 
-    # Mock fallback
-    obj_name = request.object_name or "the selected object"
-    mock_response = (f"Based on the impact analysis of {obj_name}, I can help you understand the dependencies. "
-                     f"The object has cross-artifact dependencies that may affect downstream views, procedures, "
-                     f"and integrations. Please provide more specific questions about the root cause, "
-                     f"testing requirements, or rollback procedures, and I'll give you detailed guidance.")
-    return {"response": mock_response, "mode": "mock"}
+    # Mock fallback — keyword-routed so the bot doesn't parrot the same line
+    msg = (request.message or "").strip().lower()
+    obj_name = request.object_name or None
+
+    # Greetings
+    if any(msg.startswith(g) for g in ("hi", "hello", "hey", "yo ", "yo,", "namaste", "good morning", "good afternoon", "good evening")):
+        if obj_name and graph.has_object(obj_name):
+            impact = graph.compute_impact(obj_name)
+            return {"response": (
+                f"Hi! I'm Pythia, your Oracle ERP impact analysis assistant. "
+                f"You've selected {obj_name} — risk {impact.get('risk_score','?')}/100 "
+                f"({impact.get('severity','?')}), {len(impact.get('direct_impact',[]))} direct "
+                f"and {len(impact.get('indirect_impact',[]))} indirect impacts. "
+                f"Ask me about root cause, testing, rollback, or specific dependents."
+            ), "mode": "mock"}
+        return {"response": (
+            "Hi! I'm Pythia, your Oracle ERP impact analysis assistant. "
+            "Pick an object in the graph and ask me about its blast radius, "
+            "root cause of cascading failures, testing checklist, or rollback plan."
+        ), "mode": "mock"}
+
+    # Thanks / acknowledgements
+    if msg in ("thanks", "thank you", "ty", "thx", "ok", "okay", "got it"):
+        return {"response": "You're welcome! Anything else about the Oracle impact?", "mode": "mock"}
+
+    # Goodbye
+    if any(msg.startswith(b) for b in ("bye", "goodbye", "see you", "cya")):
+        return {"response": "Goodbye! Come back when you need another impact analysis.", "mode": "mock"}
+
+    if not obj_name or not graph.has_object(obj_name):
+        return {"response": (
+            "Select an Oracle object (table, view, procedure, OIC flow, BIP report, or Groovy script) "
+            "in the dropdown and click Analyze — then I can answer questions about its blast radius, "
+            "root cause, testing, and rollback."
+        ), "mode": "mock"}
+
+    # Object-aware keyword routing
+    impact = graph.compute_impact(obj_name)
+    severity = impact.get("severity", "UNKNOWN")
+    score = impact.get("risk_score", 0)
+    direct = [o["name"] for o in impact.get("direct_impact", [])]
+    indirect = [o["name"] for o in impact.get("indirect_impact", [])]
+
+    if any(k in msg for k in ("risk", "score", "severity", "how bad")):
+        return {"response": (
+            f"{obj_name} has risk score {score}/100 — severity {severity}. "
+            f"{len(direct)} direct impacts ({', '.join(direct[:5]) or 'none'}"
+            f"{'...' if len(direct) > 5 else ''}) and {len(indirect)} indirect impacts."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("rollback", "revert", "undo")):
+        return {"response": (
+            f"Rollback plan for {obj_name}: 1) Restore DDL from DBMS_METADATA.GET_DDL snapshot. "
+            f"2) Recompile the {len(direct) + len(indirect)} dependent objects in dependency order. "
+            f"3) Roll back OIC flow versions. 4) Re-publish BIP report templates from backup. "
+            f"5) Validate end-to-end against the pre-change test suite."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("test", "testing", "checklist", "verify")):
+        return {"response": (
+            f"Test checklist for {obj_name}: recompile dependent PL/SQL (check ORA-04021), "
+            f"SELECT on every dependent view (check ORA-00942/00904), run OIC integration flows "
+            f"in test mode, regenerate BIP reports in all formats, and execute Groovy scripts in sandbox."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("root cause", "why", "cascad", "break")):
+        return {"response": (
+            f"Root cause: {obj_name} is referenced by {len(direct)} direct and "
+            f"{len(indirect)} transitive objects across multiple artifact types. "
+            f"Modifying it cascades because dependent views compile against its column definitions, "
+            f"procedures reference its fields in DML, and OIC/BIP/Groovy are tightly coupled to its schema."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("oic", "integration", "flow")):
+        oic = [n for n in (direct + indirect) if "FLOW" in n or "OIC" in n or "SYNC" in n]
+        return {"response": (
+            f"OIC flows impacted by {obj_name}: {', '.join(oic) if oic else 'none in the current graph'}. "
+            f"For each, pause scheduled runs, update connection mappings, test with sample payload, then re-enable."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("bip", "report")):
+        bip = [n for n in (direct + indirect) if "REPORT" in n or "BIP" in n or "PAYROLL" in n]
+        return {"response": (
+            f"BIP reports impacted by {obj_name}: {', '.join(bip) if bip else 'none in the current graph'}. "
+            f"Regenerate data models and verify SQL queries still execute against the modified schema."
+        ), "mode": "mock"}
+
+    if any(k in msg for k in ("column", "field")):
+        cols = [c["name"] for c in graph.get_columns(obj_name)] if obj_name else []
+        if cols:
+            return {"response": (
+                f"{obj_name} has {len(cols)} columns: {', '.join(cols[:10])}"
+                f"{'...' if len(cols) > 10 else ''}. Use the Column Impact button to see which "
+                f"downstream objects reference a specific column."
+            ), "mode": "mock"}
+
+    # Default — but reference the actual data
+    return {"response": (
+        f"I can tell you about {obj_name} — risk {score}/100 ({severity}), "
+        f"{len(direct)} direct and {len(indirect)} indirect impacts. "
+        f"Try asking: 'what's the rollback plan?', 'what tests should I run?', "
+        f"'why does this cascade?', 'which OIC flows break?', or 'what columns does it have?'."
+    ), "mode": "mock"}
 
 
 @app.get("/api/knowledge/status")
