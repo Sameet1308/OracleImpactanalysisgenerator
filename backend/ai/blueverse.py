@@ -170,12 +170,16 @@ async def call_blueverse(question: str) -> str | None:
                         len(prompt), estimate_tokens(prompt), MAX_PROMPT_CHARS)
         prompt = prompt[:MAX_PROMPT_CHARS] + "\n\n[Truncated for token optimization]"
 
-    # BlueVerse Foundry payload: snake_case `flow_id` and field name is `query`
-    # (API error "'query' field should not be empty in payload" confirms the shape)
+    # BlueVerse Foundry payload — exactly matching the canonical curl spec:
+    #   curl -X POST .../chatservice/chat
+    #     -H 'Authorization: Bearer <jwt>'
+    #     -d '{"query":"...","space_name":"...","flowId":"..."}'
+    # Note the inconsistency: request uses flowId (camelCase) while the response
+    # schema echoes flow_id (snake_case) — don't be misled by the response body.
     payload = {
-        "space_name": BLUEVERSE_SPACE,
-        "flow_id": BLUEVERSE_FLOW_ID,
         "query": prompt,
+        "space_name": BLUEVERSE_SPACE,
+        "flowId": BLUEVERSE_FLOW_ID,
     }
 
     headers = {"Authorization": f"Bearer {token}"}
