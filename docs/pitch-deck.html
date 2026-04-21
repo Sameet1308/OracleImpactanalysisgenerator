@@ -507,15 +507,15 @@
                     <text x="530" y="195" fill="#6B7280" font-size="9" text-anchor="middle">FastAPI &middot; auto-scale 2&ndash;10</text>
                     <text x="530" y="207" fill="#6B7280" font-size="9" text-anchor="middle">0.5 vCPU / 1 GB &middot; Spot (staging)</text>
 
-                    <!-- API internal arrows -->
-                    <path d="M 246,130 L 354,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <!-- API internal arrows (straight horizontals) -->
+                    <path d="M 246,130 H 354" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
                     <text x="275" y="124" fill="#4B5563" font-size="10" font-style="italic">filters</text>
-                    <path d="M 406,130 L 494,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <path d="M 406,130 H 494" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
                     <text x="425" y="124" fill="#4B5563" font-size="10" font-style="italic">forwards</text>
 
-                    <!-- Users → WAF -->
-                    <path d="M 100,165 C 140,150 170,135 194,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="130" y="148" fill="#4B5563" font-size="10" font-style="italic">HTTPS</text>
+                    <!-- Users → WAF (orthogonal: right, up, right, with 6px rounded corner) -->
+                    <path d="M 100,170 H 164 Q 170,170 170,164 V 136 Q 170,130 176,130 H 194" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="132" y="162" fill="#4B5563" font-size="10" font-style="italic">HTTPS</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- DATA LAYER ICONS (x=760, y=65/135/205) -->
@@ -549,15 +549,18 @@
                     <text x="825" y="235" fill="#6B7280" font-size="9">session + hot cache</text>
                     <text x="825" y="247" fill="#6B7280" font-size="9">Serverless</text>
 
-                    <!-- ECS → Data arrows (through the API/Data gap at x=720-740) -->
-                    <path d="M 566,110 C 650,95 710,85 759,80" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="625" y="78" fill="#4B5563" font-size="10" font-style="italic">queries + RAG</text>
+                    <!-- ECS → Data: orthogonal paths through API/Data gap (x=720-740) -->
+                    <!-- Aurora: right, up, right -->
+                    <path d="M 566,110 H 719 Q 725,110 725,104 V 96 Q 725,90 731,90 H 759" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="618" y="104" fill="#4B5563" font-size="10" font-style="italic">queries + RAG</text>
 
-                    <path d="M 566,130 C 650,140 710,150 759,155" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="630" y="125" fill="#4B5563" font-size="10" font-style="italic">writes uploads</text>
+                    <!-- S3 Artifacts: right, down, right -->
+                    <path d="M 566,135 H 724 Q 730,135 730,141 V 154 Q 730,160 736,160 H 759" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="623" y="130" fill="#4B5563" font-size="10" font-style="italic">writes uploads</text>
 
-                    <path d="M 566,155 C 640,180 710,210 759,222" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="655" y="195" fill="#4B5563" font-size="10" font-style="italic">caches</text>
+                    <!-- Redis: right, down, right -->
+                    <path d="M 566,155 H 714 Q 720,155 720,161 V 224 Q 720,230 726,230 H 759" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="660" y="200" fill="#4B5563" font-size="10" font-style="italic">caches</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- FRONTEND LAYER (y=360 icons, labels at y=420-435) -->
@@ -582,9 +585,9 @@
                     <path d="M 231,385 L 289,385" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
                     <text x="248" y="379" fill="#4B5563" font-size="9" font-style="italic">serves</text>
 
-                    <!-- Users → CloudFront  (routes through Frontend zone header gap) -->
-                    <path d="M 70,215 C 75,290 130,350 179,378" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="78" y="300" fill="#4B5563" font-size="9" font-style="italic">browses</text>
+                    <!-- Users → CloudFront: orthogonal (down, right) with rounded corner -->
+                    <path d="M 65,225 V 379 Q 65,385 71,385 H 179" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="30" y="310" fill="#4B5563" font-size="9" font-style="italic">browses</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- AUTH LAYER — Cognito -->
@@ -598,9 +601,9 @@
                     <text x="445" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Cognito</text>
                     <text x="445" y="438" fill="#6B7280" font-size="9" text-anchor="middle">SAML / OIDC</text>
 
-                    <!-- ECS → Cognito (dashed "validates JWT") — routes through 30px gap at y=290-320 -->
-                    <path d="M 515,165 C 495,230 470,295 445,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
-                    <text x="445" y="283" fill="#4B5563" font-size="9" font-style="italic">validates JWT</text>
+                    <!-- ECS → Cognito (dashed): orthogonal — down, left, down — through y=290-320 gap -->
+                    <path d="M 500,165 V 294 Q 500,300 494,300 H 451 Q 445,300 445,306 V 360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
+                    <text x="455" y="220" fill="#4B5563" font-size="9" font-style="italic">validates JWT</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- MONITORING LAYER — CloudWatch · X-Ray · Secrets Mgr -->
@@ -630,17 +633,17 @@
                     <text x="945" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Secrets Mgr</text>
                     <text x="945" y="438" fill="#6B7280" font-size="9" text-anchor="middle">JWT + DB creds</text>
 
-                    <!-- CloudWatch → X-Ray (inside zone) -->
-                    <path d="M 671,385 L 769,385" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <!-- CloudWatch → X-Ray (inside zone, straight horizontal) -->
+                    <path d="M 671,385 H 769" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
                     <text x="693" y="379" fill="#4B5563" font-size="9" font-style="italic">correlates</text>
 
-                    <!-- ECS → CloudWatch (through the 30px gap) -->
-                    <path d="M 555,165 C 590,240 625,295 645,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="595" y="278" fill="#4B5563" font-size="9" font-style="italic">logs + metrics</text>
+                    <!-- ECS → CloudWatch: orthogonal — down, right, down — via y=290-320 gap -->
+                    <path d="M 545,165 V 304 Q 545,310 551,310 H 639 Q 645,310 645,316 V 360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="555" y="258" fill="#4B5563" font-size="9" font-style="italic">logs + metrics</text>
 
-                    <!-- ECS → Secrets Mgr (dashed, long route through API/Data gap) -->
-                    <path d="M 565,140 C 730,220 870,290 945,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
-                    <text x="800" y="275" fill="#4B5563" font-size="9" font-style="italic">reads creds</text>
+                    <!-- ECS → Secrets Mgr (dashed): orthogonal — right, down, right, down — via API/Data gap + y=290-320 gap -->
+                    <path d="M 565,140 H 724 Q 730,140 730,146 V 299 Q 730,305 736,305 H 939 Q 945,305 945,311 V 360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
+                    <text x="805" y="300" fill="#4B5563" font-size="9" font-style="italic">reads creds</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- EXTERNAL AI band (y=480-550) — BlueVerse positioned in the -->
@@ -656,10 +659,10 @@
                     <text x="780" y="515" fill="#991B1B" font-size="10" font-weight="600">Not used:</text>
                     <text x="780" y="530" fill="#991B1B" font-size="10" font-weight="500">Claude &middot; OpenAI &middot; Gemini &middot; AWS Bedrock</text>
 
-                    <!-- ECS → BlueVerse (red) — routes down through the 50px Auth/Monit gap at x=510-560 -->
-                    <path d="M 535,165 C 540,260 538,360 535,465 C 535,480 534,490 534,498" stroke="#DC2626" stroke-width="1.9" fill="none" marker-end="url(#arrHeadRed)"/>
-                    <text x="555" y="295" fill="#DC2626" font-size="10" font-weight="700" font-style="italic">outbound HTTPS</text>
-                    <text x="555" y="308" fill="#991B1B" font-size="9" font-style="italic">policy-gated</text>
+                    <!-- ECS → BlueVerse (red) — pure straight vertical through the 50px Auth|Monit corridor (x=510-560) -->
+                    <path d="M 534,165 V 498" stroke="#DC2626" stroke-width="2" fill="none" marker-end="url(#arrHeadRed)"/>
+                    <text x="540" y="388" fill="#DC2626" font-size="10" font-weight="700" font-style="italic">outbound HTTPS</text>
+                    <text x="540" y="401" fill="#991B1B" font-size="9" font-style="italic">policy-gated</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- LEGEND -->
