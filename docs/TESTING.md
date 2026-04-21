@@ -1,6 +1,6 @@
 # Testing & Quality Assurance
 
-**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTIMindtree)
+**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTM)
 **Last Verified:** 2026-04-19
 
 This document covers functional test scenarios, edge cases, accuracy verification, performance benchmarks, token optimization evidence, and error handling for the Impact Analysis Generator.
@@ -127,7 +127,7 @@ The AI fallback chain (BlueVerse-only policy) means **the demo never fails**:
 BlueVerse Agent  ──fail──▶  Mock (deterministic rule-based engine)
 ```
 
-Per LTIMindtree data-governance policy, third-party LLMs (Claude / OpenAI / Gemini / OCI) are **not** used as fallback. Mock is a local, deterministic engine that produces a structured 4-section analysis from the graph metadata alone — it carries no LLM data-egress risk.
+Per LTM data-governance policy, third-party LLMs (Claude / OpenAI / Gemini / OCI) are **not** used as fallback. Mock is a local, deterministic engine that produces a structured 4-section analysis from the graph metadata alone — it carries no LLM data-egress risk.
 
 Every error path is logged and returns a structured, actionable response to the UI:
 
@@ -161,16 +161,16 @@ Chat endpoint (`POST /api/chat`) retains conversation context across turns.
 
 ## 8. Cost Comparison Across LLM Providers (Reference Only)
 
-**Production uses BlueVerse exclusively** per LTIMindtree data-governance policy. The table below is for evaluator context showing why BlueVerse is the right choice — other providers are **not wired up**.
+**Production uses BlueVerse exclusively** per LTM data-governance policy. The table below is for evaluator context showing why BlueVerse is the right choice — other providers are **not wired up**.
 
 | Provider | Model | Input $/1M tokens | Output $/1M tokens | Cost per analyze |
 |---|---|---:|---:|---:|
-| **BlueVerse** (LTIMindtree — IN USE) | AI_Elite_Ora1 | — (internal) | — | **~$0.003** effective |
+| **BlueVerse** (LTM — IN USE) | AI_Elite_Ora1 | — (internal) | — | **~$0.003** effective |
 | Claude Sonnet 4.5 (ref only) | `claude-sonnet-4-5` | $3 | $15 | ~$0.022 |
 | OpenAI GPT-4o (ref only) | `gpt-4o` | $2.50 | $10 | ~$0.018 |
 | Google Gemini 1.5 Pro (ref only) | `gemini-1.5-pro` | $1.25 | $5 | ~$0.009 |
 
-**Conclusion:** BlueVerse is both the compliant choice (data stays within LTIMindtree) and the cheapest option for LTIMindtree deployments.
+**Conclusion:** BlueVerse is both the compliant choice (data stays within LTM) and the cheapest option for LTM deployments.
 
 ---
 

@@ -6,7 +6,7 @@ Two modes (checked in order):
   2. Mock (fallback): deterministic structured output — guarantees demo resilience
      when BlueVerse is unreachable or the JWT has expired.
 
-Per LTIMindtree data-governance policy, all LLM generation routes through
+Per LTM data-governance policy, all LLM generation routes through
 BlueVerse-approved models only. Third-party LLM providers are explicitly not used.
 """
 
@@ -30,7 +30,7 @@ def get_ai_mode() -> str:
 async def generate_analysis(impact_result: Dict[str, Any], code_context: list = None) -> Dict[str, Any]:
     """
     Generate AI-powered root cause analysis and fix recommendations.
-    Priority: BlueVerse agent → Mock fallback (LTIMindtree BlueVerse-only policy).
+    Priority: BlueVerse agent → Mock fallback (LTM BlueVerse-only policy).
 
     Args:
         impact_result: Impact analysis data from graph engine

@@ -1,12 +1,12 @@
 # Use Case KPIs & Business Impact
 
-**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTIMindtree)
+**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTM)
 
 ## Problem Baseline (Manual Impact Analysis Today)
 
 | Metric | Current State (Manual) | Source |
 |---|---|---|
-| Time to trace dependencies for one Oracle object | **4–8 hours** per object | LTIMindtree Oracle SME estimate |
+| Time to trace dependencies for one Oracle object | **4–8 hours** per object | LTM Oracle SME estimate |
 | Cross-artifact coverage (OIC / BIP / Groovy) | **~40 %** — `DBA_DEPENDENCIES` misses non-PL/SQL | Oracle docs confirm `DBA_DEPENDENCIES` only covers PL/SQL |
 | Production incidents due to missed dependencies | **1–2 per quarter** on a mid-size Oracle ERP rollout | Team field data |
 | Rollback documentation completeness | Usually **ad-hoc**, written under pressure after break | — |
@@ -25,7 +25,7 @@
 
 ## Quantified Value (Per-Project Estimate)
 
-For a typical LTIMindtree Oracle ERP engagement:
+For a typical LTM Oracle ERP engagement:
 
 - **~200 change requests per year** needing dependency analysis
 - Manual approach: 200 × 6 h = **1 200 engineering hours / year**

@@ -1,6 +1,6 @@
 # Known Limitations, Assumptions & Data Sources
 
-**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTIMindtree)
+**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTM)
 
 ## 1. Supported Artifact Types
 
@@ -42,7 +42,7 @@
 3. Edge direction `A → B` means "A depends on B" (A reads, references, or is affected by B).
 4. Risk scoring formula weights (52 % direct + 18 % indirect + 30 % type-criticality) are tuned on the demo dataset — may need re-tuning per customer.
 5. The LLM prompt is English-only; non-English identifiers are passed through but the generated analysis is English.
-6. BlueVerse is the sole trusted LLM endpoint (LTIMindtree BlueVerse-only policy) — we do not re-validate PII stripping on the response, only on the prompt.
+6. BlueVerse is the sole trusted LLM endpoint (LTM BlueVerse-only policy) — we do not re-validate PII stripping on the response, only on the prompt.
 7. The user running the tool has authorisation to see the dependency metadata of all uploaded artifacts — no per-object ACL.
 
 ## 4. Data Sources
@@ -54,8 +54,8 @@
 | Demo BIP XML | Hand-crafted to match BIP data-model XML | Own |
 | Demo Groovy | Hand-crafted, resembles Fusion HCM Fast Formula / compensation scripts | Own |
 | Oracle error codes | Public Oracle Database documentation (`ORA-*` codes) | Oracle docs — public |
-| Oracle artifact concepts | Oracle Fusion / OIC / BIP / HCM public documentation + LTIMindtree SME knowledge | Public + internal |
-| LLM (sole provider) | LTIMindtree-internal `AI_Elite_Ora1` agent on BlueVerse Foundry | LTIMindtree internal |
+| Oracle artifact concepts | Oracle Fusion / OIC / BIP / HCM public documentation + LTM SME knowledge | Public + internal |
+| LLM (sole provider) | LTM-internal `AI_Elite_Ora1` agent on BlueVerse Foundry | LTM internal |
 | Embedding model (RAG, local) | `sentence-transformers/all-MiniLM-L6-v2` | Apache 2.0 — runs in-process, no network |
 
 **No customer data, no PII, no production-copied artifacts** are included in this repo.

@@ -1,6 +1,6 @@
 # Impact Analysis Generator
 
-**Oracle Pythia-26 Hackathon** | LTIMindtree
+**Oracle Pythia-26 Hackathon** | LTM
 
 > Upload Oracle ERP artifacts. See every dependency. Know the blast radius before you break production.
 
@@ -84,7 +84,7 @@ Using the built-in sample artifacts (5 files: SQL, OIC XML, BIP XML, Groovy):
 
 ## AI Provider — BlueVerse-Only Policy
 
-Per LTIMindtree data-governance policy, **all LLM generation routes through BlueVerse-approved models only** — no third-party LLM providers (Claude / OpenAI / Gemini / OCI) are used.
+Per LTM data-governance policy, **all LLM generation routes through BlueVerse-approved models only** — no third-party LLM providers (Claude / OpenAI / Gemini / OCI) are used.
 
 **Chain:** BlueVerse Foundry (`AI_Elite_Ora1`) → deterministic mock fallback.
 

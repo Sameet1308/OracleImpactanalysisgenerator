@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Impact Analysis Generator** — Oracle Pythia-26 Hackathon (LTIMindtree). Team: Sameet Dandawate (lead), Rahul Chavan, Suraj Anil Chaudhari, Arpan Yeole.
+**Impact Analysis Generator** — Oracle Pythia-26 Hackathon (LTM). Team: Sameet Dandawate (lead), Rahul Chavan, Suraj Anil Chaudhari, Arpan Yeole.
 
 Solves the Oracle ERP problem of unknown cross-artifact dependencies. Upload Oracle artifacts (SQL/PL/SQL, OIC XML, BIP XML, Groovy) → tool parses every object and dependency → select any object → see full blast radius → get AI-powered root cause + fix recommendations + rollback plan.
 
@@ -49,7 +49,7 @@ frontend/index.html (D3.js) ──HTTP──▶ FastAPI :8000 ──▶ Parsers 
 
 - **Parsers** (`backend/parsers/`): sql_parser (sqlparse + regex), oic_parser (xml.etree), groovy_parser (regex). Dispatcher in `__init__.py` routes by file extension.
 - **Graph Engine** (`backend/graph/engine.py`): NetworkX DiGraph. Edge A→B means A depends on B. Impact analysis walks predecessors (reverse). Score = 52% direct + 18% indirect + 30% type criticality.
-- **AI Module** (`backend/ai/`): 2-tier chain — BlueVerse Agent → deterministic mock. BlueVerse is the sole approved LLM endpoint per LTIMindtree data-governance policy (no third-party LLMs). `blueverse.py` calls the BlueVerse Foundry REST API. `oci_genai.py` is the AI dispatcher (filename kept for import compatibility) that routes to BlueVerse or mock.
+- **AI Module** (`backend/ai/`): 2-tier chain — BlueVerse Agent → deterministic mock. BlueVerse is the sole approved LLM endpoint per LTM data-governance policy (no third-party LLMs). `blueverse.py` calls the BlueVerse Foundry REST API. `oci_genai.py` is the AI dispatcher (filename kept for import compatibility) that routes to BlueVerse or mock.
 - **Frontend**: Enterprise light theme, 3-column layout (Change Details | Dependency Graph | Impact Summary). Login → Connect → Artifacts → Dashboard flow. D3.js radial spoke graph with card-style nodes, edge labels, risk-colored connectors.
 
 ## Environment Variables

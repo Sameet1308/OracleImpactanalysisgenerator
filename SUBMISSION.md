@@ -131,7 +131,7 @@ A: `DBA_DEPENDENCIES` only tracks PL/SQL object references. It completely misses
 A: On 30 runs against demo data, 92–96 % of cited `ORA-XXXXX` codes are valid (verified against a whitelist of 25 common codes). All recommendations reference actual object names from the graph — they are grounded, not hallucinated. See [docs/TESTING.md §3](docs/TESTING.md).
 
 **Q: What if BlueVerse goes down?**
-A: Fallback to a deterministic rule-based mock engine that produces a structured 4-section analysis from graph metadata alone. Per LTIMindtree data-governance policy, no third-party LLM (Claude / OpenAI / Gemini / OCI) is used as fallback — BlueVerse is the sole approved generation endpoint. The demo never fails. See [docs/TESTING.md §6](docs/TESTING.md).
+A: Fallback to a deterministic rule-based mock engine that produces a structured 4-section analysis from graph metadata alone. Per LTM data-governance policy, no third-party LLM (Claude / OpenAI / Gemini / OCI) is used as fallback — BlueVerse is the sole approved generation endpoint. The demo never fails. See [docs/TESTING.md §6](docs/TESTING.md).
 
 **Q: How does this scale to a real Oracle ERP with thousands of objects?**
 A: Parsing is O(n); the graph is in-memory today but the engine is backed by NetworkX which can export to Neo4j / Oracle Graph Studio for enterprise scale. RAG index is ChromaDB — swap to persistent volume or pgvector on OCI ADB. See [docs/DEPLOYMENT.md §5](docs/DEPLOYMENT.md).
@@ -140,7 +140,7 @@ A: Parsing is O(n); the graph is in-memory today but the engine is backed by Net
 A: Yes, but after a PII/credential filter that redacts passwords, connection strings, tokens, API keys, and emails via regex. Prompt is also capped at 12 000 chars. See [backend/ai/oci_genai.py:63-73](backend/ai/oci_genai.py).
 
 **Q: What's the cost per analysis?**
-A: ~$0.003 per analyze call on BlueVerse (LTIMindtree internal). See [docs/KPI.md](docs/KPI.md) + [docs/TESTING.md §8](docs/TESTING.md) for comparison across Claude, GPT-4o, Gemini, OCI Cohere.
+A: ~$0.003 per analyze call on BlueVerse (LTM internal). See [docs/KPI.md](docs/KPI.md) + [docs/TESTING.md §8](docs/TESTING.md) for comparison across Claude, GPT-4o, Gemini, OCI Cohere.
 
 **Q: What Oracle products does this cover?**
 A: Today — Oracle Fusion SQL/PL/SQL, Oracle Integration Cloud (OIC), BI Publisher (BIP), and Fusion HCM Groovy. Extensible to APEX, Forms, Workflow Builder via additional parsers.

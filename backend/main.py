@@ -359,7 +359,7 @@ async def chat(request: ChatRequest):
 
     # Build context
     context_parts = []
-    context_parts.append("You are Oracle Pythia-26, an Oracle ERP impact analysis assistant built by LTIMindtree. "
+    context_parts.append("You are Oracle Pythia-26, an Oracle ERP impact analysis assistant built by LTM. "
                          "You help users understand cross-artifact dependencies, blast radius, and provide "
                          "Oracle-specific recommendations with ORA error codes. Be concise and specific.")
 

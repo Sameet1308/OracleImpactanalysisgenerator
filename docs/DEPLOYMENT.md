@@ -1,6 +1,6 @@
 # Deployment, Scalability & Operations
 
-**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTIMindtree)
+**Project:** Impact Analysis Generator — Oracle Pythia-26 (LTM)
 
 ## 1. Environments
 
@@ -8,7 +8,7 @@
 |---|---|---|
 | **Dev (local)** | Developer laptop | `http://localhost:8000` |
 | **Demo (Render)** | Hackathon judging, public demo | via [render.yaml](../render.yaml) |
-| **Client (future)** | Per-tenant LTIMindtree-hosted deployment | BlueVerse Foundry endpoints |
+| **Client (future)** | Per-tenant LTM-hosted deployment | BlueVerse Foundry endpoints |
 
 ## 2. Local Deployment
 
@@ -33,7 +33,7 @@ python main.py
 | `BLUEVERSE_TOKEN` | local JWT | demo JWT | client-tenant JWT |
 | `PORT` | 8000 | Render-assigned | 8000 |
 
-Per LTIMindtree policy, **no third-party LLM providers** (OpenAI, Anthropic, Google, OCI GenAI) are configured. BlueVerse is the sole approved LLM endpoint.
+Per LTM policy, **no third-party LLM providers** (OpenAI, Anthropic, Google, OCI GenAI) are configured. BlueVerse is the sole approved LLM endpoint.
 
 All secrets live in `.env` (git-ignored). Template in [.env.example](../.env.example).
 
