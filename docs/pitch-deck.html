@@ -22,6 +22,12 @@
             --gradient: linear-gradient(135deg, #00D4FF, #7C3AED);
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; }
+        /* When a slide's content exceeds the viewport, allow that slide to scroll internally */
+        .slide { overflow-y: auto; }
+        .slide::-webkit-scrollbar { width: 8px; }
+        .slide::-webkit-scrollbar-track { background: transparent; }
+        .slide::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        .slide::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 
         /* Slide container */
         .deck { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
@@ -416,44 +422,53 @@
     <div class="slide" data-slide="7a">
         <div class="slide-content">
             <h2>Production on AWS: <span class="gradient-text">Scalable, Cost-Efficient</span></h2>
-            <p class="subtitle">Right-sized managed services. Estimated steady-state cost: <strong>~$140-300/month</strong> for a single-tenant prod; <strong>~$50-80/month/tenant</strong> at multi-tenant scale.</p>
+            <p class="subtitle">Right-sized managed services. Steady-state: <strong>~$230/month</strong> single-tenant prod &middot; <strong>~$50-80/month/tenant</strong> at multi-tenant scale.</p>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px">
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#127760; Edge + Frontend</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>Route 53</strong> DNS &#8594; <strong>CloudFront</strong> CDN &#8594; <strong>S3</strong> (static Next.js export). Zero compute cost on frontend, global edge caching. ~$10/mo at 100 GB egress.</p>
+            <!-- AWS FLOW DIAGRAM -->
+            <div class="arch" style="margin-top:24px;margin-bottom:30px">
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--accent2)">&#128100; User Browser<br><span style="font-size:11px;color:var(--dim)">HTTPS / TLS 1.3</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#9889; Compute (API)</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>ECS Fargate</strong> + <strong>ALB</strong>. Auto-scale 2-10 tasks, 0.5 vCPU / 1 GB each. Fargate Spot for staging (70% cheaper). ~$45/mo steady state. Lambda rejected — 15-min timeout risk on large uploads.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--orange)">&#127760; Route 53<br><span style="font-size:11px;color:var(--dim)">DNS + health checks</span></div>
+                    <div class="arch-box" style="border-color:var(--orange)">&#128737; AWS WAF<br><span style="font-size:11px;color:var(--dim)">OWASP top-10 rules</span></div>
+                    <div class="arch-box" style="border-color:var(--orange)">&#127760; CloudFront<br><span style="font-size:11px;color:var(--dim)">CDN + edge cache</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#128202; Graph + RAG Store</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>Aurora PostgreSQL Serverless v2 + pgvector</strong> — <em>one DB for both</em>. Graph via recursive CTEs; RAG via pgvector. Scales 0.5-16 ACU. ~$40-150/mo. Simpler + cheaper than Neptune + OpenSearch combo.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--green)">&#128230; S3 (static)<br><span style="font-size:11px;color:var(--dim)">Next.js build output</span></div>
+                    <div class="arch-box highlight">&#9889; ALB (HTTPS)<br><span style="font-size:11px;color:var(--dim)">Listener + target group</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#128190; Artifact Storage</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>S3</strong> with Intelligent-Tiering (auto-moves cold files to IA/Glacier). Uploaded .sql/.xml/.groovy + generated PDFs. ~$2.50/mo for 100 GB. 11 nines durability.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box highlight" style="min-width:320px">&#128229; ECS Fargate (FastAPI)<br><span style="font-size:11px;color:var(--dim)">2-10 tasks &middot; 0.5 vCPU / 1 GB &middot; auto-scale on CPU + request count &middot; Fargate Spot in staging</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#128273; Identity</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>Cognito User Pool</strong> with SAML/OIDC federation for Oracle IDCS / Entra / Okta. Free up to 50K MAU. Admin-tier roles for artifact upload vs view-only for auditors.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--accent)">&#128274; Cognito<br><span style="font-size:11px;color:var(--dim)">User pool + SAML/OIDC federation (Oracle IDCS / Entra)</span></div>
+                    <div class="arch-box" style="border-color:var(--accent)">&#128202; Aurora Serverless v2<br><span style="font-size:11px;color:var(--dim)">PostgreSQL + pgvector &middot; graph via CTEs &middot; 0.5-16 ACU</span></div>
+                    <div class="arch-box" style="border-color:var(--accent)">&#128230; S3 (artifacts)<br><span style="font-size:11px;color:var(--dim)">Uploaded .sql/.xml/.groovy + generated PDFs &middot; Intelligent-Tiering</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent)">&#128257; Async + Cache</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>SQS</strong> for async parsing of large uploads (&gt; 50 files). <strong>ElastiCache Redis Serverless</strong> for hot graph queries + sessions. ~$15/mo combined.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--accent2)">&#128231; SQS<br><span style="font-size:11px;color:var(--dim)">Async parse of large uploads</span></div>
+                    <div class="arch-box" style="border-color:var(--accent2)">&#9889; ElastiCache Redis Serverless<br><span style="font-size:11px;color:var(--dim)">Hot graph queries + session</span></div>
+                    <div class="arch-box" style="border-color:var(--accent2)">&#128273; Secrets Manager<br><span style="font-size:11px;color:var(--dim)">BlueVerse JWT + DB creds &middot; Lambda rotation</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--accent2)">&#129302; LLM (External, BlueVerse-Only)</h4>
-                    <p style="font-size:13px;margin-top:8px">ECS tasks call <strong>BlueVerse Foundry</strong> via outbound HTTPS. <strong>AWS Bedrock explicitly NOT used</strong> per LTIMindtree governance. BlueVerse JWT stored in <strong>Secrets Manager</strong> with rotation via Lambda.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box highlight" style="border-color:var(--red)">&#129302; BlueVerse Foundry (external)<br><span style="font-size:11px;color:var(--dim)">LTIMindtree-hosted AI_Elite_Ora1 &middot; outbound HTTPS only &middot; AWS Bedrock explicitly NOT used (governance)</span></div>
                 </div>
-                <div class="card">
-                    <h4 style="color:var(--orange)">&#128269; Observability</h4>
-                    <p style="font-size:13px;margin-top:8px"><strong>CloudWatch Logs</strong> (14-day retention) + <strong>CloudWatch Metrics</strong> for business KPIs (analysis count, cost/call, hallucination flags) + <strong>X-Ray</strong> for request tracing. ~$15/mo.</p>
+                <div class="arch-arrow">&#9660;</div>
+                <div class="arch-row">
+                    <div class="arch-box" style="border-color:var(--dim)">&#128269; CloudWatch Logs<br><span style="font-size:11px;color:var(--dim)">14-day retention</span></div>
+                    <div class="arch-box" style="border-color:var(--dim)">&#128200; CloudWatch Metrics<br><span style="font-size:11px;color:var(--dim)">Business KPIs: cost/call, hallucinations</span></div>
+                    <div class="arch-box" style="border-color:var(--dim)">&#128269; X-Ray<br><span style="font-size:11px;color:var(--dim)">Distributed tracing</span></div>
                 </div>
             </div>
 
-            <div style="margin-top:20px;display:grid;grid-template-columns:2fr 1fr;gap:20px">
+            <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px">
                 <div class="highlight-box" style="margin:0">
                     <h4 style="color:var(--accent)">Scale-Out Path</h4>
                     <div style="font-size:12px;color:var(--dim);line-height:1.7;margin-top:8px">
