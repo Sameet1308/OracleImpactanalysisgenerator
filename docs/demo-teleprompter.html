@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demo Teleprompter — Impact Analysis Generator</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0A0E17;
+  color: #E6EDF3;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+
+/* Sticky top bar — timer + navigation */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0;
+  background: rgba(10, 14, 23, 0.95);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 24px;
+  display: flex; align-items: center; gap: 24px;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+}
+.topbar .title {
+  font-size: 15px; font-weight: 700; color: #00D4FF;
+  letter-spacing: 0.5px;
+}
+.topbar .timer {
+  font-variant-numeric: tabular-nums;
+  font-size: 22px; font-weight: 800; color: #F0F6FC;
+  padding: 4px 14px;
+  background: rgba(0, 212, 255, 0.12);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  min-width: 120px; text-align: center;
+}
+.topbar .btn {
+  background: #00D4FF;
+  color: #0A0E17;
+  border: none; padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700; font-size: 13px;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+}
+.topbar .btn.pause { background: #FFB020; }
+.topbar .btn.reset { background: #EF4444; color: white; }
+.topbar .btn:hover { opacity: 0.88; }
+.topbar .progress {
+  flex: 1;
+  height: 6px; background: rgba(255,255,255,0.08);
+  border-radius: 3px; overflow: hidden;
+}
+.topbar .progress-fill {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, #00D4FF, #7C3AED);
+  transition: width 0.3s;
+}
+.topbar .current-section {
+  font-size: 13px; color: #8B949E;
+  min-width: 240px; text-align: right;
+}
+.topbar .controls-hint {
+  font-size: 11px; color: #6E7681;
+  letter-spacing: 0.4px;
+  padding-left: 12px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+/* TOC sidebar */
+.sidebar {
+  position: fixed; top: 64px; left: 0; bottom: 0;
+  width: 240px;
+  background: rgba(13, 17, 23, 0.6);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 20px 0;
+  overflow-y: auto;
+  z-index: 50;
+}
+.toc-item {
+  display: block;
+  padding: 10px 20px;
+  color: #8B949E;
+  text-decoration: none;
+  font-size: 13px;
+  border-left: 3px solid transparent;
+  transition: all 0.15s;
+}
+.toc-item:hover { background: rgba(255,255,255,0.04); color: #E6EDF3; }
+.toc-item.active {
+  border-left-color: #00D4FF;
+  background: rgba(0, 212, 255, 0.08);
+  color: #00D4FF; font-weight: 600;
+}
+.toc-item .time {
+  font-size: 11px; color: #6E7681;
+  font-variant-numeric: tabular-nums;
+  margin-right: 8px;
+}
+
+/* Main content */
+.content {
+  margin-left: 240px;
+  margin-top: 64px;
+  padding: 60px 80px 140px;
+  max-width: 1100px;
+}
+
+section.beat {
+  margin-bottom: 80px;
+  scroll-margin-top: 90px;
+}
+section.beat .beat-header {
+  display: flex; align-items: baseline; gap: 16px;
+  margin-bottom: 28px;
+  border-bottom: 2px solid rgba(0, 212, 255, 0.25);
+  padding-bottom: 14px;
+}
+section.beat .beat-time {
+  font-size: 18px; font-weight: 800;
+  color: #00D4FF;
+  font-variant-numeric: tabular-nums;
+  background: rgba(0, 212, 255, 0.1);
+  padding: 6px 14px; border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+section.beat .beat-title {
+  font-size: 26px; font-weight: 800;
+  color: #F0F6FC;
+  letter-spacing: -0.3px;
+}
+section.beat .beat-duration {
+  margin-left: auto;
+  font-size: 13px;
+  color: #8B949E;
+}
+
+section.beat .action {
+  background: rgba(255, 176, 32, 0.1);
+  border-left: 4px solid #FFB020;
+  border-radius: 6px;
+  padding: 12px 18px;
+  margin: 14px 0;
+  font-size: 14px;
+  color: #FFB020;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  display: flex; align-items: center; gap: 10px;
+}
+section.beat .action::before {
+  content: "▶";
+  font-size: 12px;
+}
+
+section.beat blockquote {
+  font-size: 21px;
+  line-height: 1.7;
+  color: #F0F6FC;
+  padding: 24px 32px;
+  background: rgba(255,255,255,0.02);
+  border-left: 4px solid #00D4FF;
+  border-radius: 0 10px 10px 0;
+  margin: 16px 0;
+  font-weight: 400;
+}
+section.beat blockquote em {
+  color: #7C3AED; font-style: normal; font-weight: 600;
+}
+section.beat blockquote strong {
+  color: #00D4FF; font-weight: 700;
+}
+
+.pause-marker {
+  display: inline-block;
+  background: rgba(124, 58, 237, 0.2);
+  color: #A78BFA;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 2px;
+  letter-spacing: 0.3px;
+}
+
+/* Pre-flight checklist */
+.preflight {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(255, 176, 32, 0.08));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin-bottom: 50px;
+}
+.preflight h3 {
+  color: #EF4444; font-size: 18px; font-weight: 800;
+  margin-bottom: 14px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.preflight ul { list-style: none; }
+.preflight li {
+  padding: 8px 0;
+  font-size: 15px; color: #E6EDF3;
+  display: flex; align-items: center; gap: 12px;
+}
+.preflight li::before {
+  content: "□"; color: #8B949E; font-size: 20px;
+}
+.preflight li.done::before { content: "✓"; color: #22C55E; }
+.preflight kbd {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  margin: 0 4px;
+}
+
+.tips {
+  background: rgba(34, 197, 94, 0.06);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 12px;
+  padding: 24px 30px;
+  margin-top: 60px;
+}
+.tips h3 {
+  color: #22C55E; font-size: 16px; font-weight: 800;
+  margin-bottom: 14px; letter-spacing: 0.5px;
+}
+.tips li { margin: 8px 0 8px 20px; font-size: 14px; color: #D1D9E0; }
+
+.font-controls {
+  position: fixed; bottom: 20px; right: 20px;
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex; gap: 4px;
+  z-index: 50;
+}
+.font-controls button {
+  background: transparent; border: none;
+  color: #8B949E; font-size: 15px; font-weight: 700;
+  width: 34px; height: 34px; border-radius: 6px;
+  cursor: pointer;
+}
+.font-controls button:hover { background: rgba(255,255,255,0.08); color: #E6EDF3; }
+
+/* Dynamic font size class controllers */
+body.size-S section.beat blockquote { font-size: 18px; }
+body.size-L section.beat blockquote { font-size: 24px; }
+body.size-XL section.beat blockquote { font-size: 28px; line-height: 1.5; }
+
+/* Focus mode (press F) — dim everything except current section */
+body.focus section.beat:not(.active) {
+  opacity: 0.18;
+  transition: opacity 0.3s;
+}
+body.focus section.beat.active {
+  opacity: 1;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .content { margin-left: 0; padding: 40px 24px 120px; }
+  .topbar { padding: 10px 16px; gap: 12px; flex-wrap: wrap; }
+  .topbar .controls-hint { display: none; }
+  section.beat blockquote { font-size: 18px; padding: 18px 22px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="title">Demo Teleprompter</span>
+  <span class="timer" id="timer">00:00 / 07:30</span>
+  <button class="btn" id="startBtn" onclick="toggleTimer()">▶ Start</button>
+  <button class="btn reset" onclick="resetTimer()">Reset</button>
+  <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="current-section" id="currentSection">Beat: —</span>
+  <span class="controls-hint"><kbd>Space</kbd> timer · <kbd>F</kbd> focus · <kbd>J/K</kbd> next/prev</span>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <a class="toc-item active" href="#b0" data-beat="0"><span class="time">0:00</span>Opening</a>
+  <a class="toc-item" href="#b1" data-beat="1"><span class="time">0:35</span>Problem + Solution</a>
+  <a class="toc-item" href="#b2" data-beat="2"><span class="time">1:15</span>Upload & Graph</a>
+  <a class="toc-item" href="#b3" data-beat="3"><span class="time">2:05</span>Object Impact</a>
+  <a class="toc-item" href="#b4" data-beat="4"><span class="time">3:10</span>Column Precision</a>
+  <a class="toc-item" href="#b5" data-beat="5"><span class="time">4:05</span>BlueVerse AI</a>
+  <a class="toc-item" href="#b6" data-beat="6"><span class="time">5:10</span>Chat + Metrics</a>
+  <a class="toc-item" href="#b7" data-beat="7"><span class="time">5:55</span>Architecture</a>
+  <a class="toc-item" href="#b8" data-beat="8"><span class="time">6:40</span>Business Impact</a>
+  <a class="toc-item" href="#b9" data-beat="9"><span class="time">7:15</span>Close</a>
+</aside>
+
+<main class="content">
+
+<div class="preflight">
+  <h3>Pre-Flight Checklist — DO THESE FIRST</h3>
+  <ul>
+    <li>Backend running at <strong>localhost:8000</strong></li>
+    <li>Frontend running at <strong>localhost:3000</strong></li>
+    <li>Grab fresh BlueVerse JWT (&lt; 5 min old)</li>
+    <li>Click AI badge → paste token → <kbd>Save &amp; Test BlueVerse</kbd> → wait for <strong>green ✓</strong></li>
+    <li>Upload all 6 files from <strong>backend/sample_artifacts/</strong> to populate graph (otherwise dropdown is blank)</li>
+    <li>After upload: analyze EMPLOYEES once to verify it returns score 97</li>
+    <li>Clear graph / reload page for a fresh recording state</li>
+    <li>Open <strong>pitch-deck.html</strong> in a second tab</li>
+    <li>Close DevTools, mute notifications, full-screen browser</li>
+    <li>Start recording (OBS / Xbox Game Bar <kbd>Win</kbd>+<kbd>G</kbd>)</li>
+  </ul>
+</div>
+
+<section class="beat active" id="b0" data-start="0" data-end="35">
+  <div class="beat-header">
+    <span class="beat-time">0:00</span>
+    <h2 class="beat-title">Opening</h2>
+    <span class="beat-duration">35 sec · on pitch-deck slide 1</span>
+  </div>
+  <blockquote>
+    Hi everyone. I'm <strong>Sameet Dandawate</strong>. Along with <strong>Rahul Chavan</strong>, <strong>Suraj Anil Chaudhari</strong>, and <strong>Arpan Yeole</strong>, our team at <strong>LTM</strong> built the <strong>Impact Analysis Generator</strong> for Oracle Pythia-26.
+    <br><br>
+    Here's the problem we're solving. If you've ever worked on an Oracle ERP project, you know the one question every developer asks before making a change — <em>"what am I going to break?"</em> Today, answering that question takes <strong>four to eight hours</strong> of manual tracing. And teams still miss things. Let me show you how we got that down to <strong>under a minute</strong>.
+  </blockquote>
+  <div class="action">click right-arrow → deck slide 2</div>
+</section>
+
+<section class="beat" id="b1" data-start="35" data-end="75">
+  <div class="beat-header">
+    <span class="beat-time">0:35</span>
+    <h2 class="beat-title">The Gap + Solution</h2>
+    <span class="beat-duration">40 sec · deck slides 2-3</span>
+  </div>
+  <blockquote>
+    Oracle ships <strong>DBA_DEPENDENCIES</strong> out of the box, but it only covers PL/SQL. It's <em>blind</em> to OIC integration flows, BI Publisher reports, and Fusion HCM Groovy scripts — which together account for <strong>more than half</strong> of the real blast radius in any modern Oracle deployment.
+    <br><br>
+    Our solution is a five-step pipeline. <strong>Ingest</strong> the artifacts. <strong>Parse</strong> every object and every dependency using four dedicated parsers. <strong>Build</strong> a live dependency graph. <strong>Score</strong> the risk. And finally, have our AI agent generate a root cause, a fix plan, testing steps, and a rollback plan. Let me show you the product.
+  </blockquote>
+  <div class="action">Alt-Tab to browser at localhost:3000/</div>
+</section>
+
+<section class="beat" id="b2" data-start="75" data-end="125">
+  <div class="beat-header">
+    <span class="beat-time">1:15</span>
+    <h2 class="beat-title">Upload &amp; Graph</h2>
+    <span class="beat-duration">50 sec · live in app</span>
+  </div>
+  <blockquote>
+    This is the app. You've logged in through LTM's SSO — we federate through Cognito. No other credentials are needed to start parsing.
+    <br><br>
+    Look at the left panel — that's your <strong>connector hub</strong>. We currently support direct Upload plus Oracle Database discovery. The greyed tiles — Integration Cloud, BI Publisher, HCM ERP Cloud, Fusion Apps — are on our <strong>roadmap</strong>. Hover any of them…
+  </blockquote>
+  <div class="action">hover over OIC tile — tooltip appears</div>
+  <blockquote>
+    …and you see what's coming. Direct REST pull from OIC. BIP catalog crawler. Fusion pod integration. For today, we'll use Upload.
+  </blockquote>
+  <div class="action">drag all 6 files from backend/sample_artifacts/ into Upload tile</div>
+  <blockquote>
+    I'm dragging in six real Oracle Fusion HR artifacts — two SQL files containing tables, views, procedures, and triggers; two OIC integration flows; one BIP payroll report; and one Groovy HCM compensation script.
+  </blockquote>
+  <div class="action">pause 2 sec on green toast</div>
+  <blockquote>
+    Artifacts added successfully. <strong>Thirty objects and fifty-three dependencies</strong> parsed in under two seconds. Each color represents a different artifact family — blue tables, cyan views, green procedures, orange OIC flows, pink BIP reports, teal Groovy. You can drag nodes around, they stay pinned. This is a live force-directed graph in D3.js.
+  </blockquote>
+</section>
+
+<section class="beat" id="b3" data-start="125" data-end="190">
+  <div class="beat-header">
+    <span class="beat-time">2:05</span>
+    <h2 class="beat-title">Object-Level Impact</h2>
+    <span class="beat-duration">65 sec · core workflow</span>
+  </div>
+  <blockquote>
+    Now the core workflow. Let's say I'm a developer and I need to modify the <strong>EMPLOYEES</strong> table. I pick it from the dropdown…
+  </blockquote>
+  <div class="action">select EMPLOYEES → click Analyze</div>
+  <blockquote>
+    …and click Analyze. Watch the graph.
+  </blockquote>
+  <span class="pause-marker">PAUSE 2 SEC — let red paths animate</span>
+  <blockquote>
+    Risk score: <strong>ninety-seven out of a hundred</strong>. Severity: <strong>CRITICAL</strong>. Nine direct impacts. Four indirect. Every red path on the graph is a dependency that would break if I change this table.
+    <br><br>
+    The scoring formula weights direct dependencies at <em>fifty-two percent</em>, indirect at <em>eighteen percent</em>, and object-type criticality at <em>thirty percent</em>. So a heavily-referenced table like EMPLOYEES lands in CRITICAL. A standalone sequence would be LOW. The number is <strong>deterministic</strong> — same input, same score, every time. Reproducible. Auditable.
+  </blockquote>
+</section>
+
+<section class="beat" id="b4" data-start="190" data-end="245">
+  <div class="beat-header">
+    <span class="beat-time">3:10</span>
+    <h2 class="beat-title">Column-Level Precision  🎯</h2>
+    <span class="beat-duration">55 sec · THE WOW MOMENT</span>
+  </div>
+  <blockquote>
+    Object-level is useful, but sometimes you're only changing one column. Watch this.
+  </blockquote>
+  <div class="action">point to the column dropdown</div>
+  <blockquote>
+    The moment I selected EMPLOYEES, a column picker appeared with all <strong>eleven columns</strong> the parser extracted, each with its Oracle data type. Let's look at SALARY.
+  </blockquote>
+  <div class="action">pick SALARY → click Column Impact</div>
+  <blockquote>
+    <strong>Three confirmed impacts</strong> — HR_EMPLOYEE_SUMMARY, PAYROLL_VIEW, EMP_DETAILS_VIEW. Each one has SALARY highlighted in red because that's the specific column it projects. Six possible impacts below — those are procedures and OIC flows where we can't confirm column-level detail. We flag them conservatively.
+    <br><br>
+    Now let's prove this isn't magic pattern-matching.
+  </blockquote>
+  <div class="action">change column to PHONE_NUMBER → click Column Impact</div>
+  <blockquote>
+    <strong>Zero confirmed impacts.</strong> Safe to change. The parser reads actual SELECT projection lists in view definitions — not table-level references. That's precision impact analysis, and <em>nothing else in the Oracle ecosystem does it</em>.
+  </blockquote>
+</section>
+
+<section class="beat" id="b5" data-start="245" data-end="310">
+  <div class="beat-header">
+    <span class="beat-time">4:05</span>
+    <h2 class="beat-title">BlueVerse AI Layer</h2>
+    <span class="beat-duration">65 sec · AI governance + grounding</span>
+  </div>
+  <div class="action">close column modal → click CRITICAL risk pill → AI modal opens</div>
+  <blockquote>
+    Now the AI. We route through <strong>BlueVerse Foundry</strong> — LTM's sanctioned AI platform. The agent we use is called <strong>AI_Elite_Ora1</strong>, Oracle-context tuned.
+    <br><br>
+    What's grounding the response is a <strong>RAG pipeline</strong>. We run ChromaDB locally inside the container using sentence-transformers — source code <em>never leaves the process</em>. Before the prompt goes to BlueVerse, a PII filter strips credentials, connection strings, JWTs, and emails via regex. We cap prompts at twelve kilobytes to prevent token bloat.
+    <br><br>
+    The agent returns four sections. <strong>Root cause</strong> — a narrative. <strong>Five fix steps</strong>, each citing real ORA error codes. <strong>Testing checklist</strong>. <strong>Five-step rollback plan</strong>. We run <em>hallucination detection</em> on every response, cross-checking ORA codes against a whitelist.
+    <br><br>
+    If BlueVerse goes down, we fall through to a <strong>deterministic local engine</strong> — zero calls to Claude, OpenAI, Gemini, or OCI. LTM BlueVerse-only policy, by design.
+  </blockquote>
+  <div class="action">click Export PDF — briefly show downloaded file</div>
+  <blockquote>
+    One click, professional PDF for the change-advisory-board ticket. Audit trail complete.
+  </blockquote>
+</section>
+
+<section class="beat" id="b6" data-start="310" data-end="355">
+  <div class="beat-header">
+    <span class="beat-time">5:10</span>
+    <h2 class="beat-title">Chat + Observability</h2>
+    <span class="beat-duration">45 sec · context retention + metrics</span>
+  </div>
+  <div class="action">click Chat tab — type: "what tests should I run?"</div>
+  <blockquote>
+    Multi-turn chat, grounded in the current analysis. The agent remembers the last <strong>six turns</strong>, keeps the impact context, and pulls top three source-code snippets via RAG. So follow-ups stay specific — not generic.
+  </blockquote>
+  <span class="pause-marker">WAIT for AI response — ~6 sec</span>
+  <div class="action">click the AI: Valid badge → Settings modal opens</div>
+  <blockquote>
+    BlueVerse JWTs live twenty-five minutes. Settings modal — paste a fresh token, click <strong>Save &amp; Test</strong>, green check means the agent responded. No server restart.
+  </blockquote>
+  <div class="action">close modal → open new tab: localhost:8000/api/usage</div>
+  <blockquote>
+    Everything's instrumented. Live token usage, average latency, hallucination flag count, and cost per analysis — <strong>three-tenths of a cent</strong> on BlueVerse. Our token optimization pass cut average prompt size by <strong>fifty percent</strong>.
+  </blockquote>
+</section>
+
+<section class="beat" id="b7" data-start="355" data-end="400">
+  <div class="beat-header">
+    <span class="beat-time">5:55</span>
+    <h2 class="beat-title">Architecture</h2>
+    <span class="beat-duration">45 sec · deck slides Arch + AWS</span>
+  </div>
+  <div class="action">Alt-Tab to pitch deck → Prototype Architecture slide</div>
+  <blockquote>
+    Under the hood — FastAPI backend, NetworkX for the graph, <strong>thirteen REST endpoints</strong>, four purpose-built parsers, ChromaDB plus MiniLM-L6-v2 for local RAG, and BlueVerse Foundry as the only LLM provider. Everything on the left runs locally; only the BlueVerse call goes out.
+  </blockquote>
+  <div class="action">flip to Production on AWS slide</div>
+  <blockquote>
+    For production on AWS — <strong>ECS Fargate</strong> behind an ALB, <strong>Aurora Serverless v2 with pgvector</strong> running both the graph and embeddings in one database, S3 for artifacts, CloudFront for static delivery, Cognito for federation, CloudWatch and X-Ray for observability.
+    <br><br>
+    <strong>Two hundred and thirty dollars a month</strong> single-tenant; fifty to eighty dollars per tenant at scale. AWS Bedrock is explicitly <em>not</em> used — same BlueVerse-only policy everywhere.
+  </blockquote>
+</section>
+
+<section class="beat" id="b8" data-start="400" data-end="435">
+  <div class="beat-header">
+    <span class="beat-time">6:40</span>
+    <h2 class="beat-title">Business Impact</h2>
+    <span class="beat-duration">35 sec · deck slide Before vs After</span>
+  </div>
+  <blockquote>
+    The numbers. From <em>hours and days per change</em> down to <strong>under sixty seconds</strong>. One hundred percent cross-artifact coverage versus forty percent for Oracle's native tooling. Column-level precision that doesn't exist anywhere else. Measured cost per AI call: three-tenths of a cent.
+    <br><br>
+    On a typical LTM Oracle engagement: two hundred change requests per year, <strong>twelve hundred engineering hours saved</strong>, around <strong>a hundred and fifty thousand dollars of value</strong>. AI delivery cost: sixty cents a year. Return on investment, <strong>two hundred fifty thousand to one</strong>.
+  </blockquote>
+</section>
+
+<section class="beat" id="b9" data-start="435" data-end="460">
+  <div class="beat-header">
+    <span class="beat-time">7:15</span>
+    <h2 class="beat-title">Close</h2>
+    <span class="beat-duration">25 sec · final slide</span>
+  </div>
+  <blockquote>
+    <strong>Impact Analysis Generator.</strong> Production-ready, BlueVerse-governed, RAG-grounded. Column-level precision. Ready for LTM Oracle engagements today.
+    <br><br>
+    Team: Sameet Dandawate, Rahul Chavan, Suraj Anil Chaudhari, Arpan Yeole. <em>Thank you.</em>
+  </blockquote>
+  <span class="pause-marker">STOP recording</span>
+</section>
+
+<div class="tips">
+  <h3>🎙 Voice Coaching</h3>
+  <ul>
+    <li>Breathe at sentence boundaries — the script has natural pauses built in.</li>
+    <li>Drop pitch slightly on punchlines: <em>"…three-tenths of a cent."</em></li>
+    <li>Don't rush through numbers — say <em>"ninety-seven"</em> not <em>"97"</em>.</li>
+    <li>Smile through the delivery — you can hear smiles in voices.</li>
+    <li>If you flub, say <em>"let me try that again"</em> inline — don't stop recording.</li>
+  </ul>
+</div>
+
+</main>
+
+<div class="font-controls">
+  <button onclick="setSize('S')" title="Small">A⁻</button>
+  <button onclick="setSize('')" title="Medium">A</button>
+  <button onclick="setSize('L')" title="Large">A⁺</button>
+  <button onclick="setSize('XL')" title="Extra Large">A++</button>
+</div>
+
+<script>
+let elapsed = 0;
+let running = false;
+let ticker = null;
+const totalSec = 450; // 7:30
+const timerEl = document.getElementById('timer');
+const progressFill = document.getElementById('progressFill');
+const startBtn = document.getElementById('startBtn');
+const currentSection = document.getElementById('currentSection');
+const beats = Array.from(document.querySelectorAll('section.beat'));
+const tocItems = Array.from(document.querySelectorAll('.toc-item'));
+
+function fmt(s) {
+  const m = Math.floor(s / 60), r = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(r).padStart(2, '0');
+}
+
+function renderTimer() {
+  timerEl.textContent = fmt(elapsed) + ' / 07:30';
+  progressFill.style.width = Math.min(100, (elapsed / totalSec) * 100) + '%';
+
+  // Flash red if over 7:30
+  timerEl.style.color = elapsed > totalSec ? '#FF4757' : '#F0F6FC';
+
+  // Highlight current beat based on elapsed time
+  let active = beats[0];
+  for (const b of beats) {
+    if (elapsed >= +b.dataset.start && elapsed < +b.dataset.end) active = b;
+  }
+  const activeIdx = beats.indexOf(active);
+  beats.forEach((b, i) => b.classList.toggle('active', i === activeIdx));
+  tocItems.forEach((t, i) => t.classList.toggle('active', i === activeIdx));
+  currentSection.textContent = 'Beat: ' + active.querySelector('.beat-title').textContent;
+}
+
+function toggleTimer() {
+  running = !running;
+  if (running) {
+    startBtn.textContent = '⏸ Pause';
+    startBtn.classList.add('pause');
+    ticker = setInterval(() => { elapsed++; renderTimer(); }, 1000);
+  } else {
+    startBtn.textContent = '▶ Resume';
+    startBtn.classList.remove('pause');
+    clearInterval(ticker);
+  }
+}
+
+function resetTimer() {
+  clearInterval(ticker);
+  running = false;
+  elapsed = 0;
+  startBtn.textContent = '▶ Start';
+  startBtn.classList.remove('pause');
+  renderTimer();
+}
+
+function setSize(size) {
+  document.body.className = document.body.classList.contains('focus') ? 'focus ' : '';
+  if (size) document.body.classList.add('size-' + size);
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); toggleTimer(); }
+  if (e.key === 'f' || e.key === 'F') { document.body.classList.toggle('focus'); }
+  if (e.key === 'j' || e.key === 'J') { jump(1); }
+  if (e.key === 'k' || e.key === 'K') { jump(-1); }
+  if (e.key === 'r' || e.key === 'R') { resetTimer(); }
+});
+
+function jump(dir) {
+  const active = beats.findIndex(b => b.classList.contains('active'));
+  const next = Math.max(0, Math.min(beats.length - 1, active + dir));
+  beats[next].scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// TOC click → scroll + optionally set timer
+tocItems.forEach((item, i) => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault();
+    beats[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+renderTimer();
+</script>
+
+</body>
+</html>
