@@ -1,6 +1,6 @@
 # Pythia-26 Submission Package
 
-**Team:** Sameet Dandawate (Lead) • Rahul Chavan • Suraj Anil Chaudhari • Arpan Yeole
+**Team AI Elites (LTM):** Sameet Dandawate (Lead) • Rahul Chavan • Suraj Anil Chaudhari • Arpan Yeole
 **Project:** Impact Analysis Generator for Oracle ERP
 **Repo:** https://github.com/Sameet1308/OracleImpactanalysisgenerator
 **Date:** 2026-04-19
@@ -111,7 +111,7 @@ Baseline result to expect: analyze **`EMPLOYEES`** → **Risk 82, CRITICAL, 6+ d
 
 ---
 
-## Team Contributions
+## Team AI Elites — Contributions
 
 | Member | Role | Contributions |
 |---|---|---|

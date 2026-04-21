@@ -1,6 +1,6 @@
 """
 Impact Analysis Generator — FastAPI Backend
-Oracle Pythia-26 Hackathon | Team: Sameet, Rahul, Suraj, Arpan
+Oracle Pythia-26 Hackathon | Team AI Elites (LTM) — Sameet, Rahul, Suraj, Arpan
 
 6 REST endpoints for Oracle ERP cross-artifact dependency analysis.
 """

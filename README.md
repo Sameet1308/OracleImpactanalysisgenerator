@@ -143,7 +143,7 @@ All hackathon checklist items are mapped to evidence in [SUBMISSION.md](SUBMISSI
 | Demo guide | [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md) |
 | Session/change log | [CHANGELOG.md](CHANGELOG.md) |
 
-## Team
+## Team AI Elites — LTM
 
 | Name | Role |
 |------|------|

@@ -1,6 +1,6 @@
 """
 PDF Report Generator for Impact Analysis
-Oracle Pythia-26 Hackathon | Team: Sameet, Rahul, Suraj, Arpan
+Oracle Pythia-26 Hackathon | Team AI Elites (LTM) — Sameet, Rahul, Suraj, Arpan
 
 Generates a professional PDF impact analysis report using reportlab.
 """
@@ -307,7 +307,7 @@ def generate_pdf_report(impact_data: dict, ai_analysis: dict) -> bytes:
     elements.append(footer_line)
     elements.append(Spacer(1, 8))
     elements.append(Paragraph(
-        "Team: Sameet, Rahul, Suraj, Arpan &nbsp;|&nbsp; Oracle Pythia-26 Hackathon",
+        "Team AI Elites (LTM) — Sameet, Rahul, Suraj, Arpan &nbsp;|&nbsp; Oracle Pythia-26 Hackathon",
         styles["FooterStyle"],
     ))
 

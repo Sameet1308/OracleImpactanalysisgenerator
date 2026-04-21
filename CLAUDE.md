@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Impact Analysis Generator** — Oracle Pythia-26 Hackathon (LTM). Team: Sameet Dandawate (lead), Rahul Chavan, Suraj Anil Chaudhari, Arpan Yeole.
+**Impact Analysis Generator** — Oracle Pythia-26 Hackathon. **Team AI Elites** (LTM): Sameet Dandawate (lead), Rahul Chavan, Suraj Anil Chaudhari, Arpan Yeole.
 
 Solves the Oracle ERP problem of unknown cross-artifact dependencies. Upload Oracle artifacts (SQL/PL/SQL, OIC XML, BIP XML, Groovy) → tool parses every object and dependency → select any object → see full blast radius → get AI-powered root cause + fix recommendations + rollback plan.
 
