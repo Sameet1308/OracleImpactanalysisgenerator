@@ -440,232 +440,231 @@
                     </defs>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- LAYER ZONES — clean, non-overlapping -->
+                    <!-- ZONES — mathematically non-overlapping, with gaps  -->
+                    <!--                                                    -->
+                    <!-- Top row     : API [140-720] | gap | Data [740-1020]-->
+                    <!-- Middle gap  : y=290-320 (30px horizontal corridor) -->
+                    <!-- Middle row  : Front [140-360] | gap | Auth [380-510] | WIDE GAP | Monit [560-1020] -->
+                    <!-- Bottom gap  : y=460-480 (20px horizontal corridor) -->
+                    <!-- Bottom band : External AI [140-1020, 480-550]      -->
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- API Layer (VPC) — top-center -->
-                    <rect x="160" y="30" width="570" height="250" rx="12" fill="#E0F2FE" fill-opacity="0.45" stroke="#0EA5E9" stroke-width="1.2"/>
-                    <text x="178" y="52" fill="#0369A1" font-size="11" font-weight="700" letter-spacing="0.5">API LAYER  (VPC)</text>
+                    <rect x="140" y="30" width="580" height="260" rx="12" fill="#E0F2FE" fill-opacity="0.45" stroke="#0EA5E9" stroke-width="1.2"/>
+                    <text x="158" y="52" fill="#0369A1" font-size="11" font-weight="700" letter-spacing="0.6">API LAYER  (VPC)</text>
 
-                    <!-- Data Layer — top-right -->
-                    <rect x="750" y="30" width="270" height="250" rx="12" fill="#FEF3C7" fill-opacity="0.45" stroke="#D97706" stroke-width="1.2"/>
-                    <text x="768" y="52" fill="#92400E" font-size="11" font-weight="700" letter-spacing="0.5">DATA LAYER</text>
+                    <rect x="740" y="30" width="280" height="260" rx="12" fill="#FEF3C7" fill-opacity="0.45" stroke="#D97706" stroke-width="1.2"/>
+                    <text x="758" y="52" fill="#92400E" font-size="11" font-weight="700" letter-spacing="0.6">DATA LAYER</text>
 
-                    <!-- Frontend Layer — bottom-left -->
-                    <rect x="160" y="320" width="220" height="130" rx="12" fill="#DBEAFE" fill-opacity="0.45" stroke="#3B82F6" stroke-width="1.2"/>
-                    <text x="178" y="342" fill="#1D4ED8" font-size="11" font-weight="700" letter-spacing="0.5">FRONTEND LAYER</text>
+                    <rect x="140" y="320" width="220" height="140" rx="12" fill="#DBEAFE" fill-opacity="0.45" stroke="#3B82F6" stroke-width="1.2"/>
+                    <text x="158" y="342" fill="#1D4ED8" font-size="11" font-weight="700" letter-spacing="0.6">FRONTEND LAYER</text>
 
-                    <!-- Auth Layer -->
-                    <rect x="400" y="320" width="170" height="130" rx="12" fill="#FCE7F3" fill-opacity="0.5" stroke="#DB2777" stroke-width="1.2"/>
-                    <text x="418" y="342" fill="#9D174D" font-size="11" font-weight="700" letter-spacing="0.5">AUTH LAYER</text>
+                    <rect x="380" y="320" width="130" height="140" rx="12" fill="#FCE7F3" fill-opacity="0.5" stroke="#DB2777" stroke-width="1.2"/>
+                    <text x="398" y="342" fill="#9D174D" font-size="11" font-weight="700" letter-spacing="0.6">AUTH LAYER</text>
 
-                    <!-- Monitoring Layer — bottom-right -->
-                    <rect x="590" y="320" width="430" height="130" rx="12" fill="#FEE2E2" fill-opacity="0.45" stroke="#DC2626" stroke-width="1.2"/>
-                    <text x="608" y="342" fill="#991B1B" font-size="11" font-weight="700" letter-spacing="0.5">MONITORING &amp; OBSERVABILITY</text>
+                    <rect x="560" y="320" width="460" height="140" rx="12" fill="#FEE2E2" fill-opacity="0.45" stroke="#DC2626" stroke-width="1.2"/>
+                    <text x="578" y="342" fill="#991B1B" font-size="11" font-weight="700" letter-spacing="0.6">MONITORING &amp; OBSERVABILITY</text>
 
-                    <!-- External AI band — bottom horizontal -->
-                    <rect x="160" y="470" width="860" height="60" rx="10" fill="#FEF2F2" fill-opacity="0.45" stroke="#991B1B" stroke-width="1.2" stroke-dasharray="5,3"/>
-                    <text x="178" y="490" fill="#991B1B" font-size="11" font-weight="700" letter-spacing="0.5">EXTERNAL AI  (LTM &mdash; outside AWS)</text>
+                    <rect x="140" y="480" width="880" height="70" rx="10" fill="#FEF2F2" fill-opacity="0.45" stroke="#991B1B" stroke-width="1.2" stroke-dasharray="5,3"/>
+                    <text x="158" y="498" fill="#991B1B" font-size="11" font-weight="700" letter-spacing="0.6">EXTERNAL AI  &middot;  LTM  (outside AWS)</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- USERS (outside all zones, far left) -->
+                    <!-- USERS  (x=30-100, y=130-225) -->
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <g transform="translate(30, 160)">
-                        <circle cx="40" cy="22" r="14" fill="#374151"/>
-                        <path d="M 12,68 Q 12,42 40,42 Q 68,42 68,68 Z" fill="#374151"/>
-                        <text x="40" y="92" fill="#111827" font-size="12" font-weight="600" text-anchor="middle">Users</text>
+                    <g transform="translate(30, 130)">
+                        <circle cx="35" cy="22" r="14" fill="#374151"/>
+                        <path d="M 7,80 Q 7,44 35,44 Q 63,44 63,80 Z" fill="#374151"/>
                     </g>
+                    <text x="65" y="235" fill="#111827" font-size="12" font-weight="600" text-anchor="middle">Users</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- API LAYER ICONS (WAF → ALB → ECS, left-to-right) -->
+                    <!-- API LAYER ICONS (y-center at 130, x=195 / 355 / 495 70x70) -->
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- WAF -->
                     <g filter="url(#iconShadow)">
-                        <rect x="195" y="110" width="50" height="50" rx="8" fill="#DD344C"/>
-                        <path d="M 220,122 L 232,127 L 232,137 Q 232,145 220,150 Q 208,145 208,137 L 208,127 Z" fill="none" stroke="white" stroke-width="1.8"/>
-                        <path d="M 215,134 L 219,138 L 226,130" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                        <rect x="195" y="105" width="50" height="50" rx="8" fill="#DD344C"/>
+                        <path d="M 220,118 L 232,123 L 232,133 Q 232,142 220,147 Q 208,142 208,133 L 208,123 Z" fill="none" stroke="white" stroke-width="1.8"/>
+                        <path d="M 215,131 L 219,135 L 226,127" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/>
                     </g>
-                    <text x="220" y="176" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">AWS WAF</text>
-                    <text x="220" y="189" fill="#6B7280" font-size="9" text-anchor="middle">OWASP rules</text>
+                    <text x="220" y="172" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">AWS WAF</text>
+                    <text x="220" y="185" fill="#6B7280" font-size="9" text-anchor="middle">OWASP rules</text>
 
-                    <!-- ALB -->
                     <g filter="url(#iconShadow)">
-                        <rect x="350" y="110" width="50" height="50" rx="8" fill="#A166FF"/>
-                        <circle cx="375" cy="125" r="4" fill="white"/>
-                        <path d="M 375,129 L 375,142 M 375,142 L 363,150 M 375,142 L 387,150 M 375,142 L 375,150" stroke="white" stroke-width="1.8" fill="none"/>
+                        <rect x="355" y="105" width="50" height="50" rx="8" fill="#A166FF"/>
+                        <circle cx="380" cy="120" r="4" fill="white"/>
+                        <path d="M 380,124 L 380,137 M 380,137 L 368,145 M 380,137 L 392,145 M 380,137 L 380,145" stroke="white" stroke-width="1.8" fill="none"/>
                     </g>
-                    <text x="375" y="176" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Application LB</text>
-                    <text x="375" y="189" fill="#6B7280" font-size="9" text-anchor="middle">HTTPS listener</text>
+                    <text x="380" y="172" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Application LB</text>
+                    <text x="380" y="185" fill="#6B7280" font-size="9" text-anchor="middle">HTTPS listener</text>
 
-                    <!-- ECS Fargate (emphasized, larger) -->
                     <g filter="url(#iconShadow)">
-                        <rect x="520" y="100" width="70" height="70" rx="10" fill="#ED7100"/>
-                        <rect x="534" y="114" width="16" height="16" fill="white" rx="2"/>
-                        <rect x="554" y="114" width="16" height="16" fill="white" rx="2"/>
-                        <rect x="534" y="134" width="16" height="16" fill="white" rx="2"/>
-                        <rect x="554" y="134" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="495" y="95" width="70" height="70" rx="10" fill="#ED7100"/>
+                        <rect x="509" y="109" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="529" y="109" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="549" y="109" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="509" y="129" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="529" y="129" width="16" height="16" fill="white" rx="2"/>
+                        <rect x="549" y="129" width="16" height="16" fill="white" rx="2"/>
                     </g>
-                    <text x="555" y="186" fill="#111827" font-size="11.5" font-weight="700" text-anchor="middle">ECS Fargate</text>
-                    <text x="555" y="199" fill="#6B7280" font-size="9" text-anchor="middle">FastAPI &middot; auto-scale 2&ndash;10</text>
-                    <text x="555" y="211" fill="#6B7280" font-size="9" text-anchor="middle">0.5 vCPU / 1 GB &middot; Spot (staging)</text>
+                    <text x="530" y="182" fill="#111827" font-size="11.5" font-weight="700" text-anchor="middle">ECS Fargate</text>
+                    <text x="530" y="195" fill="#6B7280" font-size="9" text-anchor="middle">FastAPI &middot; auto-scale 2&ndash;10</text>
+                    <text x="530" y="207" fill="#6B7280" font-size="9" text-anchor="middle">0.5 vCPU / 1 GB &middot; Spot (staging)</text>
 
-                    <!-- Arrows inside API layer -->
-                    <path d="M 246,135 L 349,135" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="263" y="130" fill="#4B5563" font-size="10" font-style="italic">filters</text>
-
-                    <path d="M 401,135 L 519,135" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="422" y="130" fill="#4B5563" font-size="10" font-style="italic">forwards</text>
+                    <!-- API internal arrows -->
+                    <path d="M 246,130 L 354,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="275" y="124" fill="#4B5563" font-size="10" font-style="italic">filters</text>
+                    <path d="M 406,130 L 494,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="425" y="124" fill="#4B5563" font-size="10" font-style="italic">forwards</text>
 
                     <!-- Users → WAF -->
-                    <path d="M 108,200 C 150,175 175,150 194,140" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="114" y="165" fill="#4B5563" font-size="10" font-style="italic">HTTPS</text>
+                    <path d="M 100,165 C 140,150 170,135 194,130" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="130" y="148" fill="#4B5563" font-size="10" font-style="italic">HTTPS</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- DATA LAYER ICONS (stacked vertically, right column) -->
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- Aurora -->
-                    <g filter="url(#iconShadow)">
-                        <rect x="780" y="75" width="50" height="50" rx="8" fill="#3B48CC"/>
-                        <ellipse cx="805" cy="88" rx="15" ry="5" fill="none" stroke="white" stroke-width="1.8"/>
-                        <path d="M 790,88 L 790,112 Q 790,117 805,117 Q 820,117 820,112 L 820,88" fill="none" stroke="white" stroke-width="1.8"/>
-                        <ellipse cx="805" cy="100" rx="15" ry="3" fill="none" stroke="white" stroke-width="1"/>
-                    </g>
-                    <text x="870" y="88" fill="#111827" font-size="11" font-weight="600">Aurora Serverless v2</text>
-                    <text x="870" y="101" fill="#6B7280" font-size="9">PostgreSQL + pgvector</text>
-                    <text x="870" y="113" fill="#6B7280" font-size="9">graph &amp; RAG in one DB</text>
-
-                    <!-- S3 Artifacts -->
-                    <g filter="url(#iconShadow)">
-                        <rect x="780" y="150" width="50" height="50" rx="8" fill="#569A31"/>
-                        <path d="M 792,162 Q 792,157 805,157 Q 818,157 818,162 L 818,188 Q 818,193 805,193 Q 792,193 792,188 Z" fill="none" stroke="white" stroke-width="1.8"/>
-                        <ellipse cx="805" cy="162" rx="13" ry="3" fill="none" stroke="white" stroke-width="1.3"/>
-                    </g>
-                    <text x="870" y="168" fill="#111827" font-size="11" font-weight="600">S3 Artifacts</text>
-                    <text x="870" y="181" fill="#6B7280" font-size="9">uploads + PDF reports</text>
-                    <text x="870" y="193" fill="#6B7280" font-size="9">Intelligent-Tiering</text>
-
-                    <!-- Redis -->
-                    <g filter="url(#iconShadow)">
-                        <rect x="780" y="220" width="50" height="50" rx="8" fill="#C7256F"/>
-                        <rect x="790" y="232" width="30" height="4" fill="white" rx="1"/>
-                        <rect x="790" y="241" width="30" height="4" fill="white" rx="1"/>
-                        <rect x="790" y="250" width="30" height="4" fill="white" rx="1"/>
-                    </g>
-                    <text x="870" y="238" fill="#111827" font-size="11" font-weight="600">ElastiCache Redis</text>
-                    <text x="870" y="251" fill="#6B7280" font-size="9">session + hot cache</text>
-                    <text x="870" y="263" fill="#6B7280" font-size="9">Serverless</text>
-
-                    <!-- ECS → Aurora -->
-                    <path d="M 591,115 C 650,105 720,95 779,95" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="627" y="88" fill="#4B5563" font-size="10" font-style="italic">queries + RAG</text>
-
-                    <!-- ECS → S3 Artifacts -->
-                    <path d="M 591,135 L 779,173" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="628" y="148" fill="#4B5563" font-size="10" font-style="italic">writes uploads</text>
-
-                    <!-- ECS → Redis -->
-                    <path d="M 591,160 C 650,200 720,240 779,245" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="640" y="225" fill="#4B5563" font-size="10" font-style="italic">caches</text>
-
-                    <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- FRONTEND LAYER — CloudFront + S3 Static -->
+                    <!-- DATA LAYER ICONS (x=760, y=65/135/205) -->
                     <!-- ═══════════════════════════════════════════════════ -->
                     <g filter="url(#iconShadow)">
-                        <rect x="190" y="365" width="50" height="50" rx="8" fill="#8C4FFF"/>
-                        <circle cx="215" cy="390" r="13" fill="none" stroke="white" stroke-width="1.8"/>
-                        <path d="M 202,390 L 228,390 M 215,377 Q 222,390 215,403 Q 208,390 215,377" stroke="white" stroke-width="1.3" fill="none"/>
+                        <rect x="760" y="65" width="50" height="50" rx="8" fill="#3B48CC"/>
+                        <ellipse cx="785" cy="78" rx="15" ry="5" fill="none" stroke="white" stroke-width="1.8"/>
+                        <path d="M 770,78 L 770,102 Q 770,107 785,107 Q 800,107 800,102 L 800,78" fill="none" stroke="white" stroke-width="1.8"/>
+                        <ellipse cx="785" cy="90" rx="15" ry="3" fill="none" stroke="white" stroke-width="1"/>
                     </g>
-                    <text x="215" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">CloudFront</text>
+                    <text x="825" y="82" fill="#111827" font-size="11" font-weight="600">Aurora Serverless v2</text>
+                    <text x="825" y="95" fill="#6B7280" font-size="9">PostgreSQL + pgvector</text>
+                    <text x="825" y="107" fill="#6B7280" font-size="9">graph &amp; RAG in one DB</text>
 
                     <g filter="url(#iconShadow)">
-                        <rect x="310" y="365" width="50" height="50" rx="8" fill="#569A31"/>
-                        <path d="M 322,377 Q 322,372 335,372 Q 348,372 348,377 L 348,403 Q 348,408 335,408 Q 322,408 322,403 Z" fill="none" stroke="white" stroke-width="1.8"/>
-                        <ellipse cx="335" cy="377" rx="13" ry="3" fill="none" stroke="white" stroke-width="1.3"/>
+                        <rect x="760" y="135" width="50" height="50" rx="8" fill="#569A31"/>
+                        <path d="M 772,147 Q 772,142 785,142 Q 798,142 798,147 L 798,173 Q 798,178 785,178 Q 772,178 772,173 Z" fill="none" stroke="white" stroke-width="1.8"/>
+                        <ellipse cx="785" cy="147" rx="13" ry="3" fill="none" stroke="white" stroke-width="1.3"/>
                     </g>
-                    <text x="335" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">S3 Static</text>
+                    <text x="825" y="152" fill="#111827" font-size="11" font-weight="600">S3 Artifacts</text>
+                    <text x="825" y="165" fill="#6B7280" font-size="9">uploads + PDF reports</text>
+                    <text x="825" y="177" fill="#6B7280" font-size="9">Intelligent-Tiering</text>
 
-                    <!-- CloudFront → S3 Static -->
-                    <path d="M 241,390 L 309,390" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="258" y="384" fill="#4B5563" font-size="9" font-style="italic">serves</text>
+                    <g filter="url(#iconShadow)">
+                        <rect x="760" y="205" width="50" height="50" rx="8" fill="#C7256F"/>
+                        <rect x="770" y="217" width="30" height="4" fill="white" rx="1"/>
+                        <rect x="770" y="226" width="30" height="4" fill="white" rx="1"/>
+                        <rect x="770" y="235" width="30" height="4" fill="white" rx="1"/>
+                    </g>
+                    <text x="825" y="222" fill="#111827" font-size="11" font-weight="600">ElastiCache Redis</text>
+                    <text x="825" y="235" fill="#6B7280" font-size="9">session + hot cache</text>
+                    <text x="825" y="247" fill="#6B7280" font-size="9">Serverless</text>
 
-                    <!-- Users → CloudFront -->
-                    <path d="M 108,215 C 140,280 170,340 190,370" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="110" y="290" fill="#4B5563" font-size="9" font-style="italic">browses</text>
+                    <!-- ECS → Data arrows (through the API/Data gap at x=720-740) -->
+                    <path d="M 566,110 C 650,95 710,85 759,80" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="625" y="78" fill="#4B5563" font-size="10" font-style="italic">queries + RAG</text>
+
+                    <path d="M 566,130 C 650,140 710,150 759,155" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="630" y="125" fill="#4B5563" font-size="10" font-style="italic">writes uploads</text>
+
+                    <path d="M 566,155 C 640,180 710,210 759,222" stroke="#4B5563" stroke-width="1.3" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="655" y="195" fill="#4B5563" font-size="10" font-style="italic">caches</text>
+
+                    <!-- ═══════════════════════════════════════════════════ -->
+                    <!-- FRONTEND LAYER (y=360 icons, labels at y=420-435) -->
+                    <!-- ═══════════════════════════════════════════════════ -->
+                    <g filter="url(#iconShadow)">
+                        <rect x="180" y="360" width="50" height="50" rx="8" fill="#8C4FFF"/>
+                        <circle cx="205" cy="385" r="13" fill="none" stroke="white" stroke-width="1.8"/>
+                        <path d="M 192,385 L 218,385 M 205,372 Q 212,385 205,398 Q 198,385 205,372" stroke="white" stroke-width="1.3" fill="none"/>
+                    </g>
+                    <text x="205" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">CloudFront</text>
+                    <text x="205" y="438" fill="#6B7280" font-size="9" text-anchor="middle">CDN</text>
+
+                    <g filter="url(#iconShadow)">
+                        <rect x="290" y="360" width="50" height="50" rx="8" fill="#569A31"/>
+                        <path d="M 302,372 Q 302,367 315,367 Q 328,367 328,372 L 328,398 Q 328,403 315,403 Q 302,403 302,398 Z" fill="none" stroke="white" stroke-width="1.8"/>
+                        <ellipse cx="315" cy="372" rx="13" ry="3" fill="none" stroke="white" stroke-width="1.3"/>
+                    </g>
+                    <text x="315" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">S3 Static</text>
+                    <text x="315" y="438" fill="#6B7280" font-size="9" text-anchor="middle">Next.js build</text>
+
+                    <!-- CloudFront → S3 Static (inside Frontend zone) -->
+                    <path d="M 231,385 L 289,385" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="248" y="379" fill="#4B5563" font-size="9" font-style="italic">serves</text>
+
+                    <!-- Users → CloudFront  (routes through Frontend zone header gap) -->
+                    <path d="M 70,215 C 75,290 130,350 179,378" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="78" y="300" fill="#4B5563" font-size="9" font-style="italic">browses</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
                     <!-- AUTH LAYER — Cognito -->
                     <!-- ═══════════════════════════════════════════════════ -->
                     <g filter="url(#iconShadow)">
-                        <rect x="460" y="365" width="50" height="50" rx="8" fill="#DD344C"/>
-                        <rect x="473" y="378" width="24" height="26" rx="3" fill="none" stroke="white" stroke-width="1.8"/>
-                        <circle cx="485" cy="387" r="3.5" fill="white"/>
-                        <path d="M 479,400 Q 479,394 485,394 Q 491,394 491,400" fill="none" stroke="white" stroke-width="1.8"/>
+                        <rect x="420" y="360" width="50" height="50" rx="8" fill="#DD344C"/>
+                        <rect x="433" y="373" width="24" height="26" rx="3" fill="none" stroke="white" stroke-width="1.8"/>
+                        <circle cx="445" cy="382" r="3.5" fill="white"/>
+                        <path d="M 439,395 Q 439,389 445,389 Q 451,389 451,395" fill="none" stroke="white" stroke-width="1.8"/>
                     </g>
-                    <text x="485" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Cognito</text>
+                    <text x="445" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Cognito</text>
+                    <text x="445" y="438" fill="#6B7280" font-size="9" text-anchor="middle">SAML / OIDC</text>
 
-                    <!-- Users → Cognito -->
-                    <path d="M 108,220 C 250,250 380,290 459,380" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="205" y="305" fill="#4B5563" font-size="9" font-style="italic">authenticate</text>
-
-                    <!-- ECS → Cognito (JWT validation) -->
-                    <path d="M 555,170 C 555,260 500,320 485,364" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
-                    <text x="480" y="285" fill="#4B5563" font-size="9" font-style="italic">validates JWT</text>
+                    <!-- ECS → Cognito (dashed "validates JWT") — routes through 30px gap at y=290-320 -->
+                    <path d="M 515,165 C 495,230 470,295 445,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
+                    <text x="445" y="283" fill="#4B5563" font-size="9" font-style="italic">validates JWT</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- MONITORING LAYER — CloudWatch + X-Ray + Secrets -->
+                    <!-- MONITORING LAYER — CloudWatch · X-Ray · Secrets Mgr -->
                     <!-- ═══════════════════════════════════════════════════ -->
                     <g filter="url(#iconShadow)">
-                        <rect x="640" y="365" width="50" height="50" rx="8" fill="#BF0816"/>
-                        <circle cx="660" cy="385" r="9" fill="none" stroke="white" stroke-width="1.8"/>
-                        <path d="M 666,391 L 676,401" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+                        <rect x="620" y="360" width="50" height="50" rx="8" fill="#BF0816"/>
+                        <circle cx="640" cy="380" r="9" fill="none" stroke="white" stroke-width="1.8"/>
+                        <path d="M 646,386 L 656,396" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
                     </g>
-                    <text x="665" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">CloudWatch</text>
+                    <text x="645" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">CloudWatch</text>
+                    <text x="645" y="438" fill="#6B7280" font-size="9" text-anchor="middle">logs + metrics</text>
 
                     <g filter="url(#iconShadow)">
-                        <rect x="775" y="365" width="50" height="50" rx="8" fill="#E7157B"/>
-                        <path d="M 787,405 L 800,378 L 813,405" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
-                        <circle cx="800" cy="397" r="3.5" fill="white"/>
+                        <rect x="770" y="360" width="50" height="50" rx="8" fill="#E7157B"/>
+                        <path d="M 782,400 L 795,373 L 808,400" fill="none" stroke="white" stroke-width="1.8" stroke-linejoin="round"/>
+                        <circle cx="795" cy="392" r="3.5" fill="white"/>
                     </g>
-                    <text x="800" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">AWS X-Ray</text>
+                    <text x="795" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">AWS X-Ray</text>
+                    <text x="795" y="438" fill="#6B7280" font-size="9" text-anchor="middle">distributed tracing</text>
 
                     <g filter="url(#iconShadow)">
-                        <rect x="910" y="365" width="50" height="50" rx="8" fill="#991B1B"/>
-                        <rect x="924" y="380" width="22" height="22" rx="2" fill="none" stroke="white" stroke-width="1.8"/>
-                        <circle cx="935" cy="391" r="3" fill="white"/>
-                        <path d="M 935,394 L 935,401" stroke="white" stroke-width="1.8"/>
+                        <rect x="920" y="360" width="50" height="50" rx="8" fill="#991B1B"/>
+                        <rect x="934" y="375" width="22" height="22" rx="2" fill="none" stroke="white" stroke-width="1.8"/>
+                        <circle cx="945" cy="386" r="3" fill="white"/>
+                        <path d="M 945,389 L 945,396" stroke="white" stroke-width="1.8"/>
                     </g>
-                    <text x="935" y="430" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Secrets Mgr</text>
+                    <text x="945" y="425" fill="#111827" font-size="10.5" font-weight="600" text-anchor="middle">Secrets Mgr</text>
+                    <text x="945" y="438" fill="#6B7280" font-size="9" text-anchor="middle">JWT + DB creds</text>
 
-                    <!-- CloudWatch → X-Ray -->
-                    <path d="M 691,390 L 774,390" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="708" y="384" fill="#4B5563" font-size="9" font-style="italic">correlates</text>
+                    <!-- CloudWatch → X-Ray (inside zone) -->
+                    <path d="M 671,385 L 769,385" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="693" y="379" fill="#4B5563" font-size="9" font-style="italic">correlates</text>
 
-                    <!-- ECS → CloudWatch -->
-                    <path d="M 555,170 C 600,240 640,310 660,364" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
-                    <text x="600" y="295" fill="#4B5563" font-size="9" font-style="italic">logs + metrics</text>
+                    <!-- ECS → CloudWatch (through the 30px gap) -->
+                    <path d="M 555,165 C 590,240 625,295 645,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)"/>
+                    <text x="595" y="278" fill="#4B5563" font-size="9" font-style="italic">logs + metrics</text>
 
-                    <!-- ECS → Secrets Manager -->
-                    <path d="M 591,140 C 750,250 870,310 935,364" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
-                    <text x="805" y="290" fill="#4B5563" font-size="9" font-style="italic">reads JWT + DB creds</text>
+                    <!-- ECS → Secrets Mgr (dashed, long route through API/Data gap) -->
+                    <path d="M 565,140 C 730,220 870,290 945,360" stroke="#4B5563" stroke-width="1.2" fill="none" marker-end="url(#arrHead)" stroke-dasharray="3,3"/>
+                    <text x="800" y="275" fill="#4B5563" font-size="9" font-style="italic">reads creds</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- EXTERNAL AI — BlueVerse (horizontal band at bottom) -->
+                    <!-- EXTERNAL AI band (y=480-550) — BlueVerse positioned in the -->
+                    <!-- Auth/Monit gap corridor so the red arrow can come down    -->
+                    <!-- through x=510-560 cleanly without crossing other zones.  -->
                     <!-- ═══════════════════════════════════════════════════ -->
                     <g filter="url(#iconShadow)">
-                        <rect x="420" y="488" width="46" height="32" rx="6" fill="#991B1B"/>
-                        <text x="443" y="510" fill="white" font-size="12" font-weight="800" text-anchor="middle">AI</text>
+                        <rect x="510" y="500" width="48" height="34" rx="6" fill="#991B1B"/>
+                        <text x="534" y="523" fill="white" font-size="13" font-weight="800" text-anchor="middle">AI</text>
                     </g>
-                    <text x="476" y="502" fill="#111827" font-size="12" font-weight="700">BlueVerse Foundry (LTM)</text>
-                    <text x="476" y="518" fill="#991B1B" font-size="10" font-weight="500">AI_Elite_Ora1 agent &middot; AWS Bedrock explicitly NOT used</text>
+                    <text x="570" y="515" fill="#111827" font-size="12" font-weight="700">BlueVerse Foundry (LTM)</text>
+                    <text x="570" y="530" fill="#6B7280" font-size="10" font-weight="500">AI_Elite_Ora1 agent &middot; sole LLM provider</text>
+                    <text x="780" y="515" fill="#991B1B" font-size="10" font-weight="600">Not used:</text>
+                    <text x="780" y="530" fill="#991B1B" font-size="10" font-weight="500">Claude &middot; OpenAI &middot; Gemini &middot; AWS Bedrock</text>
 
-                    <!-- ECS → BlueVerse (long red arrow) -->
-                    <path d="M 555,170 C 520,340 470,450 443,485" stroke="#DC2626" stroke-width="1.8" fill="none" marker-end="url(#arrHeadRed)"/>
-                    <text x="420" y="348" fill="#DC2626" font-size="10" font-weight="600" font-style="italic">outbound HTTPS</text>
-                    <text x="420" y="361" fill="#991B1B" font-size="9" font-style="italic">policy-gated</text>
+                    <!-- ECS → BlueVerse (red) — routes down through the 50px Auth/Monit gap at x=510-560 -->
+                    <path d="M 535,165 C 540,260 538,360 535,465 C 535,480 534,490 534,498" stroke="#DC2626" stroke-width="1.9" fill="none" marker-end="url(#arrHeadRed)"/>
+                    <text x="555" y="295" fill="#DC2626" font-size="10" font-weight="700" font-style="italic">outbound HTTPS</text>
+                    <text x="555" y="308" fill="#991B1B" font-size="9" font-style="italic">policy-gated</text>
 
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <!-- LEGEND — compact, at the very bottom -->
+                    <!-- LEGEND -->
                     <!-- ═══════════════════════════════════════════════════ -->
-                    <g transform="translate(30, 548)">
+                    <g transform="translate(30, 568)">
                         <text x="0" y="0" fill="#6B7280" font-size="9" font-weight="700" letter-spacing="1">LEGEND:</text>
                         <line x1="54" y1="-3" x2="78" y2="-3" stroke="#4B5563" stroke-width="1.3"/>
                         <text x="82" y="0" fill="#4B5563" font-size="9.5">AWS-internal</text>
